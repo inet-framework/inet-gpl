@@ -1,0 +1,66 @@
+<features cppSourceRoots = "src" definesFile = "src/inet/features.h">
+    <feature
+        id = "HttpTools"
+        name = "HttpTools"
+        description = "Components for web traffic simulation.
+                       This is a port of Kristjan Jonsson's HttpTools,
+                       see http://code.google.com/p/omnet-httptools/."
+        initiallyEnabled = "true"
+        requires = ""
+        labels = "application http web"
+        nedPackages = "
+                       inet.applications.httptools
+                       inet.node.httptools
+                      "
+        extraSourceFolders = ""
+        compileFlags = ""
+        linkerFlags = ""
+        />
+    <feature
+        id = "HttpToolsExamples"
+        name = "HttpTools examples"
+        description = "HttpTools examples."
+        initiallyEnabled = "true"
+        requires = ""
+        labels = "http web www"
+        nedPackages = "
+                       inetgpl.examples.httptools
+                      "
+        extraSourceFolders = ""
+        compileFlags = ""
+        linkerFlags = ""
+        />
+    <feature
+        id = "TcpNsc"
+        name = "TCP (NSC)"
+        description = "TCP module based on Sam Jensen's Network Simulation Cradle
+                       (NSC, http://www.wand.net.nz/~stj2/nsc) that wraps real
+                       OS stacks: Linux, FreeBSD, OpenBSD and lwIP.
+                       NSC must be downloaded and installed separately; read
+                       inet/3rdparty/README for more information."
+        initiallyEnabled = "false"
+        requires = ""
+        labels = ""
+        nedPackages = "
+                       inet.transportlayer.tcp_nsc
+                      "
+        extraSourceFolders = ""
+        compileFlags = "-DINET_WITH_TCP_NSC"
+        linkerFlags = ""
+        />
+    <feature
+        id = "PacketDrill"
+        name = "PacketDrill testing"
+        description = "PacketDrill testing application."
+        initiallyEnabled = "true"
+        requires = ""
+        labels = ""
+        nedPackages = "
+                       inet.applications.packetdrill
+                       inet.node.packetdrill
+                      "
+        extraSourceFolders = ""
+        compileFlags = "-DINET_WITH_PACKETDRILL"
+        linkerFlags = ""
+        />
+</features>

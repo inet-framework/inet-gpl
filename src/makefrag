@@ -1,0 +1,119 @@
+.DEFAULT_GOAL := all-pch
+
+#
+# Use the new message compiler introduced in OMNeT++ 5.3
+#
+MSGC:=$(MSGC) --msg6
+
+FEATURETOOL := opp_featuretool
+
+#
+# compiler warning for c-style cast
+#
+#CFLAGS += -Wold-style-cast
+
+ifneq (,$(findstring win32,$(PLATFORM)))
+  #
+  # on windows we have to link with the ws2_32 (winsock2) library as it is no longer added
+  # to the omnetpp system libraries by default (as of OMNeT++ 5.1)
+  #
+  LDFLAGS += -lws2_32
+  DEFINES += -DINET_EXPORT
+endif
+
+#
+# TCP implementaion using the Network Simulation Cradle (TCP_NSC feature)
+#
+WITH_TCP_NSC := $(shell (cd .. && $(FEATURETOOL) -q isenabled TcpNsc && echo enabled) )
+ifeq ($(WITH_TCP_NSC), enabled)
+  NSC_VERSION= $(shell ls -d ../3rdparty/nsc* 2>/dev/null | sed 's/^.*-//')
+  ifneq ($(NSC_VERSION),)
+    INCLUDE_PATH += -I../3rdparty/nsc-$(NSC_VERSION)/sim
+    LIBS += -Wl,-rpath,$(abspath ../3rdparty/nsc-$(NSC_VERSION))
+  else
+    $(error Please install NSC or disable 'TCP_NSC' feature)
+  endif
+endif
+
+
+#########################################################################
+# precompiled header support for GCC and CLANG
+
+# Set this to "no" if you want to avoid using the precompiled header. The default is "yes".
+ifndef USE_PRECOMPILED_HEADER # don't detect ccache if this setting is passed in as a command line argument
+  # force turning off precompiled headers if ccache is used as it is not compatible with precompiled headers.
+  ifneq (,$(findstring ccache,$(shell (which $(CC)))))
+    USE_PRECOMPILED_HEADER = no
+    $(info *** CCACHE detected - precompiled headers disabled)
+  else
+    USE_PRECOMPILED_HEADER = yes
+    $(info *** CCACHE not detected - using precompiled headers)
+  endif
+endif
+
+PRECOMPILED_HEADER=inet/common/precompiled_$(MODE).h
+
+ifeq ($(USE_PRECOMPILED_HEADER),yes)
+  ifneq (,$(findstring gcc,$(CC)))
+    PRECOMPILED_EXT=gch
+  else ifneq (,$(findstring clang,$(CC)))
+    PRECOMPILED_EXT=pch
+  else
+    PRECOMPILED_EXT=
+  endif
+  CFLAGS += -include $(PRECOMPILED_HEADER)
+endif
+
+PRECOMPILED_HEADER_PCH=$(PRECOMPILED_HEADER).$(PRECOMPILED_EXT)
+PRECOMPILED_HEADER_D=$(PRECOMPILED_HEADER_PCH:%.$(PRECOMPILED_EXT)=%.d)
+
+# Main target
+all-pch: | pch msgheaders all
+
+.PHONY: pch clean-pch
+
+pch : $(PRECOMPILED_HEADER_PCH)
+
+$(PRECOMPILED_HEADER_PCH): $(PRECOMPILED_HEADER)
+ifneq ("$(PRECOMPILED_EXT)","")
+	@echo Creating precompiled header for $(CC)...
+	$(Q)$(CXX) -x c++-header $(CXXFLAGS) $(filter-out -MMD -include $(PRECOMPILED_HEADER),$(COPTS)) -MD -o $@ $<
+endif
+
+clean: clean-pch clean-defines
+
+clean-pch:
+	$(Q)-rm -f $(PRECOMPILED_HEADER_D) $(PRECOMPILED_HEADER).pch $(PRECOMPILED_HEADER).gch
+
+-include $(PRECOMPILED_HEADER_D)
+
+# Create opp_defines.h so important WITH_* macros from OMNeT++ can be included as macros from a header file
+# This helps the IDE to properly enable/disable conditional code in the editor
+DEFINES_FILE=inet/opp_defines.h
+
+msgheaders: $(DEFINES_FILE)
+
+clean-defines:
+	$(Q)-rm -f $(DEFINES_FILE)
+
+$(DEFINES_FILE) : $(COPTS_FILE)
+	@echo "// Generated file, do not edit" >$(DEFINES_FILE)
+ifeq ($(WITH_OSG),yes)
+	@echo "#ifndef WITH_OSG" >>$(DEFINES_FILE)
+	@echo "#define WITH_OSG" >>$(DEFINES_FILE)
+	@echo "#endif" >>$(DEFINES_FILE)
+endif
+ifeq ($(WITH_OSGEARTH),yes)
+	@echo "#ifndef WITH_OSGEARTH" >>$(DEFINES_FILE)
+	@echo "#define WITH_OSGEARTH" >>$(DEFINES_FILE)
+	@echo "#endif" >>$(DEFINES_FILE)
+endif
+
+# dump out the actual compiler and linker command line for easier debugging
+ifneq ($(MAKECMDGOALS),clean)
+$(info *** COMPILING with:)
+$(info $(CXX) -c $(CXXFLAGS) $(COPTS))
+$(info *** LINKING with:)
+$(info $(SHLIB_LD) -o $O/$(TARGET) $(AS_NEEDED_OFF) $(WHOLE_ARCHIVE_ON) $(LIBS) $(WHOLE_ARCHIVE_OFF) $(OMNETPP_LIBS) $(LDFLAGS))
+$(info Building...)
+endif
