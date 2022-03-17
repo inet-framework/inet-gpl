@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 //
 
-package inet.examples.htb;
+package inetgpl.examples.htb;
 
 import inet.networklayer.configurator.ipv4.Ipv4NetworkConfigurator;
 import inet.node.inet.StandardHost;

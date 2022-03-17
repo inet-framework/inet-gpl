@@ -4,7 +4,7 @@
 
 
 
-package inet.examples.httptools.socket.pairsocket;
+package inetgpl.examples.httptools.socket.pairsocket;
 
 import inet.applications.httptools.configurator.HttpController;
 import inet.networklayer.configurator.ipv4.Ipv4NetworkConfigurator;

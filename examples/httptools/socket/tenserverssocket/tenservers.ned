@@ -18,7 +18,7 @@
 // ----------------------------------------------------------------------------
 
 
-package inet.examples.httptools.socket.tenserverssocket;
+package inetgpl.examples.httptools.socket.tenserverssocket;
 
 import inet.applications.httptools.configurator.HttpController;
 import inet.networklayer.configurator.ipv4.Ipv4NetworkConfigurator;

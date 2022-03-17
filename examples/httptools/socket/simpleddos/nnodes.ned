@@ -18,7 +18,7 @@
 // ----------------------------------------------------------------------------
 
 
-package inet.examples.httptools.socket.simpleddos;
+package inetgpl.examples.httptools.socket.simpleddos;
 
 import inet.applications.httptools.configurator.HttpController;
 import inet.networklayer.configurator.ipv4.Ipv4NetworkConfigurator;
