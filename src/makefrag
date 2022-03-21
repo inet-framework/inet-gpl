@@ -51,7 +51,7 @@ ifndef USE_PRECOMPILED_HEADER # don't detect ccache if this setting is passed in
   endif
 endif
 
-PRECOMPILED_HEADER=inet/common/precompiled_$(MODE).h
+PRECOMPILED_HEADER=inetgpl/common/precompiled_$(MODE).h
 
 ifeq ($(USE_PRECOMPILED_HEADER),yes)
   ifneq (,$(findstring gcc,$(CC)))
@@ -89,7 +89,7 @@ clean-pch:
 
 # Create opp_defines.h so important WITH_* macros from OMNeT++ can be included as macros from a header file
 # This helps the IDE to properly enable/disable conditional code in the editor
-DEFINES_FILE=inet/opp_defines.h
+DEFINES_FILE=inetgpl/opp_defines.h
 
 msgheaders: $(DEFINES_FILE)
 

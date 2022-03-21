@@ -9,8 +9,8 @@
         requires = ""
         labels = "application http web"
         nedPackages = "
-                       inet.applications.httptools
-                       inet.node.httptools
+                       inetgpl.applications.httptools
+                       inetgpl.node.httptools
                       "
         extraSourceFolders = ""
         compileFlags = ""
@@ -42,7 +42,7 @@
         requires = ""
         labels = ""
         nedPackages = "
-                       inet.transportlayer.tcp_nsc
+                       inetgpl.transportlayer.tcp_nsc
                       "
         extraSourceFolders = ""
         compileFlags = "-DINET_WITH_TCP_NSC"
@@ -56,8 +56,8 @@
         requires = ""
         labels = ""
         nedPackages = "
-                       inet.applications.packetdrill
-                       inet.node.packetdrill
+                       inetgpl.applications.packetdrill
+                       inetgpl.node.packetdrill
                       "
         extraSourceFolders = ""
         compileFlags = "-DINET_WITH_PACKETDRILL"

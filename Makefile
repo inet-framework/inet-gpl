@@ -1,5 +1,5 @@
 FEATURETOOL = opp_featuretool
-FEATURES_H = src/inet/features-gpl.h
+FEATURES_H = src/inetgpl/features.h
 
 .PHONY: all clean cleanall makefiles makefiles-so makefiles-lib makefiles-exe checkmakefiles doxy doc submodule-init
 
