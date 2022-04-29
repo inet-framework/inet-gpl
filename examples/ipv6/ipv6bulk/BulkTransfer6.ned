@@ -5,7 +5,7 @@
 //
 //
 
-package inet.examples.ipv6.ipv6bulk;
+package inetgpl.examples.ipv6.ipv6bulk;
 
 import inet.networklayer.configurator.ipv6.Ipv6FlatNetworkConfigurator;
 import inet.node.ipv6.Router6;

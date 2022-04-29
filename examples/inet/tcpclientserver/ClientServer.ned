@@ -5,7 +5,7 @@
 //
 //
 
-package inet.examples.inet.tcpclientserver;
+package inetgpl.examples.inet.tcpclientserver;
 
 import inet.networklayer.configurator.ipv4.Ipv4NetworkConfigurator;
 import inet.node.inet.StandardHost;

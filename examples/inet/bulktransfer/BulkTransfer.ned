@@ -5,7 +5,7 @@
 //
 //
 
-package inet.examples.inet.bulktransfer;
+package inetgpl.examples.inet.bulktransfer;
 
 import inet.networklayer.configurator.ipv4.Ipv4NetworkConfigurator;
 import inet.node.inet.Router;

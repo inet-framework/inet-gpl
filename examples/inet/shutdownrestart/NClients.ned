@@ -8,7 +8,7 @@
 
 
 
-package inet.examples.inet.shutdownrestart;
+package inetgpl.examples.inet.shutdownrestart;
 
 import inet.common.misc.ThruputMeteringChannel;
 import inet.common.scenario.ScenarioManager;
