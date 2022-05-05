@@ -4,8 +4,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#ifndef __INET_HTTPSERVERDIRECT_H
-#define __INET_HTTPSERVERDIRECT_H
+#ifndef __INETGPL_HTTPSERVERDIRECT_H
+#define __INETGPL_HTTPSERVERDIRECT_H
 
 #include "inetgpl/applications/httptools/server/HttpServerBase.h"
 

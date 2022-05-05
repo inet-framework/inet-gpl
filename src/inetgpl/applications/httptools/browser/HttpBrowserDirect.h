@@ -4,8 +4,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#ifndef __INET_HTTPBROWSERDIRECT_H
-#define __INET_HTTPBROWSERDIRECT_H
+#ifndef __INETGPL_HTTPBROWSERDIRECT_H
+#define __INETGPL_HTTPBROWSERDIRECT_H
 
 #include "inetgpl/applications/httptools/browser/HttpBrowserBase.h"
 

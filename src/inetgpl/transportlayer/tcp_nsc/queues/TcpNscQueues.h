@@ -5,8 +5,8 @@
 //
 //
 
-#ifndef __INET_TCPNSCQUEUES_H
-#define __INET_TCPNSCQUEUES_H
+#ifndef __INETGPL_TCPNSCQUEUES_H
+#define __INETGPL_TCPNSCQUEUES_H
 
 #include "inet/common/packet/ChunkQueue.h"
 #include "inet/common/packet/Packet.h"

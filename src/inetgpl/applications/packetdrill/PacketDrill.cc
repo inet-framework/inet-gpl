@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#include "inet/applications/packetdrill/PacketDrill.h"
+#include "inetgpl/applications/packetdrill/PacketDrill.h"
 
 #include <assert.h>
 #include <stdio.h>

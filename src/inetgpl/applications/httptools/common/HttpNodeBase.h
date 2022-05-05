@@ -4,8 +4,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#ifndef __INET_HTTPNODEBASE_H
-#define __INET_HTTPNODEBASE_H
+#ifndef __INETGPL_HTTPNODEBASE_H
+#define __INETGPL_HTTPNODEBASE_H
 
 #include <fstream>
 #include <iostream>

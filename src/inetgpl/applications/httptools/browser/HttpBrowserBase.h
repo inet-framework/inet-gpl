@@ -4,8 +4,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#ifndef __INET_HTTPBROWSERBASE_H
-#define __INET_HTTPBROWSERBASE_H
+#ifndef __INETGPL_HTTPBROWSERBASE_H
+#define __INETGPL_HTTPBROWSERBASE_H
 
 #include "inetgpl/applications/httptools/common/HttpNodeBase.h"
 #include "inet/common/ModuleRefByPar.h"

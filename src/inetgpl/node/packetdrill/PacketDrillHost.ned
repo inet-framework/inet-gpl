@@ -3,7 +3,7 @@
 // Copyright (C) 2004 OpenSim Ltd.
 // Copyright (C) 2000 Institut fuer Telematik, Universitaet Karlsruhe
 //
-// SPDX-License-Identifier: LGPL-3.0-or-later
+// SPDX-License-Identifier: GPL-3.0-or-later
 //
 
 package inetgpl.node.packetdrill;

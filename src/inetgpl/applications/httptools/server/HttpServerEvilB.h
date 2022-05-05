@@ -4,8 +4,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#ifndef __INET_HTTPSERVEREVILB_H
-#define __INET_HTTPSERVEREVILB_H
+#ifndef __INETGPL_HTTPSERVEREVILB_H
+#define __INETGPL_HTTPSERVEREVILB_H
 
 #include <string>
 

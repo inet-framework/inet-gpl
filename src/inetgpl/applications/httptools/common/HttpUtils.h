@@ -4,8 +4,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#ifndef __INET_HTTPUTILS_H
-#define __INET_HTTPUTILS_H
+#ifndef __INETGPL_HTTPUTILS_H
+#define __INETGPL_HTTPUTILS_H
 
 #include <stdlib.h>
 #include <string.h>

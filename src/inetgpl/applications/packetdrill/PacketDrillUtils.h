@@ -4,8 +4,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#ifndef __INET_PACKETDRILLUTILS_H
-#define __INET_PACKETDRILLUTILS_H
+#ifndef __INETGPL_PACKETDRILLUTILS_H
+#define __INETGPL_PACKETDRILLUTILS_H
 
 #include "inet/networklayer/common/L3Address.h"
 #include "omnetpp/platdep/sockets.h"

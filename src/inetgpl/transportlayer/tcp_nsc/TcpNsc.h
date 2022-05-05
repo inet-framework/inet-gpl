@@ -6,8 +6,8 @@
 //
 //
 
-#ifndef __INET_TCPNSC_H
-#define __INET_TCPNSC_H
+#ifndef __INETGPL_TCPNSC_H
+#define __INETGPL_TCPNSC_H
 
 #include <map>
 

@@ -5,8 +5,8 @@
 //
 
 
-#ifndef __INET_PRECOMPILED_H
-#define __INET_PRECOMPILED_H
+#ifndef __INETGPL_PRECOMPILED_H
+#define __INETGPL_PRECOMPILED_H
 
 // NOTE: All macros that modify the behavior of an omnet or system header file
 // MUST be defined inside this header otherwise the precompiled header will be incorrectly built

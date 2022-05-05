@@ -4,8 +4,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#ifndef __INET_HTTPBROWSER_H
-#define __INET_HTTPBROWSER_H
+#ifndef __INETGPL_HTTPBROWSER_H
+#define __INETGPL_HTTPBROWSER_H
 
 #include "inetgpl/applications/httptools/browser/HttpBrowserBase.h"
 #include "inet/common/packet/ChunkQueue.h"

@@ -4,8 +4,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#ifndef __INET_PACKETDRILLAPP_H
-#define __INET_PACKETDRILLAPP_H
+#ifndef __INETGPL_PACKETDRILLAPP_H
+#define __INETGPL_PACKETDRILLAPP_H
 
 #include "inet/applications/base/ApplicationBase.h"
 #include "inet/common/socket/SocketMap.h"

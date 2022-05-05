@@ -9,8 +9,8 @@
 // Code base taken from the "PriorityScheduler"
 //
 
-#ifndef __INET_HTBSCHEDULER_H
-#define __INET_HTBSCHEDULER_H
+#ifndef __INETGPL_HTBSCHEDULER_H
+#define __INETGPL_HTBSCHEDULER_H
 
 #include <string>
 #include <set>

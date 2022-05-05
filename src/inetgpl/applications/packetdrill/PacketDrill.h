@@ -4,8 +4,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#ifndef __INET_PACKETDRILL_H
-#define __INET_PACKETDRILL_H
+#ifndef __INETGPL_PACKETDRILL_H
+#define __INETGPL_PACKETDRILL_H
 
 #include "inetgpl/applications/packetdrill/PacketDrillApp.h"
 #include "inetgpl/applications/packetdrill/PacketDrillUtils.h"

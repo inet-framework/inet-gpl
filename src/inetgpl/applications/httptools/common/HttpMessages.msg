@@ -52,7 +52,6 @@
 
 import inet.common.INETDefs;
 import inet.common.packet.chunk.Chunk;
-import inet.common.packet.chunk.FieldsChunk;
 import inet.transportlayer.common.CrcMode;
 
 namespace inetgpl::httptools;

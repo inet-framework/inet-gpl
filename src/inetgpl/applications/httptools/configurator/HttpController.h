@@ -4,8 +4,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#ifndef __INET_HTTPCONTROLLER_H
-#define __INET_HTTPCONTROLLER_H
+#ifndef __INETGPL_HTTPCONTROLLER_H
+#define __INETGPL_HTTPCONTROLLER_H
 
 #include <fstream>
 #include <list>

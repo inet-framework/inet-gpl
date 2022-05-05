@@ -4,8 +4,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
-#ifndef __INET_HTTPSERVER_H
-#define __INET_HTTPSERVER_H
+#ifndef __INETGPL_HTTPSERVER_H
+#define __INETGPL_HTTPSERVER_H
 
 #include "inetgpl/applications/httptools/server/HttpServerBase.h"
 #include "inet/common/packet/ChunkQueue.h"
