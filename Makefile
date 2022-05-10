@@ -1,7 +1,7 @@
 FEATURETOOL = opp_featuretool
 FEATURES_H = src/inetgpl/features.h
 
-.PHONY: all clean cleanall makefiles makefiles-so makefiles-lib makefiles-exe checkmakefiles doxy doc submodule-init
+.PHONY: all clean cleanall makefiles makefiles-so makefiles-lib makefiles-exe checkenvir checkmakefiles doxy doc submodule-init
 
 all: checkmakefiles $(FEATURES_H)
 	@cd src && $(MAKE)
@@ -15,19 +15,40 @@ cleanall: checkmakefiles
 	@rm -f src/Makefile $(FEATURES_H)
 
 
-INET_PROJ=../../inet4.4
+INET_PROJ = $(shell inet_root)
+INETGPL_PROJ = $(shell inetgpl_root)
+
 MAKEMAKE_OPTIONS := -f --deep -o INETGPL -O out -KINET_PROJ=$(INET_PROJ) -I. -I$$\(INET_PROJ\)/src -L$$\(INET_PROJ\)/src -lINET$$\(D\)
 
 makefiles: makefiles-so
 
-makefiles-so: $(FEATURES_H)
+makefiles-so: checkenvir $(FEATURES_H)
 	@FEATURE_OPTIONS=$$($(FEATURETOOL) options -f -l) && cd src && opp_makemake --make-so $(MAKEMAKE_OPTIONS) $$FEATURE_OPTIONS
 
-makefiles-lib: $(FEATURES_H)
+makefiles-lib: checkenvir $(FEATURES_H)
 	@FEATURE_OPTIONS=$$($(FEATURETOOL) options -f -l) && cd src && opp_makemake --make-lib $(MAKEMAKE_OPTIONS) $$FEATURE_OPTIONS
 
-makefiles-exe: $(FEATURES_H)
+makefiles-exe: checkenvir $(FEATURES_H)
 	@FEATURE_OPTIONS=$$($(FEATURETOOL) options -f -l) && cd src && opp_makemake $(MAKEMAKE_OPTIONS) $$FEATURE_OPTIONS
+
+checkenvir:
+	@if [ "$(INET_PROJ)" = "" ]; then \
+	echo; \
+	echo '==========================================================================='; \
+	echo '<inet_root>/setenv is not sourced. Please change to the INET root directory'; \
+	echo 'and type "source setenv" to initialize the environment!'; \
+	echo '==========================================================================='; \
+	echo; \
+	exit 1; \
+	fi
+	@if [ "$(INETGPL_PROJ)" = "" ]; then \
+	echo; \
+	echo '==================================================================================='; \
+	echo '"setenv" is not sourced. Please type "source setenv" to initialize the environment!'; \
+	echo '==================================================================================='; \
+	echo; \
+	exit 1; \
+	fi
 
 checkmakefiles:
 	@if [ ! -f src/Makefile ]; then \
