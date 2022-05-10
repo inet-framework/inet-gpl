@@ -46,7 +46,7 @@
  * directly into the top of the .c file it generates.
  */
 
-#include "inet/common/INETDefs.h"
+#include "inetgpl/common/INETGPLDefs.h"
 
 #if !defined(_WIN32) && !defined(__WIN32__) && !defined(WIN32) && !defined(__CYGWIN__) && !defined(_WIN64)
 #include <arpa/inet.h>
@@ -65,12 +65,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+using namespace inetgpl;
+using namespace inet;
+namespace inet { namespace sctp { }}
+using namespace inet::sctp;
+
 #include "PacketDrillUtils.h"
 #include "PacketDrill.h"
-
-
-using namespace inet;
-using namespace inet::sctp;
 
 /* This include of the bison-generated .h file must go last so that we
  * can first include all of the declarations on which it depends.

@@ -42,7 +42,7 @@ class HttpServerBase;
  *
  * @author  Kristjan V. Jonsson
  */
-class INET_API HttpController : public cSimpleModule
+class INETGPL_API HttpController : public cSimpleModule
 {
   protected:
     enum ServerStatus { SS_NORMAL, SS_SPECIAL };

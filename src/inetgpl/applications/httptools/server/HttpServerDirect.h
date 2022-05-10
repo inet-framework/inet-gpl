@@ -25,7 +25,7 @@ namespace httptools {
  *
  * @author  Kristjan V. Jonsson
  */
-class INET_API HttpServerDirect : public HttpServerBase
+class INETGPL_API HttpServerDirect : public HttpServerBase
 {
   protected:
     virtual int numInitStages() const override { return NUM_INIT_STAGES; }

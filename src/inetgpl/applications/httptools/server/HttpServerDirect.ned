@@ -6,7 +6,7 @@
 
 package inetgpl.applications.httptools.server;
 
-import inet.applications.httptools.common.IHttpDirectApp;
+import inetgpl.applications.httptools.common.IHttpDirectApp;
 
 //
 // A Web server module for OMNeT++ simulations and direct message passing between modules.

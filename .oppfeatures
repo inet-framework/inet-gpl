@@ -1,4 +1,4 @@
-<features cppSourceRoots = "src" definesFile = "src/inet/features.h">
+<features cppSourceRoots = "src" definesFile = "src/inetgpl/features.h">
     <feature
         id = "HttpTools"
         name = "HttpTools"

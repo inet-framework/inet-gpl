@@ -29,7 +29,7 @@ class TcpNscSendQueue;
 /**
  * Encapsulates a Network Simulation Cradle (NSC) instance.
  */
-class INET_API TcpNscConnection
+class INETGPL_API TcpNscConnection
 {
   public:
     class SockAddr {

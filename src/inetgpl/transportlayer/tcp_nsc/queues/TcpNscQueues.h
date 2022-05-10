@@ -21,7 +21,7 @@ namespace tcp {
 /**
  * Send queue that manages actual bytes.
  */
-class INET_API TcpNscSendQueue : public cObject
+class INETGPL_API TcpNscSendQueue : public cObject
 {
   public:
     /**
@@ -99,7 +99,7 @@ class INET_API TcpNscSendQueue : public cObject
 /**
  * Receive queue that manages actual bytes.
  */
-class INET_API TcpNscReceiveQueue : public cObject
+class INETGPL_API TcpNscReceiveQueue : public cObject
 {
   public:
     /**

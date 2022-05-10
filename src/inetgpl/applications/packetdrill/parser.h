@@ -203,7 +203,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 224 "parser.y"
+#line 211 "parser.y"
 
     int64_t integer;
     double floating;

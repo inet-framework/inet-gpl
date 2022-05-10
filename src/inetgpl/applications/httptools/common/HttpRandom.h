@@ -10,6 +10,7 @@
 #include <exception>
 #include <string>
 
+#include "inetgpl/common/INETGPLDefs.h"
 #include "inetgpl/applications/httptools/common/HttpUtils.h"
 #include "inet/common/INETMath.h"
 #include "inet/common/stlutils.h"
@@ -31,7 +32,7 @@ enum DistrType { dt_normal, dt_uniform, dt_exponential, dt_histogram, dt_constan
 /**
  * Base random object. Should not be instantiated directly.
  */
-class INET_API rdObject
+class INETGPL_API rdObject
 {
   protected:
     DistrType m_type = dt_normal;
@@ -55,7 +56,7 @@ class INET_API rdObject
  * Normal distribution random object.
  * Wraps the OMNeT++ normal distribution function but adds a minimum limit.
  */
-class INET_API rdNormal : public rdObject
+class INETGPL_API rdNormal : public rdObject
 {
   protected:
     double m_mean = NaN; ///< The mean of the distribution.
@@ -96,7 +97,7 @@ class INET_API rdNormal : public rdObject
  * Uniform distribution random object.
  * Wraps the OMNeT++ uniform distribution function.
  */
-class INET_API rdUniform : public rdObject
+class INETGPL_API rdUniform : public rdObject
 {
   protected:
     double m_beginning = NaN; ///< Low limit
@@ -129,7 +130,7 @@ class INET_API rdUniform : public rdObject
  * Exponential distribution random object.
  * Wraps the OMNeT++ exponential distribution function, but adds min and max limits.
  */
-class INET_API rdExponential : public rdObject
+class INETGPL_API rdExponential : public rdObject
 {
   protected:
     double m_mean = NaN; // the distribution mean
@@ -165,7 +166,7 @@ class INET_API rdExponential : public rdObject
 /**
  * Histogram distribution random object.
  */
-class INET_API rdHistogram : public rdObject
+class INETGPL_API rdHistogram : public rdObject
 {
   protected:
     struct rdHistogramBin {
@@ -204,7 +205,7 @@ class INET_API rdHistogram : public rdObject
  * Not really a random object, but used to allow constants to be assigned in stead of random distributions
  * when initializing parameters.
  */
-class INET_API rdConstant : public rdObject
+class INETGPL_API rdConstant : public rdObject
 {
   protected:
     double m_value = NaN; ///< The constant
@@ -232,7 +233,7 @@ class INET_API rdConstant : public rdObject
  * Returns a random value from a zipf distribution (1/n^a), where a is the constant alpha and n is a order of popularity.
  * See more details on http://en.wikipedia.org/wiki/Zipf.
  */
-class INET_API rdZipf : public rdObject
+class INETGPL_API rdZipf : public rdObject
 {
   protected:
     double m_alpha = NaN; // the alpha value
@@ -278,7 +279,7 @@ class INET_API rdZipf : public rdObject
  * A factory class used to construct random distribution objects based on XML elements.
  * The type name is used to instantiate the appropriate rdObject-derived class.
  */
-class INET_API rdObjectFactory
+class INETGPL_API rdObjectFactory
 {
   public:
     /*

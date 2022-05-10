@@ -20,14 +20,16 @@
 #include <algorithm>
 #include <functional>
 
+#include "inetgpl/common/INETGPLDefs.h"
 #include "inet/common/XMLUtils.h"
 #include "inet/queueing/base/PacketSchedulerBase.h"
 #include "inet/queueing/contract/IPacketCollection.h"
 
 namespace inetgpl {
 namespace queueing {
+using namespace inet::queueing;
 
-class INET_API HtbScheduler : public PacketSchedulerBase, public IPacketCollection, public cListener
+class INETGPL_API HtbScheduler : public PacketSchedulerBase, public IPacketCollection, public cListener
 {
   protected:
     simsignal_t dequeueIndexSignal;

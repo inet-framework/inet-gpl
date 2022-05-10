@@ -6,12 +6,10 @@ src/Makefile
 .nedexclusions
 .pydevproject
 .vscode/*
-src/inet/features-gpl.h
-src/inet/opp_defines.h
+src/inetgpl/features.h
+src/inetgpl/opp_defines.h
 precompiled_*.h.*
 /3rdparty
-/media
-**/MoBAN_Pattern*.txt
 python/inet/test/fingerprint/all_fingerprints.json
 
 # output and result files

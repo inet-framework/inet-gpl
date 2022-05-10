@@ -11,7 +11,7 @@
 
 #include <map>
 
-#include "inet/common/INETDefs.h"
+#include "inetgpl/common/INETGPLDefs.h"
 #include "inet/common/lifecycle/LifecycleUnsupported.h"
 #include "inet/common/packet/Message.h"
 #include "inet/networklayer/common/L3Address.h"
@@ -36,7 +36,7 @@ class TcpNscReceiveQueue;
 /**
  * Encapsulates a Network Simulation Cradle (NSC) instance.
  */
-class INET_API TcpNsc : public cSimpleModule, ISendCallback, IInterruptCallback, public LifecycleUnsupported
+class INETGPL_API TcpNsc : public cSimpleModule, ISendCallback, IInterruptCallback, public LifecycleUnsupported
 {
   protected:
     enum { MAX_SEND_BYTES = 500000 };

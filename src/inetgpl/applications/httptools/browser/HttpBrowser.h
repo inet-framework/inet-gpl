@@ -33,7 +33,7 @@ namespace httptools {
  * @see HttpBrowserBase
  * @see HttpBrowserDirect
  */
-class INET_API HttpBrowser : public HttpBrowserBase, public TcpSocket::ReceiveQueueBasedCallback
+class INETGPL_API HttpBrowser : public HttpBrowserBase, public TcpSocket::ReceiveQueueBasedCallback
 {
   protected:
     /*

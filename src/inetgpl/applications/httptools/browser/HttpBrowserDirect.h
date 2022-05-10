@@ -23,7 +23,7 @@ namespace httptools {
  *
  * @author Kristjan V. Jonsson (kristjanvj@gmail.com)
  */
-class INET_API HttpBrowserDirect : public HttpBrowserBase
+class INETGPL_API HttpBrowserDirect : public HttpBrowserBase
 {
   protected:
     virtual void initialize(int stage) override;

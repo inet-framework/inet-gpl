@@ -28,7 +28,7 @@ class PacketDrillScript;
 /**
  * Implements the packetdrill application simple module. See the NED file for more info.
  */
-class INET_API PacketDrillApp : public ApplicationBase,
+class INETGPL_API PacketDrillApp : public ApplicationBase,
     public UdpSocket::ICallback, public TcpSocket::ICallback,
     public SctpSocket::ICallback, TunSocket::ICallback
 {

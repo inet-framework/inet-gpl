@@ -6,7 +6,7 @@
 
 package inetgpl.applications.httptools.server;
 
-import inet.applications.httptools.common.IHttpDirectApp;
+import inetgpl.applications.httptools.common.IHttpDirectApp;
 
 //
 // Demonstrates subclassing the server to create a custom site. This site is an attacker -- a puppetmaster --

@@ -49,7 +49,7 @@ namespace httptools {
  *
  * @author Kristjan V. Jonsson (kristjanvj@gmail.com)
  */
-class INET_API HttpBrowserBase : public HttpNodeBase
+class INETGPL_API HttpBrowserBase : public HttpNodeBase
 {
   protected:
     /*

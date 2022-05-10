@@ -38,7 +38,7 @@ namespace httptools {
  *
  * @author  Kristjan V. Jonsson
  */
-class INET_API HttpServerBase : public HttpNodeBase
+class INETGPL_API HttpServerBase : public HttpNodeBase
 {
   protected:
     /**

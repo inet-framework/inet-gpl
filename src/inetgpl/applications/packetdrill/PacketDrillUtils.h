@@ -7,6 +7,7 @@
 #ifndef __INETGPL_PACKETDRILLUTILS_H
 #define __INETGPL_PACKETDRILLUTILS_H
 
+#include "inetgpl/common/INETGPLDefs.h"
 #include "inet/networklayer/common/L3Address.h"
 #include "omnetpp/platdep/sockets.h"
 #if !defined(_WIN32) && !defined(__WIN32__) && !defined(WIN32) && !defined(__CYGWIN__) && !defined(_WIN64)
@@ -311,12 +312,12 @@ struct command_spec
  */
 struct Invocation;
 
-} // namespace inet
+} // namespace inetgpl
 
-int parse_script(inet::PacketDrillConfig *config,
-        inet::PacketDrillScript *script,
-        inet::Invocation *callback_invocation);
-void parse_and_finalize_config(inet::Invocation *invocation);
+int parse_script(inetgpl::PacketDrillConfig *config,
+        inetgpl::PacketDrillScript *script,
+        inetgpl::Invocation *callback_invocation);
+void parse_and_finalize_config(inetgpl::Invocation *invocation);
 
 namespace inetgpl {
 
@@ -435,7 +436,7 @@ struct sctp_add_streams_expr
     PacketDrillExpression *sas_outstrms;
 };
 
-class INET_API PacketDrillConfig
+class INETGPL_API PacketDrillConfig
 {
   public:
     PacketDrillConfig();
@@ -459,7 +460,7 @@ class INET_API PacketDrillConfig
     void parseScriptOptions(cQueue *options);
 };
 
-class INET_API PacketDrillPacket
+class INETGPL_API PacketDrillPacket
 {
   public:
     PacketDrillPacket();
@@ -476,7 +477,7 @@ class INET_API PacketDrillPacket
     void setInetPacket(Packet *pkt) { inetPacket = pkt->dup(); delete pkt; }
 };
 
-class INET_API PacketDrillEvent : public cObject
+class INETGPL_API PacketDrillEvent : public cObject
 {
   public:
     PacketDrillEvent(enum event_t type_);
@@ -522,7 +523,7 @@ class INET_API PacketDrillEvent : public cObject
     struct command_spec *getCommand() { return eventKind.command; };
 };
 
-class INET_API PacketDrillExpression : public cObject
+class INETGPL_API PacketDrillExpression : public cObject
 {
   public:
     PacketDrillExpression(enum expression_t type_);
@@ -592,7 +593,7 @@ class INET_API PacketDrillExpression : public cObject
     bool lookupIntSymbol(const char *input_symbol, int64_t *output_integer, struct int_symbol *symbols);
 };
 
-class INET_API PacketDrillScript
+class INETGPL_API PacketDrillScript
 {
   public:
     PacketDrillScript(const char *file);
@@ -618,7 +619,7 @@ class INET_API PacketDrillScript
     void addOption(PacketDrillOption *opt) { optionList->insert((cObject *)opt); } // FIXME Why needed the cast to cObject?
 };
 
-class INET_API PacketDrillStruct : public cObject
+class INETGPL_API PacketDrillStruct : public cObject
 {
   public:
     PacketDrillStruct();
@@ -642,7 +643,7 @@ class INET_API PacketDrillStruct : public cObject
     cQueue *streamNumbers = nullptr;
 };
 
-class INET_API PacketDrillOption : public cObject
+class INETGPL_API PacketDrillOption : public cObject
 {
   public:
     PacketDrillOption(char *name, char *value);
@@ -659,7 +660,7 @@ class INET_API PacketDrillOption : public cObject
 
 typedef std::vector<uint8_t> ByteVector;
 
-class INET_API PacketDrillBytes : public cObject
+class INETGPL_API PacketDrillBytes : public cObject
 {
   public:
     PacketDrillBytes();
@@ -674,7 +675,7 @@ class INET_API PacketDrillBytes : public cObject
     uint32_t listLength;
 };
 
-class INET_API PacketDrillTcpOption : public cObject
+class INETGPL_API PacketDrillTcpOption : public cObject
 {
   public:
     PacketDrillTcpOption(uint16_t kind_, uint16_t length_);
@@ -709,7 +710,7 @@ class INET_API PacketDrillTcpOption : public cObject
     void increaseBlockCount() { blockCount++; };
 };
 
-class INET_API PacketDrillSctpChunk : public cObject
+class INETGPL_API PacketDrillSctpChunk : public cObject
 {
   public:
     PacketDrillSctpChunk(uint8_t type_, sctp::SctpChunk *sctpChunk);
@@ -723,7 +724,7 @@ class INET_API PacketDrillSctpChunk : public cObject
     sctp::SctpChunk *getChunk() { return chunk; };
 };
 
-class INET_API PacketDrillSctpParameter : public cObject
+class INETGPL_API PacketDrillSctpParameter : public cObject
 {
   public:
     PacketDrillSctpParameter(uint16_t type_, int16_t len_, void *content_);

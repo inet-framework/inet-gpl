@@ -28,7 +28,7 @@ namespace httptools {
  *
  * @author  Kristjan V. Jonsson
  */
-class INET_API HttpServerDirectEvilB : public HttpServerDirect
+class INETGPL_API HttpServerDirectEvilB : public HttpServerDirect
 {
   private:
     int badLow = 0;

@@ -26,7 +26,7 @@ namespace httptools {
  *
  * @author  Kristjan V. Jonsson
  */
-class INET_API HttpServer : public HttpServerBase, public TcpSocket::ReceiveQueueBasedCallback
+class INETGPL_API HttpServer : public HttpServerBase, public TcpSocket::ReceiveQueueBasedCallback
 {
   protected:
     struct SockData {

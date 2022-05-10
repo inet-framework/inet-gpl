@@ -1,0 +1,4 @@
+package inetgpl;
+
+@namespace(inetgpl);
+

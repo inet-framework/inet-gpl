@@ -19,7 +19,7 @@
 namespace inetgpl {
 class PacketDrillApp;
 
-class INET_API PacketDrill
+class INETGPL_API PacketDrill
 {
   protected:
     static PacketDrillApp *pdapp;

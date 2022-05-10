@@ -15,8 +15,8 @@ cleanall: checkmakefiles
 	@rm -f src/Makefile $(FEATURES_H)
 
 
-INET_PROJ=../../inet
-MAKEMAKE_OPTIONS := -f --deep -o INETGPL -O out -KINET_PROJ=../../inet -I. -I$(INET_PROJ)/src/ -L$$\(INET_PROJ\)/src  -lINET$$\(D\)
+INET_PROJ=../../inet4.4
+MAKEMAKE_OPTIONS := -f --deep -o INETGPL -O out -KINET_PROJ=$(INET_PROJ) -I. -I$$\(INET_PROJ\)/src -L$$\(INET_PROJ\)/src -lINET$$\(D\)
 
 makefiles: makefiles-so
 

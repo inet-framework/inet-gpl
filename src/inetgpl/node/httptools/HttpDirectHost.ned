@@ -6,7 +6,7 @@
 
 package inetgpl.node.httptools;
 
-import inet.applications.httptools.common.IHttpDirectApp;
+import inetgpl.applications.httptools.common.IHttpDirectApp;
 
 
 //

@@ -19,8 +19,8 @@
 
 package inetgpl.examples.httptools.direct.pairdirect;
 
-import inet.applications.httptools.configurator.HttpController;
-import inet.node.httptools.HttpDirectHost;
+import inetgpl.applications.httptools.configurator.HttpController;
+import inetgpl.node.httptools.HttpDirectHost;
 
 
 //

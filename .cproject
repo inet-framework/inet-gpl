@@ -55,8 +55,24 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<folderInfo id="org.omnetpp.cdt.gnu.config.debug.229043752.1337641928" name="/" resourcePath="src">
+						<toolChain id="org.omnetpp.cdt.gnu.toolchain.debug.88014137" name="GCC for OMNeT++" superClass="org.omnetpp.cdt.gnu.toolchain.debug" unusedChildren="">
+							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1040124050" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base.1843986175"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.433225480" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base.1544720771">
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.536775154" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.c.compiler.base.1308187483" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base.892294620">
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1224219039" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.c.linker.base.1759563255" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.base.1169210834"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.base.1712496057" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.base.1065738287"/>
+							<tool id="cdt.managedbuild.tool.gnu.assembler.base.681671389" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.base.420284418">
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.816629673" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							</tool>
+						</toolChain>
+					</folderInfo>
 					<sourceEntries>
-						<entry excluding="inet/visualizer/osg|inet/applications/voipstream|inet/transportlayer/tcp_nsc|inet/transportlayer/tcp_lwip|inet/emulation|inet/clock/oscillator|inet/clock/model|inet/clock/common|inet/clock/base|inet/linklayer/ext|inet/routing/extras|transport/tcp_nsc|transport/tcp_lwip" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
+						<entry excluding="inetgpl/transportlayer/tcp_nsc|inet/visualizer/osg|inet/applications/voipstream|inet/transportlayer/tcp_nsc|inet/transportlayer/tcp_lwip|inet/emulation|inet/clock/oscillator|inet/clock/model|inet/clock/common|inet/clock/base|inet/linklayer/ext|inet/routing/extras|transport/tcp_nsc|transport/tcp_lwip" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -81,7 +97,7 @@
 					<folderInfo id="org.omnetpp.cdt.gnu.config.release.1746235823." name="/" resourcePath="">
 						<toolChain id="org.omnetpp.cdt.gnu.toolchain.release.1498166216" name="GCC for OMNeT++" superClass="org.omnetpp.cdt.gnu.toolchain.release">
 							<targetPlatform binaryParser="org.eclipse.cdt.core.ELF;org.eclipse.cdt.core.MachO64;org.eclipse.cdt.core.PE" id="org.omnetpp.cdt.targetPlatform.1049800537" isAbstract="false" name="Windows, Linux, Mac" osList="win32,linux,macosx" superClass="org.omnetpp.cdt.targetPlatform"/>
-							<builder id="org.omnetpp.cdt.gnu.builder.release.1176677325" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="OMNeT++ Make Builder (opp_makemake)" parallelBuildOn="true" parallelizationNumber="optimal" superClass="org.omnetpp.cdt.gnu.builder.release"/>
+							<builder command="make" id="org.omnetpp.cdt.gnu.builder.release.1176677325" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="OMNeT++ Make Builder (opp_makemake)" parallelBuildOn="false" superClass="org.omnetpp.cdt.gnu.builder.release"/>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1643927787" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.1039888888" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
 								<option id="gnu.cpp.compiler.option.preprocessor.def.655304152" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false"/>
@@ -112,8 +128,24 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<folderInfo id="org.omnetpp.cdt.gnu.config.release.1746235823.2105834646" name="/" resourcePath="src">
+						<toolChain id="org.omnetpp.cdt.gnu.toolchain.release.1427956761" name="GCC for OMNeT++" superClass="org.omnetpp.cdt.gnu.toolchain.release" unusedChildren="">
+							<tool id="cdt.managedbuild.tool.gnu.archiver.base.87189046" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base.1643927787"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.418722192" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base.1039888888">
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1447255742" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.c.compiler.base.2025734073" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base.419916163">
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.649251323" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.c.linker.base.1254938615" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.base.1190158571"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.base.408146800" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.base.893445214"/>
+							<tool id="cdt.managedbuild.tool.gnu.assembler.base.367203527" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.base.960891752">
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.688378861" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							</tool>
+						</toolChain>
+					</folderInfo>
 					<sourceEntries>
-						<entry excluding="inet/visualizer/osg|inet/applications/voipstream|inet/transportlayer/tcp_nsc|inet/transportlayer/tcp_lwip|inet/emulation|inet/clock/oscillator|inet/clock/model|inet/clock/common|inet/clock/base|inet/linklayer/ext|inet/routing/extras|transport/tcp_nsc|transport/tcp_lwip" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
+						<entry excluding="inetgpl/transportlayer/tcp_nsc|inet/visualizer/osg|inet/applications/voipstream|inet/transportlayer/tcp_nsc|inet/transportlayer/tcp_lwip|inet/emulation|inet/clock/oscillator|inet/clock/model|inet/clock/common|inet/clock/base|inet/linklayer/ext|inet/routing/extras|transport/tcp_nsc|transport/tcp_lwip" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -339,6 +371,8 @@
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="debug"/>
+		<configuration configurationName="release"/>
 		<configuration configurationName="gcc-release">
 			<resource resourceType="PROJECT" workspacePath="/inet"/>
 		</configuration>
