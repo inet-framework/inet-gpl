@@ -6,12 +6,9 @@
 //
 //
 
-#include "inetgpl/transportlayer/tcp_nsc/TcpNscConnection.h"
-
 #include <assert.h>
 #include <dlfcn.h>
 #include <netinet/in.h>
-#include <sim_interface.h> // NSC header
 
 #include "inet/common/ProtocolTag_m.h"
 #include "inet/common/checksum/TcpIpChecksum.h"
@@ -19,8 +16,12 @@
 #include "inet/transportlayer/contract/tcp/TcpCommand_m.h"
 #include "inet/transportlayer/tcp_common/TcpHeader.h"
 #include "inet/transportlayer/tcp_common/headers/tcphdr.h"
-#include "inetgpl/transportlayer/tcp_nsc/TcpNsc.h"
+
+#include "inetgpl/transportlayer/tcp_nsc/TcpNscConnection.h"
 #include "inetgpl/transportlayer/tcp_nsc/queues/TcpNscQueues.h"
+#include "inetgpl/transportlayer/tcp_nsc/TcpNsc.h"
+
+#include <sim_interface.h> // NSC header
 
 namespace inetgpl {
 

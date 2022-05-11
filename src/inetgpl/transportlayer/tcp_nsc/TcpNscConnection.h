@@ -9,6 +9,7 @@
 #ifndef __INETGPL_TCPNSCCONNECTION_H
 #define __INETGPL_TCPNSCCONNECTION_H
 
+#include "inetgpl/common/INETGPLDefs.h"
 #include "inet/common/packet/Packet.h"
 #include "inet/networklayer/common/L3Address.h"
 
@@ -17,9 +18,6 @@ struct INetStack;
 struct INetStreamSocket;
 
 namespace inetgpl {
-
-class TcpConnectInfo;
-
 namespace tcp {
 
 class TcpNsc;
@@ -102,7 +100,7 @@ class INETGPL_API TcpNscConnection
 
 } // namespace tcp
 
-} // namespace inet
+} // namespace inetgpl
 
 #endif
 

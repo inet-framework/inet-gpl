@@ -5,16 +5,18 @@
 //
 //
 
+#include "inetgpl/common/INETGPLDefs.h"
 #include "inetgpl/transportlayer/tcp_nsc/queues/TcpNscQueues.h"
+#include "inetgpl/transportlayer/tcp_nsc/TcpNscConnection.h"
 
 #include "inet/common/packet/chunk/BytesChunk.h"
 #include "inet/transportlayer/contract/tcp/TcpCommand_m.h"
 #include "inet/transportlayer/tcp_common/TcpHeader.h"
-#include "inetgpl/transportlayer/tcp_nsc/TcpNscConnection.h"
 
 namespace inetgpl {
 
 namespace tcp {
+using namespace inet::tcp;
 
 Register_Class(TcpNscSendQueue);
 

@@ -22,14 +22,9 @@
 #include "sim_interface.h" // NSC. We need this here to derive from classes
 
 namespace inetgpl {
-
-// forward declarations:
-class TcpCommand;
-
 namespace tcp {
 
 // forward declarations:
-class TcpHeader;
 class TcpNscSendQueue;
 class TcpNscReceiveQueue;
 

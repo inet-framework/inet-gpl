@@ -6,7 +6,10 @@
 //
 //
 
-#include "inet/transportlayer/tcp_nsc/TcpNsc.h"
+#include <assert.h>
+#include <dlfcn.h>
+#include <netinet/in.h>
+#include <sim_errno.h>
 
 #ifdef INET_WITH_IPv4
 #include "inet/networklayer/ipv4/IcmpHeader_m.h"
@@ -15,11 +18,6 @@
 #ifdef INET_WITH_IPv6
 #include "inet/networklayer/icmpv6/Icmpv6Header_m.h"
 #endif // ifdef INET_WITH_IPv6
-
-#include <assert.h>
-#include <dlfcn.h>
-#include <netinet/in.h>
-#include <sim_errno.h>
 
 #include "inet/common/INETUtils.h"
 #include "inet/common/IProtocolRegistrationListener.h"
@@ -35,11 +33,15 @@
 #include "inet/transportlayer/contract/tcp/TcpCommand_m.h"
 #include "inet/transportlayer/tcp_common/TcpHeader.h"
 #include "inet/transportlayer/tcp_common/headers/tcphdr.h"
+
+#include "inetgpl/transportlayer/tcp_nsc/TcpNsc.h"
 #include "inetgpl/transportlayer/tcp_nsc/queues/TcpNscQueues.h"
+
 
 namespace inetgpl {
 
 namespace tcp {
+using namespace inet::tcp;
 
 Define_Module(TcpNsc);
 
