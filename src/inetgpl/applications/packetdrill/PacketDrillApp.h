@@ -7,6 +7,7 @@
 #ifndef __INETGPL_PACKETDRILLAPP_H
 #define __INETGPL_PACKETDRILLAPP_H
 
+
 #include "inet/applications/base/ApplicationBase.h"
 #include "inet/common/socket/SocketMap.h"
 #include "inet/linklayer/tun/TunSocket.h"
@@ -19,6 +20,8 @@
 #include "inet/transportlayer/udp/UdpHeader_m.h"
 #include "inetgpl/applications/packetdrill/PacketDrill.h"
 #include "inetgpl/applications/packetdrill/PacketDrillUtils.h"
+
+extern template class inet::OperationalMixin<omnetpp::cSimpleModule>;
 
 namespace inetgpl {
 

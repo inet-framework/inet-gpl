@@ -14,10 +14,11 @@ FEATURETOOL := opp_featuretool
 
 ifeq ($(PLATFORM),win32)
   #
-  # on windows we have to link with the ws2_32 (winsock2) library as it is no longer added
+  # on windows we have to turn off ignord-attributes warning because inline functions
+  # in exported classes are redeclared as 'import' when used.
   #
-  LDFLAGS += -lws2_32
-  DEFINES += -DINETGPL_EXPORT
+  CFLAGS += -Wno-ignored-attributes
+  DEFINES += -DINETGPL_EXPORT -DINET_IMPORT
 endif
 
 #
