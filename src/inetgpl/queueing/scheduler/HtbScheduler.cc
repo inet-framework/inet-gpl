@@ -418,10 +418,16 @@ int HtbScheduler::getNumPackets() const
             }
             if (parentOk == true) {
                 if (currClassMode == can_send && leafClasses.at(leafId)->nextEventTime <= simTime()) {
-                    dequeueSize += collectionNumPackets;
+                    // Verify if the class is actually active on any priority. Can't dequeue if it's not active
+                    if (std::any_of(std::begin(leafClasses.at(leafId)->activePriority), std::end(leafClasses.at(leafId)->activePriority), [](bool b) {return b;})) {
+                        dequeueSize += collectionNumPackets;
+                    }
                 }
                 else if (currClassMode == may_borrow && (currClassMode == leafClasses.at(leafId)->mode || leafClasses.at(leafId)->nextEventTime <= simTime())) {
-                    dequeueSize += collectionNumPackets;
+                    // Verify if the class is actually active on any priority. Can't dequeue if it's not active
+                    if (std::any_of(std::begin(leafClasses.at(leafId)->activePriority), std::end(leafClasses.at(leafId)->activePriority), [](bool b) {return b;})) {
+                        dequeueSize += collectionNumPackets;
+                    }
                 }
             }
         }
