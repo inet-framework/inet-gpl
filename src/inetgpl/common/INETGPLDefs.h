@@ -16,6 +16,10 @@
 
 #include "inet/common/INETDefs.h"
 
+#if INET_VERSION < 0x0404
+#  error At least INET version 4.4 required
+#endif
+
 // important INET_WITH_* macros defined by OMNET
 #include "inetgpl/opp_defines.h"
 
