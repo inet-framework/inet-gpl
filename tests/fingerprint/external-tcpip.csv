@@ -15,6 +15,6 @@
 # /examples/inet/tcpclientserver/,     -f omnetpp.ini -c NSClwip__inet -r 0,              100s,            0000-0000/tplx, ERROR,    # lwip NSC stack works on 32 bit system only
 /examples/inet/tcpclientserver/,     -f omnetpp.ini -c inet__NSClinux -r 0,             100s,            f19e-b9ba/tplx, PASS,
 
-/examples/ipv6/ipv6bulk/,            -f omnetpp.ini -c inet_nsc -r 0,                    50s,            832d-fb32/tplx, PASS, EthernetMac
-/examples/ipv6/ipv6bulk/,            -f omnetpp.ini -c nsc_inet -r 0,                    50s,            1b42-a6aa/tplx, PASS, EthernetMac
-/examples/ipv6/ipv6bulk/,            -f omnetpp.ini -c nsc_nsc -r 0,                     50s,            2b7f-ad1b/tplx, PASS, EthernetMac
+/examples/ipv6/ipv6bulk/,            -f omnetpp.ini -c inet_nsc -r 0,                    50s,            e32f-ffee/tplx, PASS, EthernetMac
+/examples/ipv6/ipv6bulk/,            -f omnetpp.ini -c nsc_inet -r 0,                    50s,            3ed0-2005/tplx, PASS, EthernetMac
+/examples/ipv6/ipv6bulk/,            -f omnetpp.ini -c nsc_nsc -r 0,                     50s,            d372-9217/tplx, PASS, EthernetMac

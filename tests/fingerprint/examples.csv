@@ -23,10 +23,10 @@
 /examples/httptools/direct/pairdirect/, -f omnetpp.ini -c scripted -r 0,               500000s,      128c-6b2d/tplx;2949-7cdf/~tNl;d600-4c74/tyf, PASS,
 /examples/httptools/direct/pairdirect/, -f omnetpp.ini -c scripted-bad -r 0,           500000s,      8cb2-2401/tplx;14ae-2d9b/~tNl;9c54-5981/tyf, PASS,
 /examples/httptools/direct/pairdirect/, -f omnetpp.ini -c scripted-cross -r 0,         500000s,      3c73-a7f4/tplx;4ab0-893b/~tNl;282b-e21f/tyf, PASS,
-/examples/httptools/socket/pairsocket/, -f omnetpp.ini -c random -r 0,                 500000s,      1fa2-b252/tplx;1c29-34ac/~tNl;9e09-4d72/tyf, PASS, EthernetMac
-/examples/httptools/socket/pairsocket/, -f omnetpp.ini -c scripted -r 0,               500000s,      5a33-1e9a/tplx;155f-cc98/~tNl;8940-9455/tyf, PASS, EthernetMac
-/examples/httptools/socket/pairsocket/, -f omnetpp.ini -c scripted-bad -r 0,           500000s,      e9ea-7bca/tplx;f5c4-4078/~tNl;5b0b-b037/tyf, PASS, EthernetMac
-/examples/httptools/socket/pairsocket/, -f omnetpp.ini -c scripted-cross -r 0,         500000s,      f682-21f5/tplx;43ca-1cc1/~tNl;c830-dfc4/tyf, PASS, EthernetMac
-/examples/httptools/socket/simpleddos/, -f omnetpp.ini -c General -r 0,                500000s,      6abf-3815/tplx;261e-0ed9/~tNl;d66d-8038/tyf, PASS, EthernetMac
-/examples/httptools/socket/tenserverssocket/, -f omnetpp.ini -c uniform -r 0,          50000s,       ae30-1486/tplx;59f2-6541/~tNl;9aa6-3c97/tyf, PASS, EthernetMac
-/examples/httptools/socket/tenserverssocket/, -f omnetpp.ini -c histogram -r 0,        50000s,       9a36-e378/tplx;37b0-2c44/~tNl;cd0a-5832/tyf, PASS, EthernetMac
+/examples/httptools/socket/pairsocket/, -f omnetpp.ini -c random -r 0,                 500000s,      3547-31db/tplx;1c29-34ac/~tNl;ad10-fb10/tyf, PASS, EthernetMac
+/examples/httptools/socket/pairsocket/, -f omnetpp.ini -c scripted -r 0,               500000s,      6041-16ea/tplx;155f-cc98/~tNl;149e-f755/tyf, PASS, EthernetMac
+/examples/httptools/socket/pairsocket/, -f omnetpp.ini -c scripted-bad -r 0,           500000s,      fc01-10d2/tplx;f5c4-4078/~tNl;ce40-b542/tyf, PASS, EthernetMac
+/examples/httptools/socket/pairsocket/, -f omnetpp.ini -c scripted-cross -r 0,         500000s,      b427-4c61/tplx;43ca-1cc1/~tNl;814a-4ac4/tyf, PASS, EthernetMac
+/examples/httptools/socket/simpleddos/, -f omnetpp.ini -c General -r 0,                500000s,      bc05-bd00/tplx;261e-0ed9/~tNl;9305-091e/tyf, PASS, EthernetMac
+/examples/httptools/socket/tenserverssocket/, -f omnetpp.ini -c uniform -r 0,          50000s,       3679-6fd0/tplx;59f2-6541/~tNl;68c9-acd6/tyf, PASS, EthernetMac
+/examples/httptools/socket/tenserverssocket/, -f omnetpp.ini -c histogram -r 0,        50000s,       50b0-9ea4/tplx;37b0-2c44/~tNl;1c6f-191a/tyf, PASS, EthernetMac
