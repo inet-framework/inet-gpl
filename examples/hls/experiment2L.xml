@@ -1,0 +1,38 @@
+<config>
+	<class id="root">
+		<parentId>NULL</parentId>
+	</class>
+	<class id="A">
+		<parentId>root</parentId>
+		<weight type="int">300</weight>
+	</class>
+	<class id="B">
+		<parentId>root</parentId>
+		<weight type="int">300</weight>
+	</class>
+	<class id="C">
+		<parentId>root</parentId>
+		<weight type="int">400</weight>
+		<queueId type="int">4</queueId>
+	</class>
+	<class id="A1">
+		<parentId>A</parentId>
+		<weight type="int">140</weight>
+		<queueId type="int">0</queueId>
+	</class>
+	<class id="A2">
+		<parentId>A</parentId>
+		<weight type="int">160</weight>
+		<queueId type="int">1</queueId>
+	</class>
+	<class id="B1">
+		<parentId>B</parentId>
+		<weight type="int">140</weight>
+		<queueId type="int">2</queueId>
+	</class>
+	<class id="B2">
+		<parentId>B</parentId>
+		<weight type="int">160</weight>
+		<queueId type="int">3</queueId>
+	</class>
+</config>
