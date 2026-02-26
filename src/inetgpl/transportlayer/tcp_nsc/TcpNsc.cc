@@ -206,7 +206,7 @@ void TcpNsc::initialize(int stage)
             throw cRuntimeError("Don't use obsolete receiveQueueClass = \"%s\" parameter", q);
 
         const char *crcModeString = par("crcMode");
-        crcMode = parseCrcMode(crcModeString, false);
+        crcMode = parseChecksumMode(crcModeString, false);
 
         WATCH_MAP(tcpAppConnMapM);
 
@@ -226,9 +226,9 @@ void TcpNsc::initialize(int stage)
         registerService(Protocol::tcp, gate("appIn"), gate("appOut"));
         registerProtocol(Protocol::tcp, gate("ipOut"), gate("ipIn"));
 
-        if (crcMode == CRC_COMPUTED) {
-            cModuleType *moduleType = cModuleType::get("inet.transportlayer.tcp_common.TcpCrcInsertionHook");
-            auto *crcInsertion = check_and_cast<TcpCrcInsertionHook *>(moduleType->create("crcInsertion", this));
+        if (crcMode == CHECKSUM_COMPUTED) {
+            cModuleType *moduleType = cModuleType::get("inet.transportlayer.tcp_common.TcpChecksumInsertionHook");
+            auto *crcInsertion = check_and_cast<TcpChecksumInsertionHook *>(moduleType->create("crcInsertion", this));
             crcInsertion->finalizeParameters();
             crcInsertion->callInitialize();
 
@@ -356,17 +356,17 @@ void TcpNsc::handleIpInputMessage(Packet *packet)
 
     auto tcpHdr = packet->peekAtFront<TcpHeader>();
 
-    switch (tcpHdr->getCrcMode()) {
-        case CRC_DECLARED_INCORRECT:
+    switch (tcpHdr->getChecksumMode()) {
+        case CHECKSUM_DECLARED_INCORRECT:
             EV_WARN << "CRC error, packet dropped\n";
             delete packet;
             return;
-        case CRC_DECLARED_CORRECT: {
+        case CHECKSUM_DECLARED_CORRECT: {
             // modify to calculated, for serializing
             packet->trimFront();
             const auto& newTcpHdr = packet->removeAtFront<TcpHeader>();
-            newTcpHdr->setCrcMode(CRC_COMPUTED);
-            newTcpHdr->setCrc(0);
+            newTcpHdr->setChecksumMode(CHECKSUM_COMPUTED);
+            newTcpHdr->setChecksum(0);
             packet->insertAtFront(newTcpHdr);
             tcpHdr = newTcpHdr;
             break;
@@ -877,9 +877,9 @@ void TcpNsc::sendToIP(const void *dataP, int lenP)
     }
 
     auto tcpHdr = fp->removeAtFront<TcpHeader>();
-    tcpHdr->setCrc(0);
-    ASSERT(crcMode == CRC_COMPUTED || crcMode == CRC_DECLARED_CORRECT);
-    tcpHdr->setCrcMode(crcMode);
+    tcpHdr->setChecksum(0);
+    ASSERT(crcMode == CHECKSUM_COMPUTED || crcMode == CHECKSUM_DECLARED_CORRECT);
+    tcpHdr->setChecksumMode(crcMode);
     insertTransportProtocolHeader(fp, Protocol::tcp, tcpHdr);
 
     b payloadLength = fp->getDataLength() - tcpHdr->getChunkLength();

@@ -15,9 +15,9 @@
 #include "inet/common/lifecycle/LifecycleUnsupported.h"
 #include "inet/common/packet/Message.h"
 #include "inet/networklayer/common/L3Address.h"
-#include "inet/transportlayer/common/CrcMode_m.h"
+#include "inet/common/checksum/ChecksumMode_m.h"
 #include "inet/transportlayer/contract/tcp/TcpCommand_m.h"
-#include "inet/transportlayer/tcp_common/TcpCrcInsertionHook.h"
+#include "inet/transportlayer/tcp_common/TcpChecksumInsertionHook.h"
 #include "inetgpl/transportlayer/tcp_nsc/TcpNscConnection.h"
 #include "sim_interface.h" // NSC. We need this here to derive from classes
 
@@ -154,7 +154,7 @@ class INETGPL_API TcpNsc : public cSimpleModule, ISendCallback, IInterruptCallba
     int curAddrCounterM; // incr, when set curLocalAddr, decr when "felhasznaltam"
     TcpNscConnection *curConnM; // store current connection in connect/listen command
 
-    CrcMode crcMode = CRC_MODE_UNDEFINED;
+    ChecksumMode crcMode = CHECKSUM_MODE_UNDEFINED;
 
     static const L3Address localInnerIpS; // local NSC IP addr
     static const L3Address localInnerGwS; // local NSC gateway IP addr
