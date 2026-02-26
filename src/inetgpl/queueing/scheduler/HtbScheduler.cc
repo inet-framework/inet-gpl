@@ -257,7 +257,7 @@ void HtbScheduler::initialize(int stage)
         dequeueIndexSignal = registerSignal("dequeueIndex");
         // Get all leaf queues. IMPORTANT: Leaf queue id MUST correspond to leaf class id!!!!!
         for (auto provider : providers) {
-            collections.push_back(dynamic_cast<IPacketCollection *>(provider)); // Get pointers to queues
+            collections.push_back(dynamic_cast<IPacketCollection *>((IPassivePacketSource *)provider)); // Get pointers to queues
         }
 
         // Load configs
@@ -312,7 +312,7 @@ void HtbScheduler::handleMessage(cMessage *message)
 {
     Enter_Method("handleMessage");
     if (message == classModeChangeEvent) {
-        CHK(collector)->handleCanPullPacketChanged(CHK(outputGate)->getPathEndGate());
+        collector.handleCanPullPacketChanged();
     }
     else
         throw cRuntimeError("Unknown self message");
@@ -444,7 +444,7 @@ int HtbScheduler::getNumPackets() const
     return dequeueSize;
 }
 
-bool HtbScheduler::canPullSomePacket(cGate *gate) const
+bool HtbScheduler::canPullSomePacket(const cGate *gate) const
 {
     // TODO write a more optimal code
     return getNumPackets() > 0;

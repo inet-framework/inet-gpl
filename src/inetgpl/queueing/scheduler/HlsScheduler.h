@@ -108,7 +108,7 @@ class INET_API HlsScheduler : public PacketSchedulerBase, public IPacketCollecti
 
     virtual int getMaxNumPackets() const override { return -1; }
     virtual int getNumPackets() const override;
-    virtual bool canPullSomePacket(cGate *gate) const override;
+    virtual bool canPullSomePacket(const cGate *gate) const override;
 
     virtual b getMaxTotalLength() const override { return b(-1); }
     virtual b getTotalLength() const override;
@@ -117,7 +117,7 @@ class INET_API HlsScheduler : public PacketSchedulerBase, public IPacketCollecti
     virtual Packet *getPacket(int index) const override;
     virtual void removePacket(Packet *packet) override;
     virtual void removeAllPackets() override;
-    virtual void handleCanPullPacketChanged(cGate *gate) override;
+    virtual void handleCanPullPacketChanged(const cGate *gate) override;
 
 
 

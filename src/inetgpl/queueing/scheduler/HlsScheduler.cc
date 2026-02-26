@@ -36,7 +36,7 @@ void HlsScheduler::initialize(int stage)
 
         // Get all leaf queues.
         for (auto provider : providers) {
-            collections.push_back(dynamic_cast<IPacketCollection *>(provider)); // Get pointers to queues
+            collections.push_back(dynamic_cast<IPacketCollection *>((IPassivePacketSource *)provider)); // Get pointers to queues
         }
 
         // push -1 at the linked list, -1 presents the end of the round robin, i.e. after the round robin reaches -1 a new round should start
@@ -375,7 +375,7 @@ void HlsScheduler::hlsSetIdle(hlsClass *cl)
 
 }
 
-void HlsScheduler::handleCanPullPacketChanged(cGate *gate)
+void HlsScheduler::handleCanPullPacketChanged(const cGate *gate)
 {
     Enter_Method("handleCanPullPacketChanged");
     if(canPullSomePacket(gate)) {
@@ -393,7 +393,7 @@ int HlsScheduler::getNumPackets() const
     return numPackets;
 }
 
-bool HlsScheduler::canPullSomePacket(cGate *gate) const
+bool HlsScheduler::canPullSomePacket(const cGate *gate) const
 {
     return numBusyClasses > 0;
 }
