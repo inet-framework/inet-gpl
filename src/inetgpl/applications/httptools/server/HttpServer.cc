@@ -97,7 +97,7 @@ void HttpServer::socketDataArrived(TcpSocket *socket)
     EV_DEBUG << "Socket data arrived on connection " << socket->getSocketId() << "." << endl;
 
     // call the message handler to process the message.
-    auto queue = socket->getReceiveQueue();
+    auto queue = socket->getReadBuffer();
     while (queue->has<HttpRequestMessage>()) {
         auto packet = new Packet("", queue->pop<HttpRequestMessage>());
         auto reply = handleReceivedMessage(packet);

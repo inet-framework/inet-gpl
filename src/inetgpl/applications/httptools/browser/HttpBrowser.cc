@@ -183,7 +183,7 @@ void HttpBrowser::socketDataArrived(TcpSocket *socket)
     }
 
     ASSERT(socket == sockdata->socket);
-    auto queue = socket->getReceiveQueue();
+    auto queue = socket->getReadBuffer();
     while (queue->has<HttpReplyMessage>())
         handleDataMessage(queue->pop<HttpReplyMessage>());
 
