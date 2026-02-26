@@ -467,7 +467,7 @@ void PacketDrillApp::runEvent(PacketDrillEvent *event)
                         case RE_CONFIG: {
                             SctpStreamResetChunk *reconfig = check_and_cast<SctpStreamResetChunk *>(chunk);
                             for (unsigned int i = 0; i < reconfig->getParametersArraySize(); i++) {
-                                auto *parameter = reconfig->getParametersForUpdate(i);
+                                auto *parameter = const_cast<SctpParameter *>(reconfig->getParameters(i));
                                 switch (parameter->getParameterType()) {
                                     case STREAM_RESET_RESPONSE_PARAMETER: {
                                         SctpStreamResetResponseParameter *param = check_and_cast<SctpStreamResetResponseParameter *>(parameter);
