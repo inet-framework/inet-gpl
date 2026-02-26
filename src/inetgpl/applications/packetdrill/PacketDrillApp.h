@@ -56,7 +56,7 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     void setSeqNumMap(uint32_t ownNum, uint32_t liveNum) { seqNumMap[ownNum] = liveNum; }
     uint32_t getSeqNumMap(uint32_t ownNum) { return seqNumMap[ownNum]; }
     bool findSeqNumMap(uint32_t num);
-    CrcMode getCrcMode() { return crcMode; }
+    ChecksumMode getCrcMode() { return crcMode; }
 
   protected:
     virtual int numInitStages() const override { return NUM_INIT_STAGES; }
@@ -117,7 +117,7 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     std::map<uint32_t, uint32_t> seqNumMap;
     simtime_t peerHeartbeatTime;
     cMessage *eventTimer = nullptr;
-    CrcMode crcMode = CRC_MODE_UNDEFINED;
+    ChecksumMode crcMode = CHECKSUM_MODE_UNDEFINED;
     int bytesSent = 0;
 
   private:

@@ -75,13 +75,13 @@ Ptr<Ipv4Header> PacketDrill::makeIpv4Header(IpProtocolId protocol, enum directio
 
 void PacketDrill::setIpv4HeaderCrc(Ptr<Ipv4Header>& ipv4Header)
 {
-    ipv4Header->setCrcMode(pdapp->getCrcMode());
-    ipv4Header->setCrc(0);
-    if (pdapp->getCrcMode() == CRC_COMPUTED) {
+    ipv4Header->setChecksumMode(pdapp->getCrcMode());
+    ipv4Header->setChecksum(0);
+    if (pdapp->getCrcMode() == CHECKSUM_COMPUTED) {
         MemoryOutputStream ipv4HeaderStream;
         Chunk::serialize(ipv4HeaderStream, ipv4Header);
         uint16_t crc = TcpIpChecksum::checksum(ipv4HeaderStream.getData());
-        ipv4Header->setCrc(crc);
+        ipv4Header->setChecksum(crc);
     }
 }
 
@@ -107,7 +107,7 @@ Packet *PacketDrill::buildUDPPacket(int address_family, enum direction_t directi
     }
     else
         throw cRuntimeError("Unknown direction");
-    udpHeader->setCrcMode(CRC_DISABLED);
+    udpHeader->setChecksumMode(CHECKSUM_DISABLED);
     udpHeader->setTotalLengthField(UDP_HEADER_LENGTH + B(udpPayloadBytes));
     packet->insertAtFront(udpHeader);
     auto ipHeader = PacketDrill::makeIpv4Header(IP_PROT_UDP, direction, app->getLocalAddress(), app->getRemoteAddress());
@@ -459,8 +459,8 @@ Packet *PacketDrill::buildSCTPPacket(int address_family, enum direction_t direct
         }
     }
     sctpmsg->setChecksumOk(true);
-    sctpmsg->setCrcMode(pdapp->getCrcMode());
-    sctpmsg->setCrc(0);
+    sctpmsg->setChecksumMode(pdapp->getCrcMode());
+    sctpmsg->setChecksum(0);
 
     for (cQueue::Iterator iter(*chunks); !iter.end(); iter++) {
         PacketDrillSctpChunk *chunk = check_and_cast<PacketDrillSctpChunk *>(*iter);

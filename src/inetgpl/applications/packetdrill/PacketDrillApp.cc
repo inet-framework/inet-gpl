@@ -72,7 +72,7 @@ void PacketDrillApp::initialize(int stage)
         localPort = par("localPort");
         remotePort = par("remotePort");
         const char *crcModeString = par("crcMode");
-        crcMode = parseCrcMode(crcModeString, false);
+        crcMode = parseChecksumMode(crcModeString, false);
         const char *interface = par("interface");
 //        const char *interfaceTableModule = par("interfaceTableModule");
         IInterfaceTable *interfaceTable = getModuleFromPar<IInterfaceTable>(par("interfaceTableModule"), this);
@@ -618,7 +618,7 @@ void PacketDrillApp::closeAllSockets()
     sctpmsg->setVTag(peerVTag);
     pk->setName("SCTPCleanUp");
     sctpmsg->setChecksumOk(true);
-    sctpmsg->setCrcMode(crcMode);
+    sctpmsg->setChecksumMode(crcMode);
     sctpmsg->appendSctpChunks(abortChunk);
     pk->insertAtFront(sctpmsg);
     auto ipv4Header = makeShared<Ipv4Header>();
@@ -633,8 +633,8 @@ void PacketDrillApp::closeAllSockets()
     ipv4Header->setDontFragment(0);
     ipv4Header->setFragmentOffset(0);
     ipv4Header->setTypeOfService(0);
-    ipv4Header->setCrcMode(crcMode);
-    ipv4Header->setCrc(0);
+    ipv4Header->setChecksumMode(crcMode);
+    ipv4Header->setChecksum(0);
     ipv4Header->setTotalLengthField(ipv4Header->getChunkLength() + pk->getDataLength());
     pk->insertAtFront(ipv4Header);
     EV_DETAIL << "Send Abort to cleanup association." << endl;
