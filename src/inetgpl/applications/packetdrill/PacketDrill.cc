@@ -14,7 +14,7 @@
 #include <cinttypes>
 
 #include "inetgpl/applications/packetdrill/PacketDrillUtils.h"
-#include "inet/common/checksum/TcpIpChecksum.h"
+#include "inet/common/checksum/Checksum.h"
 #include "inet/common/packet/chunk/ByteCountChunk.h"
 #include "inet/networklayer/common/L3AddressTag_m.h"
 #include "inet/networklayer/common/L3Tools.h"
@@ -80,7 +80,7 @@ void PacketDrill::setIpv4HeaderCrc(Ptr<Ipv4Header>& ipv4Header)
     if (pdapp->getCrcMode() == CHECKSUM_COMPUTED) {
         MemoryOutputStream ipv4HeaderStream;
         Chunk::serialize(ipv4HeaderStream, ipv4Header);
-        uint16_t crc = TcpIpChecksum::checksum(ipv4HeaderStream.getData());
+        uint16_t crc = internetChecksum(ipv4HeaderStream.getData());
         ipv4Header->setChecksum(crc);
     }
 }
