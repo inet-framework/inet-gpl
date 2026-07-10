@@ -24,7 +24,7 @@
 #include "inet/common/ModuleAccess.h"
 #include "inet/common/Protocol.h"
 #include "inet/common/ProtocolTag_m.h"
-#include "inet/common/checksum/TcpIpChecksum.h"
+#include "inet/common/checksum/Checksum.h"
 #include "inet/common/lifecycle/NodeStatus.h"
 #include "inet/common/socket/SocketTag_m.h"
 #include "inet/networklayer/common/L3AddressTag_m.h"
@@ -438,7 +438,7 @@ void TcpNsc::handleIpInputMessage(Packet *packet)
     size_t totalIpLen = ipHdrLen + totalTcpLen;
     ih->tot_len = htons(totalIpLen);
     ih->check = 0;
-    ih->check = htons(TcpIpChecksum::checksum(ih, ipHdrLen));
+    ih->check = htons(internetChecksum((const uint8_t *)ih, ipHdrLen));
 
     // receive msg from network
 
@@ -886,7 +886,7 @@ void TcpNsc::sendToIP(const void *dataP, int lenP)
     EV_TRACE << this << ": Sending: conn=" << conn << ", data: " << dataP << " of len " << lenP << " from " << src
              << " to " << dest << "\n";
 
-    IL3AddressType *addressType = dest.getAddressType();
+    const IL3AddressType *addressType = dest.getAddressType();
     fp->addTag<DispatchProtocolReq>()->setProtocol(addressType->getNetworkProtocol());
     auto addresses = fp->addTag<L3AddressReq>();
     addresses->setSrcAddress(src);
