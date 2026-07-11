@@ -52,6 +52,32 @@ struct int_symbol
 #define TCPOPT_TIMESTAMP          8
 #define TCPOLEN_TIMESTAMP         10
 #define TCPOPT_EXP                254    /* Experimental */
+#define TCPOPT_MD5SIG             19     /* RFC 2385 */
+#define TCPOLEN_MD5_BASE          2
+#define TCP_MD5_DIGEST_LEN        16
+
+#define TCPOPT_FASTOPEN           34     /* RFC 7413 */
+#define TCPOLEN_FASTOPEN_BASE     2
+#define TCPOLEN_EXP_FASTOPEN_BASE 4      /* 1-byte kind, 1-byte length, 2-byte magic */
+#define TCPOPT_FASTOPEN_MAGIC     0xF989 /* RFC 6994 experimental-option magic, TFO variant */
+/* RFC 7413's cookie is 4-16 bytes; this is a generous, realistic bound rather
+ * than upstream packetdrill's full max-TCP-option-space arithmetic. */
+#define MAX_TCP_FAST_OPEN_COOKIE_BYTES 16
+
+/* AccECN (draft-ietf-tcpm-accurate-ecn) option kinds and field-presence bits. */
+#define TCPOPT_ACCECN0            172
+#define TCPOPT_ACCECN1            174
+#define TCPOLEN_ACCECN_BASE       2
+#define ACCECN_PRESENT_E0B        (1 << 0)
+#define ACCECN_PRESENT_E1B        (1 << 1)
+#define ACCECN_PRESENT_CEB        (1 << 2)
+
+/* RFC 3168 ECN codepoints, as carried in the low 2 bits of the IP ToS byte
+ * (packet-line bracket syntax, e.g. "> [ect0] P. 1:1001(1000) ack 1"). */
+#define IP_ECN_NOT_ECT            0
+#define IP_ECN_ECT1               1
+#define IP_ECN_ECT0               2
+#define IP_ECN_CE                 3
 
 #define SCTP_DATA_CHUNK_TYPE                0x00
 #define SCTP_INIT_CHUNK_TYPE                0x01
@@ -202,6 +228,8 @@ static inline bool is_valid_u8(int64_t x) { return (x >= 0) && (x <= UCHAR_MAX);
 static inline bool is_valid_u16(int64_t x) { return (x >= 0) && (x <= USHRT_MAX); };
 
 static inline bool is_valid_u32(int64_t x) { return (x >= 0) && (x <= UINT_MAX); };
+
+static inline bool is_valid_u24(int64_t x) { return (x >= 0) && (x <= 0xFFFFFF); };
 
 #define ADDR_STR_LEN              66
 #define TUN_DRIVER_DEFAULT_MTU    1500    /* default MTU for tun device */
@@ -691,6 +719,15 @@ class INETGPL_API PacketDrillTcpOption : public cObject
     cQueue *blockList;
     uint8_t windowScale;
     uint16_t blockCount;
+    ByteVector md5Digest;
+    ByteVector fastOpenCookie;
+    bool fastOpenExperimental;
+    struct {
+        uint8_t present; /* ACCECN_PRESENT_* bitmask */
+        uint32_t e0b;
+        uint32_t e1b;
+        uint32_t ceb;
+    } accEcn;
 
   public:
     uint16_t getKind() { return kind; };
@@ -708,6 +745,23 @@ class INETGPL_API PacketDrillTcpOption : public cObject
     void setBlockList(cQueue *bList) { blockList = bList; }
     uint16_t getBlockCount() { return blockCount; };
     void increaseBlockCount() { blockCount++; };
+    const ByteVector& getMd5Digest() { return md5Digest; };
+    void setMd5Digest(const ByteVector& digest) { md5Digest = digest; }
+    const ByteVector& getFastOpenCookie() { return fastOpenCookie; };
+    void setFastOpenCookie(const ByteVector& cookie) { fastOpenCookie = cookie; }
+    bool getFastOpenExperimental() { return fastOpenExperimental; };
+    void setFastOpenExperimental(bool exp) { fastOpenExperimental = exp; }
+    void setAccEcnFields(uint8_t present, uint32_t e0b, uint32_t e1b, uint32_t ceb)
+    {
+        accEcn.present = present;
+        accEcn.e0b = e0b;
+        accEcn.e1b = e1b;
+        accEcn.ceb = ceb;
+    }
+    uint8_t getAccEcnPresent() { return accEcn.present; };
+    uint32_t getAccEcnE0b() { return accEcn.e0b; };
+    uint32_t getAccEcnE1b() { return accEcn.e1b; };
+    uint32_t getAccEcnCeb() { return accEcn.ceb; };
 };
 
 class INETGPL_API PacketDrillSctpChunk : public cObject

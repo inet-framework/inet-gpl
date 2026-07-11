@@ -1780,6 +1780,28 @@ bool PacketDrillApp::compareTcpHeader(const Ptr<const TcpHeader>& storedTcp, con
                                 return false;
                             }
                             break;
+                        case TCPOPT_MD5SIG:
+                        case TCPOPT_FASTOPEN:
+                        case TCPOPT_EXP:
+                        case TCPOPT_ACCECN0:
+                        case TCPOPT_ACCECN1: {
+                            // INET has no typed MD5-signature, Fast Open, or AccECN
+                            // option; all three sides carry these as raw bytes in
+                            // TcpOptionUnknown.
+                            const auto *storedUnknown = check_and_cast<const TcpOptionUnknown *>(storedOption);
+                            const auto *liveUnknown = check_and_cast<const TcpOptionUnknown *>(liveOption);
+                            if (!(storedOption->getLength() == liveOption->getLength() &&
+                                  storedUnknown->getBytesArraySize() == liveUnknown->getBytesArraySize()))
+                            {
+                                return false;
+                            }
+                            for (unsigned int b = 0; b < storedUnknown->getBytesArraySize(); b++) {
+                                if (storedUnknown->getBytes(b) != liveUnknown->getBytes(b)) {
+                                    return false;
+                                }
+                            }
+                            break;
+                        }
                         default:
                             EV_INFO << "TCP Option type=" << storedOption->getKind() << " not supported";
                             break;

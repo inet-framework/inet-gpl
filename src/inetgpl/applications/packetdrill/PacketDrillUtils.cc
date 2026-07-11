@@ -382,6 +382,11 @@ PacketDrillTcpOption::PacketDrillTcpOption(uint16_t kind_, uint16_t length_)
     blockList = nullptr;
     windowScale = 0;
     blockCount = 0;
+    fastOpenExperimental = false;
+    accEcn.present = 0;
+    accEcn.e0b = 0;
+    accEcn.e1b = 0;
+    accEcn.ceb = 0;
 }
 
 PacketDrillSctpChunk::PacketDrillSctpChunk(uint8_t type_, SctpChunk *sctpChunk)

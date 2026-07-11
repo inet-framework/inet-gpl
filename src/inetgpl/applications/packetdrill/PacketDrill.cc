@@ -173,6 +173,71 @@ TcpOption *setOptionValues(PacketDrillTcpOption *opt)
                 return option;
             }
             break;
+        case TCPOPT_MD5SIG: {
+            // INET has no typed MD5-signature option (RFC 2385 is not
+            // implemented) -- carry the digest as raw bytes.
+            auto *option = new TcpOptionUnknown();
+            option->setKind(static_cast<TcpOptionNumbers>(TCPOPT_MD5SIG));
+            option->setLength(length);
+            const ByteVector& digest = opt->getMd5Digest();
+            option->setBytesArraySize(digest.size());
+            for (size_t i = 0; i < digest.size(); i++)
+                option->setBytes(i, digest[i]);
+            return option;
+        }
+        case TCPOPT_FASTOPEN: {
+            // INET has no typed Fast Open option (RFC 7413 is not
+            // implemented) -- carry the cookie as raw bytes.
+            auto *option = new TcpOptionUnknown();
+            option->setKind(static_cast<TcpOptionNumbers>(TCPOPT_FASTOPEN));
+            option->setLength(length);
+            const ByteVector& cookie = opt->getFastOpenCookie();
+            option->setBytesArraySize(cookie.size());
+            for (size_t i = 0; i < cookie.size(); i++)
+                option->setBytes(i, cookie[i]);
+            return option;
+        }
+        case TCPOPT_EXP: {
+            // Experimental option (RFC 6994); the fork only ever builds this
+            // for Fast Open experimental (FOEXP), so the payload is always
+            // the 2-byte 0xF989 magic followed by the cookie.
+            auto *option = new TcpOptionUnknown();
+            option->setKind(static_cast<TcpOptionNumbers>(TCPOPT_EXP));
+            option->setLength(length);
+            const ByteVector& cookie = opt->getFastOpenCookie();
+            option->setBytesArraySize(2 + cookie.size());
+            option->setBytes(0, (TCPOPT_FASTOPEN_MAGIC >> 8) & 0xff);
+            option->setBytes(1, TCPOPT_FASTOPEN_MAGIC & 0xff);
+            for (size_t i = 0; i < cookie.size(); i++)
+                option->setBytes(2 + i, cookie[i]);
+            return option;
+        }
+        case TCPOPT_ACCECN0:
+        case TCPOPT_ACCECN1: {
+            // INET has no AccECN implementation -- carry the present fields
+            // as raw bytes, always serialized in e0b/e1b/ceb order regardless
+            // of the order the script specified them in (this is a
+            // self-consistent encoding for comparison purposes only; INET
+            // never emits this option, so scripts that assert it always end
+            // up a genuine, correctly-attributed DIVERGENCE, not a false MATCH).
+            auto *option = new TcpOptionUnknown();
+            option->setKind(static_cast<TcpOptionNumbers>(opt->getKind()));
+            option->setLength(length);
+            std::vector<uint32_t> fields;
+            if (opt->getAccEcnPresent() & ACCECN_PRESENT_E0B)
+                fields.push_back(opt->getAccEcnE0b());
+            if (opt->getAccEcnPresent() & ACCECN_PRESENT_E1B)
+                fields.push_back(opt->getAccEcnE1b());
+            if (opt->getAccEcnPresent() & ACCECN_PRESENT_CEB)
+                fields.push_back(opt->getAccEcnCeb());
+            option->setBytesArraySize(fields.size() * 3);
+            for (size_t i = 0; i < fields.size(); i++) {
+                option->setBytes(i * 3 + 0, (fields[i] >> 16) & 0xff);
+                option->setBytes(i * 3 + 1, (fields[i] >> 8) & 0xff);
+                option->setBytes(i * 3 + 2, fields[i] & 0xff);
+            }
+            return option;
+        }
         default:
             EV_INFO << "TCP option is not supported (yet).";
             break;
@@ -189,7 +254,8 @@ TcpOption *setOptionValues(PacketDrillTcpOption *opt)
 
 Packet *PacketDrill::buildTCPPacket(int address_family, enum direction_t direction, const char *flags,
                                     uint32_t startSequence, uint16_t tcpPayloadBytes, uint32_t ackSequence,
-                                    int32_t window, cQueue *tcpOptions, char **error)
+                                    int32_t window, uint16_t urgentPointer, cQueue *tcpOptions,
+                                    int ecnCodepoint, char **error)
 {
     Packet *packet = new Packet("TCPInject");
     PacketDrillApp *app = PacketDrill::pdapp;
@@ -221,7 +287,7 @@ Packet *PacketDrill::buildTCPPacket(int address_family, enum direction_t directi
     tcpHeader->setRstBit(strchr(flags, 'R'));
     tcpHeader->setPshBit(strchr(flags, 'P'));
     tcpHeader->setAckBit(strchr(flags, '.'));
-    tcpHeader->setUrgBit(0);
+    tcpHeader->setUrgBit(strchr(flags, 'U'));
     if (tcpHeader->getSynBit() && !tcpHeader->getAckBit())
         packet->setName("Inject SYN");
     else if (tcpHeader->getSynBit() && tcpHeader->getAckBit())
@@ -234,7 +300,7 @@ Packet *PacketDrill::buildTCPPacket(int address_family, enum direction_t directi
         packet->setName("Inject FIN");
 
     tcpHeader->setWindow(window);
-    tcpHeader->setUrgentPointer(0);
+    tcpHeader->setUrgentPointer(urgentPointer);
     // Checksum (header checksum): modelled by cMessage::hasBitError()
 
     if (tcpOptions && tcpOptions->getLength() > 0) { // options present?
@@ -254,6 +320,9 @@ Packet *PacketDrill::buildTCPPacket(int address_family, enum direction_t directi
 
     auto ipHeader = PacketDrill::makeIpv4Header(IP_PROT_TCP, direction, app->getLocalAddress(),
             app->getRemoteAddress());
+    if (ecnCodepoint >= 0) {
+        ipHeader->setEcn(ecnCodepoint);
+    }
     ipHeader->setTotalLengthField(ipHeader->getTotalLengthField() + packet->getDataLength());
     PacketDrill::setIpv4HeaderCrc(ipHeader);
     packet->insertAtFront(ipHeader);

@@ -34,7 +34,8 @@ class INETGPL_API PacketDrill
     static Packet *buildTCPPacket(int address_family, enum direction_t direction,
                                   const char *flags, uint32_t startSequence,
                                   uint16_t tcpPayloadBytes, uint32_t ackSequence,
-                                  int32_t window, cQueue *tcpOptions, char **error);
+                                  int32_t window, uint16_t urgentPointer,
+                                  cQueue *tcpOptions, int ecnCodepoint, char **error);
 
     static Packet *buildSCTPPacket(int address_family, enum direction_t direction,
                                    cQueue *chunks);

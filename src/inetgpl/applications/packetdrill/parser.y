@@ -201,6 +201,27 @@ static PacketDrillExpression *new_integer_expression(int64_t num, const char *fo
     return NULL;
 }*/
 
+/* Hex-decode a contiguous hex-digit string (e.g. an MD5 digest or a TCP Fast
+ * Open cookie, lexed as a plain MYWORD) into a byte vector. Errors out via
+ * semantic_error() on an odd-length or non-hex-digit string. */
+static ByteVector hex_string_to_bytes(const char *hex)
+{
+    size_t len = strlen(hex);
+    if ((len % 2) != 0) {
+        semantic_error("hex string must have an even number of digits");
+    }
+    ByteVector bytes;
+    bytes.reserve(len / 2);
+    for (size_t i = 0; i < len; i += 2) {
+        if (!isxdigit((unsigned char)hex[i]) || !isxdigit((unsigned char)hex[i + 1])) {
+            semantic_error("hex string contains a non-hex-digit character");
+        }
+        char byteStr[3] = { hex[i], hex[i + 1], '\0' };
+        bytes.push_back((uint8_t)strtoul(byteStr, NULL, 16));
+    }
+    return bytes;
+}
+
 %}
 
 %locations
@@ -254,6 +275,8 @@ static PacketDrillExpression *new_integer_expression(int64_t num, const char *fo
 %token ELLIPSIS
 %token <reserved> UDP _HTONS_ _HTONL_ BACK_QUOTED SA_FAMILY SIN_PORT SIN_ADDR
 %token <reserved> ACK WIN WSCALE MSS NOP TIMESTAMP ECR EOL TCPSACK VAL SACKOK
+%token <reserved> URG MD5 FO FOEXP
+%token <reserved> ACCECN ACCECN_E0B ACCECN_E1B ACCECN_CEB
 %token <reserved> OPTION IPV4_TYPE IPV6_TYPE INET_ADDR
 %token <reserved> SPP_ASSOC_ID SPP_ADDRESS SPP_HBINTERVAL SPP_PATHMAXRXT SPP_PATHMTU
 %token <reserved> SPP_FLAGS SPP_IPV6_FLOWLABEL_ SPP_DSCP_
@@ -301,6 +324,11 @@ static PacketDrillExpression *new_integer_expression(int64_t num, const char *fo
 %type <sack_block> sack_block gap dup
 %type <window> opt_window
 %type <sequence_number> opt_ack
+%type <port> opt_urg_ptr
+%type <window> opt_ip_info ip_ecn
+%type <string> opt_fastopen_cookie
+%type <sequence_number> accecn_val
+%type <tcp_option> accecn_option
 %type <string> script
 %type <string> function_name
 %type <sack_block_list> sack_block_list opt_gaps gap_list dup_list opt_dups
@@ -520,21 +548,21 @@ packet_spec
 ;
 
 tcp_packet_spec
-: packet_prefix flags seq opt_ack opt_window opt_tcp_options {
+: packet_prefix opt_ip_info flags seq opt_ack opt_window opt_urg_ptr opt_tcp_options {
     char *error = NULL;
     PacketDrillPacket *outer = $1, *inner = NULL;
     enum direction_t direction = outer->getDirection();
 
-    if (($6 == NULL) && (direction != DIRECTION_OUTBOUND)) {
-        yylineno = @6.first_line;
+    if (($8 == NULL) && (direction != DIRECTION_OUTBOUND)) {
+        yylineno = @8.first_line;
         printf("<...> for TCP options can only be used with outbound packets");
     }
     Packet *pkt = PacketDrill::buildTCPPacket(in_config->getWireProtocol(), direction,
-                                               $2,
-                                               $3.start_sequence, $3.payload_bytes,
-                                               $4, $5, $6, &error);
+                                               $3,
+                                               $4.start_sequence, $4.payload_bytes,
+                                               $5, $6, $7, $8, $2, &error);
 
-    free($2);
+    free($3);
 
     inner = new PacketDrillPacket();
     inner->setInetPacket(pkt);
@@ -1366,6 +1394,36 @@ direction
 }
 ;
 
+/* IP-level info on a packet line, e.g. "> [ect0] P. 1:1001(1000) ack 1".
+ * Scoped to the ECN codepoint only (upstream packetdrill's opt_ip_info also
+ * covers TTL/flow-label/GRE-flags/MPLS-stack-bottom; none of those constructs
+ * appear in this fork's TCP corpus, so they are intentionally not ported). */
+opt_ip_info
+: {
+    $$ = -1; /* no ECN codepoint specified -- do not override the IP header's ECN bits */
+}
+| '[' ip_ecn ']' {
+    $$ = $2;
+}
+;
+
+ip_ecn
+: MYWORD {
+    if (!strcmp($1, "noecn")) {
+        $$ = IP_ECN_NOT_ECT;
+    } else if (!strcmp($1, "ect0")) {
+        $$ = IP_ECN_ECT0;
+    } else if (!strcmp($1, "ect1")) {
+        $$ = IP_ECN_ECT1;
+    } else if (!strcmp($1, "ce")) {
+        $$ = IP_ECN_CE;
+    } else {
+        semantic_error("bad ECN codepoint, expected one of: noecn, ect0, ect1, ce");
+    }
+    free($1);
+}
+;
+
 flags
 : MYWORD {
     $$ = $1;
@@ -1421,6 +1479,18 @@ opt_window
 | WIN INTEGER {
     if (!is_valid_u16($2)) {
         semantic_error("TCP window value out of range");
+    }
+    $$ = $2;
+}
+;
+
+opt_urg_ptr
+: {
+    $$ = 0;
+}
+| URG INTEGER {
+    if (!is_valid_u16($2)) {
+        semantic_error("urg_ptr value out of range");
     }
     $$ = $2;
 }
@@ -1492,6 +1562,90 @@ tcp_option
     ecr = $5;
     $$->setVal(val);
     $$->setEcr(ecr);
+}
+| MD5 MYWORD {
+    ByteVector digest = hex_string_to_bytes($2);
+    free($2);
+    if (digest.size() > TCP_MD5_DIGEST_LEN) {
+        semantic_error("md5 digest too long");
+    }
+    $$ = new PacketDrillTcpOption(TCPOPT_MD5SIG, TCPOLEN_MD5_BASE + digest.size());
+    $$->setMd5Digest(digest);
+}
+| FO opt_fastopen_cookie {
+    ByteVector cookie = hex_string_to_bytes($2);
+    free($2);
+    if (cookie.size() > MAX_TCP_FAST_OPEN_COOKIE_BYTES) {
+        semantic_error("fast open cookie too long");
+    }
+    $$ = new PacketDrillTcpOption(TCPOPT_FASTOPEN, TCPOLEN_FASTOPEN_BASE + cookie.size());
+    $$->setFastOpenCookie(cookie);
+    $$->setFastOpenExperimental(false);
+}
+| FOEXP opt_fastopen_cookie {
+    ByteVector cookie = hex_string_to_bytes($2);
+    free($2);
+    if (cookie.size() > MAX_TCP_FAST_OPEN_COOKIE_BYTES) {
+        semantic_error("fast open experimental cookie too long");
+    }
+    $$ = new PacketDrillTcpOption(TCPOPT_EXP, TCPOLEN_EXP_FASTOPEN_BASE + cookie.size());
+    $$->setFastOpenCookie(cookie);
+    $$->setFastOpenExperimental(true);
+}
+| accecn_option {
+    $$ = $1;
+}
+;
+
+opt_fastopen_cookie
+: {
+    $$ = strdup("");
+}
+| MYWORD {
+    $$ = $1;
+}
+;
+
+/* AccECN (draft-ietf-tcpm-accurate-ecn) option: up to 3 24-bit byte-counter
+ * fields (e0b/e1b/ceb) in script-author-chosen order, e.g.
+ * "ECN e1b 1 ceb 0 e0b 1". Whichever of e0b/e1b appears FIRST selects the
+ * option kind (TCPOPT_ACCECN0 vs TCPOPT_ACCECN1), matching real corpus usage
+ * (kernel/tcp_accecn_*.pkt). INET has no AccECN implementation, so this
+ * exists purely so these scripts parse and their real divergence from Linux
+ * becomes visible instead of being masked by a dialect gap. */
+accecn_val
+: INTEGER {
+    if (!is_valid_u24($1)) {
+        semantic_error("AccECN field value out of range (must fit in 24 bits)");
+    }
+    $$ = $1;
+}
+;
+
+accecn_option
+: ACCECN ACCECN_E0B accecn_val {
+    $$ = new PacketDrillTcpOption(TCPOPT_ACCECN0, TCPOLEN_ACCECN_BASE + 3);
+    $$->setAccEcnFields(ACCECN_PRESENT_E0B, $3, 0, 0);
+}
+| ACCECN ACCECN_E0B accecn_val ACCECN_CEB accecn_val {
+    $$ = new PacketDrillTcpOption(TCPOPT_ACCECN0, TCPOLEN_ACCECN_BASE + 6);
+    $$->setAccEcnFields(ACCECN_PRESENT_E0B | ACCECN_PRESENT_CEB, $3, 0, $5);
+}
+| ACCECN ACCECN_E0B accecn_val ACCECN_CEB accecn_val ACCECN_E1B accecn_val {
+    $$ = new PacketDrillTcpOption(TCPOPT_ACCECN0, TCPOLEN_ACCECN_BASE + 9);
+    $$->setAccEcnFields(ACCECN_PRESENT_E0B | ACCECN_PRESENT_CEB | ACCECN_PRESENT_E1B, $3, $7, $5);
+}
+| ACCECN ACCECN_E1B accecn_val {
+    $$ = new PacketDrillTcpOption(TCPOPT_ACCECN1, TCPOLEN_ACCECN_BASE + 3);
+    $$->setAccEcnFields(ACCECN_PRESENT_E1B, 0, $3, 0);
+}
+| ACCECN ACCECN_E1B accecn_val ACCECN_CEB accecn_val {
+    $$ = new PacketDrillTcpOption(TCPOPT_ACCECN1, TCPOLEN_ACCECN_BASE + 6);
+    $$->setAccEcnFields(ACCECN_PRESENT_E1B | ACCECN_PRESENT_CEB, 0, $3, $5);
+}
+| ACCECN ACCECN_E1B accecn_val ACCECN_CEB accecn_val ACCECN_E0B accecn_val {
+    $$ = new PacketDrillTcpOption(TCPOPT_ACCECN1, TCPOLEN_ACCECN_BASE + 9);
+    $$->setAccEcnFields(ACCECN_PRESENT_E1B | ACCECN_PRESENT_CEB | ACCECN_PRESENT_E0B, $7, $3, $5);
 }
 ;
 
