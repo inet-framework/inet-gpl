@@ -7,6 +7,9 @@
 #include <fcntl.h>
 #if !defined(_WIN32) && !defined(__WIN32__) && !defined(WIN32) && !defined(__CYGWIN__) && !defined(_WIN64)
  #include <netinet/in.h>
+ #include <netinet/tcp.h>
+ #include <sys/epoll.h>
+ #include <linux/errqueue.h>
 #else
 #include "sys/stat.h"
 #include "sys/types.h"
@@ -66,6 +69,29 @@ struct int_symbol platform_symbols_table[] = {
     { F_GETFL,                          "F_GETFL"                         },
     { F_SETFL,                          "F_SETFL"                         },
     { O_RDWR,                           "PD_O_RDWR"                       },
+
+    { SOL_SOCKET,                       "SOL_SOCKET"                      },
+    { SOL_TCP,                          "SOL_TCP"                         },
+    { TCP_CM_INQ,                       "TCP_CM_INQ"                      },
+
+    /* /usr/include/sys/epoll.h */
+    { EPOLL_CTL_ADD,                    "EPOLL_CTL_ADD"                   },
+    { EPOLL_CTL_MOD,                    "EPOLL_CTL_MOD"                   },
+    { EPOLL_CTL_DEL,                    "EPOLL_CTL_DEL"                   },
+    { EPOLLIN,                          "EPOLLIN"                         },
+    { EPOLLOUT,                         "EPOLLOUT"                        },
+    { EPOLLERR,                         "EPOLLERR"                        },
+    { EPOLLHUP,                         "EPOLLHUP"                        },
+    { EPOLLRDHUP,                       "EPOLLRDHUP"                      },
+    { EPOLLPRI,                         "EPOLLPRI"                        },
+    { EPOLLET,                          "EPOLLET"                         },
+    { EPOLLONESHOT,                     "EPOLLONESHOT"                    },
+
+    /* /usr/include/linux/errqueue.h, /usr/include/netinet/in.h (MSG_ERRQUEUE cmsg for IP_RECVERR) */
+    { SOL_IP,                           "CMSG_LEVEL_IP"                   },
+    { IP_RECVERR,                       "CMSG_TYPE_RECVERR"               },
+    { SO_EE_ORIGIN_ZEROCOPY,            "SO_EE_ORIGIN_ZEROCOPY"           },
+    { SO_EE_CODE_ZEROCOPY_COPIED,       "SO_EE_CODE_ZEROCOPY_COPIED"      },
     /* Sentinel marking the end of the table. */
     { 0, nullptr },
 };
@@ -115,7 +141,11 @@ PacketDrillExpression::PacketDrillExpression(enum expression_t type_)
 
 PacketDrillExpression::~PacketDrillExpression()
 {
-    if (type == EXPR_LIST) {
+    // An empty array ('[]', or the implicit empty opt_cmsg alternative)
+    // parses with a null list rather than an empty cQueue -- nothing to
+    // free, and the cQueue::Iterator below would dereference the null
+    // pointer (see the matching guard in evaluateListExpression()).
+    if (type == EXPR_LIST && list) {
         for (cQueue::Iterator iter(*list); !iter.end(); iter++)
             list->remove((*iter));
         delete list;

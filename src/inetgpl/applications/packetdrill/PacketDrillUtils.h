@@ -275,6 +275,11 @@ enum expression_t {
     EXPR_SCTP_STATUS,
     EXPR_SCTP_ASSOCPARAMS, /* struct sctp_assocparams for SCTP_ASSOCINFO */
     EXPR_SCTP_ADD_STREAMS,
+    EXPR_MSGHDR,   /* struct msghdr_expr for sendmsg/recvmsg */
+    EXPR_CMSG,     /* struct cmsg_expr for msg_control entries */
+    EXPR_IOVEC,    /* struct iovec_expr for msg_iov entries */
+    EXPR_EPOLLEV,  /* struct epollev_expr for epoll_ctl/epoll_wait */
+    EXPR_SOCK_EXTENDED_ERR, /* struct sock_extended_err_expr for cmsg_data of IP_RECVERR */
 
     NUM_EXPR_TYPES,
 };
@@ -464,6 +469,50 @@ struct sctp_add_streams_expr
     PacketDrillExpression *sas_outstrms;
 };
 
+/* Parse tree for a msghdr struct in a sendmsg/recvmsg syscall. */
+struct msghdr_expr
+{
+    PacketDrillExpression *msg_iov;      /* EXPR_LIST of EXPR_IOVEC */
+    PacketDrillExpression *msg_iovlen;   /* integer count */
+    PacketDrillExpression *msg_flags;    /* integer/word expression */
+    PacketDrillExpression *msg_control;  /* EXPR_LIST of EXPR_CMSG, possibly empty */
+};
+
+/* Parse tree for a cmsghdr struct entry in a msghdr's msg_control list. */
+struct cmsg_expr
+{
+    PacketDrillExpression *cmsg_level;
+    PacketDrillExpression *cmsg_type;
+    PacketDrillExpression *cmsg_data;
+};
+
+/* Parse tree for an iovec struct entry in a msghdr's msg_iov list. */
+struct iovec_expr
+{
+    PacketDrillExpression *iov_len;   /* iov_base is always ELLIPSIS in this dialect, not stored */
+};
+
+/* Parse tree for an epoll_event struct in an epoll_ctl/epoll_wait syscall. */
+struct epollev_expr
+{
+    PacketDrillExpression *events;
+    PacketDrillExpression *fd;    /* nullptr if this event used ptr/u32/u64 instead */
+    PacketDrillExpression *ptr;   /* nullptr if unused */
+    PacketDrillExpression *u32;   /* nullptr if unused */
+    PacketDrillExpression *u64;   /* nullptr if unused */
+};
+
+/* Parse tree for a struct sock_extended_err (delivered via MSG_ERRQUEUE, e.g. IP_RECVERR). */
+struct sock_extended_err_expr
+{
+    PacketDrillExpression *ee_errno;
+    PacketDrillExpression *ee_origin;
+    PacketDrillExpression *ee_type;
+    PacketDrillExpression *ee_code;
+    PacketDrillExpression *ee_info;
+    PacketDrillExpression *ee_data;
+};
+
 class INETGPL_API PacketDrillConfig
 {
   public:
@@ -574,6 +623,11 @@ class INETGPL_API PacketDrillExpression : public cObject
         struct sctp_add_streams_expr *sctp_addstreams;
         struct sctp_status_expr *sctp_status;
         L3Address *ip_address;
+        struct msghdr_expr *msghdr;
+        struct cmsg_expr *cmsg;
+        struct iovec_expr *iovec;
+        struct epollev_expr *epollev;
+        struct sock_extended_err_expr *sockExtendedErr;
     } value;
     cQueue *list;
     const char *format; /* the printf format for printing the value */
@@ -612,6 +666,16 @@ class INETGPL_API PacketDrillExpression : public cObject
     struct sctp_status_expr *getStatus() { return value.sctp_status; };
     void setAddStreams(struct sctp_add_streams_expr *exp) { value.sctp_addstreams = exp; }
     struct sctp_add_streams_expr *getAddStreams() { return value.sctp_addstreams; };
+    void setMsghdr(struct msghdr_expr *exp) { value.msghdr = exp; }
+    struct msghdr_expr *getMsghdr() { return value.msghdr; };
+    void setCmsg(struct cmsg_expr *exp) { value.cmsg = exp; }
+    struct cmsg_expr *getCmsg() { return value.cmsg; };
+    void setIovec(struct iovec_expr *exp) { value.iovec = exp; }
+    struct iovec_expr *getIovec() { return value.iovec; };
+    void setEpollev(struct epollev_expr *exp) { value.epollev = exp; }
+    struct epollev_expr *getEpollev() { return value.epollev; };
+    void setSockExtendedErr(struct sock_extended_err_expr *exp) { value.sockExtendedErr = exp; }
+    struct sock_extended_err_expr *getSockExtendedErr() { return value.sockExtendedErr; }
 
     int unescapeCstringExpression(const char *input_string, char **error);
     int getS32(int32_t *value, char **error);

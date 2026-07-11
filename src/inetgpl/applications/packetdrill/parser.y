@@ -277,6 +277,9 @@ static ByteVector hex_string_to_bytes(const char *hex)
 %token <reserved> ACK WIN WSCALE MSS NOP TIMESTAMP ECR EOL TCPSACK VAL SACKOK
 %token <reserved> URG MD5 FO FOEXP
 %token <reserved> ACCECN ACCECN_E0B ACCECN_E1B ACCECN_CEB
+%token <reserved> MSG_NAME MSG_IOV MSG_FLAGS MSG_CONTROL CMSG_LEVEL CMSG_TYPE CMSG_DATA
+%token <reserved> EVENTS FD PTR U32 U64
+%token <reserved> EE_ERRNO EE_ORIGIN EE_TYPE EE_CODE EE_INFO EE_DATA
 %token <reserved> OPTION IPV4_TYPE IPV6_TYPE INET_ADDR
 %token <reserved> SPP_ASSOC_ID SPP_ADDRESS SPP_HBINTERVAL SPP_PATHMAXRXT SPP_PATHMTU
 %token <reserved> SPP_FLAGS SPP_IPV6_FLOWLABEL_ SPP_DSCP_
@@ -349,6 +352,7 @@ static ByteVector hex_string_to_bytes(const char *hex)
 %type <expression> sctp_status sstat_state sstat_rwnd sstat_unackdata sstat_penddata
 %type <expression> sstat_instrms sstat_outstrms sstat_fragmentation_point sstat_primary
 %type <expression> sctp_add_streams
+%type <expression> msghdr cmsg_expr iovec epollev opt_cmsg sock_extended_err
 %type <errno_info> opt_errno
 %type <integer> opt_flags opt_len opt_data_flags opt_abort_flags chunk_type
 %type <integer> opt_shutdown_complete_flags opt_tag opt_a_rwnd opt_os opt_is
@@ -1846,6 +1850,21 @@ expression
 | sctp_add_streams  {
     $$ = $1;
 }
+| msghdr            {
+    $$ = $1;
+}
+| epollev           {
+    $$ = $1;
+}
+| cmsg_expr         {
+    $$ = $1;
+}
+| iovec             {
+    $$ = $1;
+}
+| sock_extended_err {
+    $$ = $1;
+}
 ;
 
 
@@ -1881,6 +1900,94 @@ array
 | '[' expression_list ']' {
     $$ = new PacketDrillExpression(EXPR_LIST);
     $$->setList($2);
+}
+;
+
+msghdr
+: '{' MSG_NAME '(' ELLIPSIS ')' '=' ELLIPSIS ','
+      MSG_IOV '(' decimal_integer ')' '=' array ','
+      MSG_FLAGS '=' expression
+      opt_cmsg '}' {
+    $$ = new PacketDrillExpression(EXPR_MSGHDR);
+    struct msghdr_expr *msg_expr = (struct msghdr_expr *) malloc(sizeof(struct msghdr_expr));
+    msg_expr->msg_iov = $14;
+    msg_expr->msg_iovlen = $11;
+    msg_expr->msg_flags = $18;
+    msg_expr->msg_control = $19;
+    $$->setMsghdr(msg_expr);
+}
+;
+
+opt_cmsg
+:                               { $$ = new PacketDrillExpression(EXPR_LIST); $$->setList(NULL); }
+| ',' MSG_CONTROL '=' array     { $$ = $4; }
+;
+
+cmsg_expr
+: '{' CMSG_LEVEL '=' expression ','
+      CMSG_TYPE '=' expression ','
+      CMSG_DATA '=' expression '}' {
+    $$ = new PacketDrillExpression(EXPR_CMSG);
+    struct cmsg_expr *cmsg = (struct cmsg_expr *) malloc(sizeof(struct cmsg_expr));
+    cmsg->cmsg_level = $4;
+    cmsg->cmsg_type = $8;
+    cmsg->cmsg_data = $12;
+    $$->setCmsg(cmsg);
+}
+;
+
+sock_extended_err
+: '{' EE_ERRNO '=' expression ','
+      EE_ORIGIN '=' expression ','
+      EE_TYPE '=' expression ','
+      EE_CODE '=' expression ','
+      EE_INFO '=' expression ','
+      EE_DATA '=' expression '}' {
+    $$ = new PacketDrillExpression(EXPR_SOCK_EXTENDED_ERR);
+    struct sock_extended_err_expr *ee = (struct sock_extended_err_expr *) malloc(sizeof(struct sock_extended_err_expr));
+    ee->ee_errno = $4;
+    ee->ee_origin = $8;
+    ee->ee_type = $12;
+    ee->ee_code = $16;
+    ee->ee_info = $20;
+    ee->ee_data = $24;
+    $$->setSockExtendedErr(ee);
+}
+;
+
+iovec
+: '{' ELLIPSIS ',' decimal_integer '}' {
+    $$ = new PacketDrillExpression(EXPR_IOVEC);
+    struct iovec_expr *iov = (struct iovec_expr *) malloc(sizeof(struct iovec_expr));
+    iov->iov_len = $4;
+    $$->setIovec(iov);
+}
+;
+
+epollev
+: '{' EVENTS '=' expression ',' FD '=' expression '}' {
+    $$ = new PacketDrillExpression(EXPR_EPOLLEV);
+    struct epollev_expr *ev = (struct epollev_expr *) malloc(sizeof(struct epollev_expr));
+    ev->events = $4; ev->fd = $8; ev->ptr = NULL; ev->u32 = NULL; ev->u64 = NULL;
+    $$->setEpollev(ev);
+}
+| '{' EVENTS '=' expression ',' PTR '=' expression '}' {
+    $$ = new PacketDrillExpression(EXPR_EPOLLEV);
+    struct epollev_expr *ev = (struct epollev_expr *) malloc(sizeof(struct epollev_expr));
+    ev->events = $4; ev->fd = NULL; ev->ptr = $8; ev->u32 = NULL; ev->u64 = NULL;
+    $$->setEpollev(ev);
+}
+| '{' EVENTS '=' expression ',' U32 '=' expression '}' {
+    $$ = new PacketDrillExpression(EXPR_EPOLLEV);
+    struct epollev_expr *ev = (struct epollev_expr *) malloc(sizeof(struct epollev_expr));
+    ev->events = $4; ev->fd = NULL; ev->ptr = NULL; ev->u32 = $8; ev->u64 = NULL;
+    $$->setEpollev(ev);
+}
+| '{' EVENTS '=' expression ',' U64 '=' expression '}' {
+    $$ = new PacketDrillExpression(EXPR_EPOLLEV);
+    struct epollev_expr *ev = (struct epollev_expr *) malloc(sizeof(struct epollev_expr));
+    ev->events = $4; ev->fd = NULL; ev->ptr = NULL; ev->u32 = NULL; ev->u64 = $8;
+    $$->setEpollev(ev);
 }
 ;
 

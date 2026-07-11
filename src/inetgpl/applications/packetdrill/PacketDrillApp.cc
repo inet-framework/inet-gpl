@@ -8,10 +8,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/epoll.h>
+#include <netinet/tcp.h>
 
 #include "inetgpl/applications/packetdrill/PacketDrillInfo_m.h"
 #include "inetgpl/applications/packetdrill/PacketDrillUtils.h"
 #include "inet/common/ModuleAccess.h"
+#include "inet/common/packet/chunk/ByteCountChunk.h"
 #include "inet/common/TimeTag_m.h"
 #include "inet/common/lifecycle/ModuleOperations.h"
 #include "inet/common/lifecycle/NodeStatus.h"
@@ -133,18 +136,40 @@ void PacketDrillApp::socketClosed(UdpSocket *socket)
 
 void PacketDrillApp::socketDataArrived(TcpSocket *socket, Packet *msg, bool urgent)
 {
+    // Mirrors the working UDP socketDataArrived() below: the socket runs in
+    // TcpSocket's default autoRead mode, so data is pushed up as it arrives
+    // rather than pulled via an explicit TCP_C_READ command (a command this
+    // handler used to send anyway, as a plain TcpCommand rather than a
+    // TcpReadCommand -- unreachable in practice since it only fired when
+    // data had already arrived, but would have crashed process_READ_REQUEST()
+    // if it ever had). The previous version also discarded the payload
+    // (`delete msg`) without ever queuing it, so read()/recvfrom()/recvmsg()
+    // could never actually verify TCP payload lengths.
+    epollInEdgePending = true;
     if (recvFromSet) {
-        auto *msg = new Request("data request", TCP_C_READ);
-        TcpCommand *cmd = new TcpCommand();
-        msg->addTag<SocketReq>()->setSocketId(tcpConnId);
-        msg->addTag<DispatchProtocolReq>()->setProtocol(&Protocol::tcp);
-        msg->setControlInfo(cmd);
-        send(msg, "socketOut"); // send to TCP
         recvFromSet = false;
-        // send a receive request to TCP
+        msgArrived = false;
+        if (!(msg->getByteLength() == expectedMessageSize)) {
+            delete msg;
+            throw cTerminationException("Packetdrill error: Received data has unexpected size");
+        }
+        delete msg;
+        if (!eventTimer->isScheduled() && eventCounter < numEvents - 1) {
+            eventCounter++;
+            scheduleEvent();
+        }
     }
-    msgArrived = true;
-    delete msg;
+    else {
+        PacketDrillInfo *info = new PacketDrillInfo();
+        info->setLiveTime(getSimulation()->getSimTime());
+        msg->setContextPointer(info);
+        receivedPackets->insert(msg);
+        msgArrived = true;
+        if (!eventTimer->isScheduled() && eventCounter < numEvents - 1) {
+            eventCounter++;
+            scheduleEvent();
+        }
+    }
 }
 
 void PacketDrillApp::socketAvailable(TcpSocket *socket, TcpAvailableInfo *availableInfo)
@@ -717,6 +742,21 @@ void PacketDrillApp::runSystemCallEvent(PacketDrillEvent *event, struct syscall_
     else if (!strcmp(name, "shutdown")) {
         result = syscallShutdown(syscall, args, &error);
     }
+    else if (!strcmp(name, "sendmsg")) {
+        result = syscallSendMsg(syscall, args, &error);
+    }
+    else if (!strcmp(name, "recvmsg")) {
+        result = syscallRecvMsg(event, syscall, args, &error);
+    }
+    else if (!strcmp(name, "epoll_create") || !strcmp(name, "epoll_create1")) {
+        result = syscallEpollCreate(syscall, args, &error);
+    }
+    else if (!strcmp(name, "epoll_ctl")) {
+        result = syscallEpollCtl(syscall, args, &error);
+    }
+    else if (!strcmp(name, "epoll_wait")) {
+        result = syscallEpollWait(syscall, args, &error);
+    }
     else if (!strcmp(name, "connect")) {
         result = syscallConnect(syscall, args, &error);
     }
@@ -912,8 +952,12 @@ int PacketDrillApp::syscallWrite(struct syscall_spec *syscall, cQueue *args, cha
 
     switch (protocol) {
         case IP_PROT_TCP: {
+            // inet::Packet overrides setBitLength()/setByteLength() to throw
+            // (packet length must come from its Chunk content); give it a
+            // ByteCountChunk of the script's asserted length instead -- the
+            // actual byte values are irrelevant to this framework's model.
             Packet *payload = new Packet("Write");
-            payload->setByteLength(syscall->result->getNum());
+            payload->insertAtBack(makeShared<ByteCountChunk>(B(syscall->result->getNum())));
             tcpSocket.send(payload);
             break;
         }
@@ -1254,7 +1298,7 @@ int PacketDrillApp::syscallSendTo(struct syscall_spec *syscall, cQueue *args, ch
         return STATUS_ERR;
 
     Packet *payload = new Packet("SendTo");
-    payload->setByteLength(count);
+    payload->insertAtBack(makeShared<ByteCountChunk>(B(count)));
 
     switch (protocol) {
         case IP_PROT_UDP:
@@ -1497,6 +1541,199 @@ int PacketDrillApp::syscallRecvFrom(PacketDrillEvent *event, struct syscall_spec
     else {
         expectedMessageSize = syscall->result->getNum();
         recvFromSet = true;
+    }
+    return STATUS_OK;
+}
+
+int PacketDrillApp::syscallSendMsg(struct syscall_spec *syscall, cQueue *args, char **error)
+{
+    PacketDrillExpression *exp;
+
+    if (args->getLength() != 3)
+        return STATUS_ERR;
+    exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(1));
+    if (!exp || (exp->getType() != EXPR_MSGHDR))
+        return STATUS_ERR;
+
+    // Errors (e.g. sendmsg-empty-iov's EINVAL) have nothing to send.
+    if (syscall->result->getNum() < 0)
+        return STATUS_OK;
+
+    switch (protocol) {
+        case IP_PROT_TCP: {
+            // Same coarse "send N bytes, trust the script's asserted return
+            // value" model as syscallWrite() -- msg_flags (MSG_MORE etc.)
+            // and msg_control on the send side aren't modeled; any behavior
+            // difference they'd cause in the real kernel shows up as an
+            // honest DIVERGENCE on the resulting packet, not here.
+            Packet *payload = new Packet("SendMsg");
+            payload->insertAtBack(makeShared<ByteCountChunk>(B(syscall->result->getNum())));
+            tcpSocket.send(payload);
+            break;
+        }
+        default:
+            EV_INFO << "Protocol not supported for this socket call";
+            break;
+    }
+    return STATUS_OK;
+}
+
+int PacketDrillApp::syscallRecvMsg(PacketDrillEvent *event, struct syscall_spec *syscall, cQueue *args, char **error)
+{
+    PacketDrillExpression *exp;
+
+    if (args->getLength() != 3)
+        return STATUS_ERR;
+    exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(1));
+    if (!exp || (exp->getType() != EXPR_MSGHDR))
+        return STATUS_ERR;
+
+    if (msgArrived) {
+        cPacket *msg = (receivedPackets->pop());
+        msgArrived = false;
+        recvFromSet = false;
+        if (!(msg->getByteLength() == syscall->result->getNum())) {
+            delete msg;
+            throw cTerminationException("Packetdrill error: Wrong payload length");
+        }
+        PacketDrillInfo *info = (PacketDrillInfo *)msg->getContextPointer();
+        if (verifyTime(event->getTimeType(), event->getEventTime(), event->getEventTimeEnd(),
+                event->getEventOffset(), info->getLiveTime(), "inbound packet") == STATUS_ERR)
+        {
+            delete info;
+            delete msg;
+            return STATUS_ERR;
+        }
+        delete info;
+        delete msg;
+        if (verifyMsgControlInq(exp->getMsghdr(), error) == STATUS_ERR)
+            throw cTerminationException("Packetdrill error: TCP_CM_INQ value mismatch");
+    }
+    else {
+        // Deferred/blocking case: satisfied later by socketDataArrived(),
+        // which -- like read()/recvfrom() -- only verifies the byte length,
+        // not msg_control. The script arg tree (and this msghdr with it) is
+        // destroyed by the caller once this call returns, so there is
+        // nothing safe to stash here for later re-verification.
+        expectedMessageSize = syscall->result->getNum();
+        recvFromSet = true;
+    }
+    return STATUS_OK;
+}
+
+int PacketDrillApp::verifyMsgControlInq(struct msghdr_expr *msgExpr, char **error)
+{
+    if (!msgExpr || !msgExpr->msg_control)
+        return STATUS_OK;
+    cQueue *cmsgList = msgExpr->msg_control->getList();
+    if (!cmsgList)
+        return STATUS_OK;
+    for (cQueue::Iterator it(*cmsgList); !it.end(); it++) {
+        auto *cmsgExpr = check_and_cast<PacketDrillExpression *>(*it);
+        if (cmsgExpr->getType() != EXPR_CMSG)
+            continue;
+        struct cmsg_expr *cmsg = cmsgExpr->getCmsg();
+        int32_t cmsgType;
+        if (cmsg->cmsg_type->getS32(&cmsgType, error))
+            continue; // symbolic/unresolved cmsg_type: nothing we can check
+        if (cmsgType != TCP_CM_INQ)
+            continue; // other cmsg types (zerocopy completion, timestamping, ...) aren't modeled
+        int32_t expectedInq;
+        if (cmsg->cmsg_data->getS32(&expectedInq, error))
+            return STATUS_ERR;
+        int64_t actualInq = 0;
+        for (cQueue::Iterator qit(*receivedPackets); !qit.end(); qit++)
+            actualInq += check_and_cast<cPacket *>(*qit)->getByteLength();
+        if (actualInq != expectedInq) {
+            EV_INFO << "TCP_CM_INQ mismatch: expected " << expectedInq << " actual " << actualInq << endl;
+            return STATUS_ERR;
+        }
+    }
+    return STATUS_OK;
+}
+
+int PacketDrillApp::syscallEpollCreate(struct syscall_spec *syscall, cQueue *args, char **error)
+{
+    // This framework only ever has one socket worth watching, so "creating"
+    // an epoll instance just (re-)clears the single registration below.
+    epollRegistered = false;
+    epollWatchedEvents = 0;
+    epollInEdgePending = false;
+    epollOutEdgePending = false;
+    return STATUS_OK;
+}
+
+int PacketDrillApp::syscallEpollCtl(struct syscall_spec *syscall, cQueue *args, char **error)
+{
+    if (args->getLength() != 4)
+        return STATUS_ERR;
+    PacketDrillExpression *exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(1));
+    int32_t op;
+    if (!exp || exp->getS32(&op, error))
+        return STATUS_ERR;
+
+    if (op == EPOLL_CTL_DEL) {
+        epollRegistered = false;
+        epollWatchedEvents = 0;
+        return STATUS_OK;
+    }
+
+    exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(3));
+    if (!exp || (exp->getType() != EXPR_EPOLLEV))
+        return STATUS_ERR;
+    struct epollev_expr *ev = exp->getEpollev();
+    uint32_t events;
+    if (!ev->events || ev->events->getU32(&events, error))
+        return STATUS_ERR;
+
+    epollWatchedEvents = events;
+    epollRegistered = true;
+    // (Re-)registering counts as a fresh edge for edge-triggered watches:
+    // any already-queued data, and writability (this framework's TCP writes
+    // always succeed immediately, so the socket is always "writable"), are
+    // both new-to-report as of this call.
+    if (receivedPackets->getLength() > 0)
+        epollInEdgePending = true;
+    epollOutEdgePending = true;
+    return STATUS_OK;
+}
+
+int PacketDrillApp::syscallEpollWait(struct syscall_spec *syscall, cQueue *args, char **error)
+{
+    if (args->getLength() != 4)
+        return STATUS_ERR;
+    PacketDrillExpression *exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(1));
+    if (!exp || (exp->getType() != EXPR_EPOLLEV))
+        return STATUS_ERR;
+    struct epollev_expr *expectedEv = exp->getEpollev();
+
+    uint32_t actualEvents = 0;
+    if (epollRegistered) {
+        bool edgeTriggered = (epollWatchedEvents & EPOLLET) != 0;
+        if ((epollWatchedEvents & EPOLLIN) && receivedPackets->getLength() > 0 &&
+                (!edgeTriggered || epollInEdgePending))
+        {
+            actualEvents |= EPOLLIN;
+            epollInEdgePending = false;
+        }
+        // EPOLLOUT: this framework never models a full send buffer, so the
+        // socket is always writable once connected; edge-triggered mode
+        // therefore only ever reports it once, right after registration.
+        if ((epollWatchedEvents & EPOLLOUT) && (!edgeTriggered || epollOutEdgePending)) {
+            actualEvents |= EPOLLOUT;
+            epollOutEdgePending = false;
+        }
+    }
+
+    int32_t expectedReturn = syscall->result->getNum();
+    int32_t actualReturn = (actualEvents != 0) ? 1 : 0;
+    if (actualReturn != expectedReturn)
+        throw cTerminationException("Packetdrill error: epoll_wait returned unexpected event count");
+
+    if (actualEvents != 0) {
+        uint32_t expectedEvMask;
+        if (!expectedEv->events || expectedEv->events->getU32(&expectedEvMask, error) || expectedEvMask != actualEvents)
+            throw cTerminationException("Packetdrill error: epoll_wait returned unexpected events");
     }
     return STATUS_OK;
 }

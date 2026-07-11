@@ -120,6 +120,13 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     ChecksumMode crcMode = CHECKSUM_MODE_UNDEFINED;
     int bytesSent = 0;
 
+    // epoll: this framework only ever has one socket worth watching, so a
+    // single registration (not a real per-fd table) covers the corpus.
+    bool epollRegistered = false;
+    uint32_t epollWatchedEvents = 0;
+    bool epollInEdgePending = false;
+    bool epollOutEdgePending = false;
+
   private:
     void scheduleEvent();
 
@@ -152,6 +159,18 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     int syscallClose(struct syscall_spec *syscall, cQueue *args, char **error);
 
     int syscallShutdown(struct syscall_spec *syscall, cQueue *args, char **error);
+
+    int syscallSendMsg(struct syscall_spec *syscall, cQueue *args, char **error);
+
+    int syscallRecvMsg(PacketDrillEvent *event, struct syscall_spec *syscall, cQueue *args, char **error);
+
+    int verifyMsgControlInq(struct msghdr_expr *msgExpr, char **error);
+
+    int syscallEpollCreate(struct syscall_spec *syscall, cQueue *args, char **error);
+
+    int syscallEpollCtl(struct syscall_spec *syscall, cQueue *args, char **error);
+
+    int syscallEpollWait(struct syscall_spec *syscall, cQueue *args, char **error);
 
     int syscallSctpSendmsg(struct syscall_spec *syscall, cQueue *args, char **error);
 

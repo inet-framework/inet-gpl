@@ -1778,6 +1778,110 @@ int PacketDrill::evaluate(PacketDrillExpression *in, PacketDrillExpression *out,
             break;
         }
 
+        case EXPR_MSGHDR: {
+            struct msghdr_expr *src = in->getMsghdr();
+            struct msghdr_expr *dst = (struct msghdr_expr *)malloc(sizeof(struct msghdr_expr));
+            dst->msg_iov = new PacketDrillExpression(src->msg_iov->getType());
+            dst->msg_iovlen = new PacketDrillExpression(src->msg_iovlen->getType());
+            dst->msg_flags = new PacketDrillExpression(src->msg_flags->getType());
+            dst->msg_control = new PacketDrillExpression(src->msg_control->getType());
+            if (evaluate(src->msg_iov, dst->msg_iov, error) ||
+                evaluate(src->msg_iovlen, dst->msg_iovlen, error) ||
+                evaluate(src->msg_flags, dst->msg_flags, error) ||
+                evaluate(src->msg_control, dst->msg_control, error))
+            {
+                delete dst->msg_iov;
+                delete dst->msg_iovlen;
+                delete dst->msg_flags;
+                delete dst->msg_control;
+                free(dst);
+                return STATUS_ERR;
+            }
+            out->setMsghdr(dst);
+            break;
+        }
+
+        case EXPR_CMSG: {
+            struct cmsg_expr *src = in->getCmsg();
+            struct cmsg_expr *dst = (struct cmsg_expr *)malloc(sizeof(struct cmsg_expr));
+            dst->cmsg_level = new PacketDrillExpression(src->cmsg_level->getType());
+            dst->cmsg_type = new PacketDrillExpression(src->cmsg_type->getType());
+            dst->cmsg_data = new PacketDrillExpression(src->cmsg_data->getType());
+            if (evaluate(src->cmsg_level, dst->cmsg_level, error) ||
+                evaluate(src->cmsg_type, dst->cmsg_type, error) ||
+                evaluate(src->cmsg_data, dst->cmsg_data, error))
+            {
+                delete dst->cmsg_level;
+                delete dst->cmsg_type;
+                delete dst->cmsg_data;
+                free(dst);
+                return STATUS_ERR;
+            }
+            out->setCmsg(dst);
+            break;
+        }
+
+        case EXPR_IOVEC: {
+            struct iovec_expr *src = in->getIovec();
+            struct iovec_expr *dst = (struct iovec_expr *)malloc(sizeof(struct iovec_expr));
+            dst->iov_len = new PacketDrillExpression(src->iov_len->getType());
+            if (evaluate(src->iov_len, dst->iov_len, error)) {
+                delete dst->iov_len;
+                free(dst);
+                return STATUS_ERR;
+            }
+            out->setIovec(dst);
+            break;
+        }
+
+        case EXPR_EPOLLEV: {
+            struct epollev_expr *src = in->getEpollev();
+            struct epollev_expr *dst = (struct epollev_expr *)malloc(sizeof(struct epollev_expr));
+            dst->fd = dst->ptr = dst->u32 = dst->u64 = nullptr;
+            dst->events = new PacketDrillExpression(src->events->getType());
+            if (evaluate(src->events, dst->events, error)) {
+                delete dst->events;
+                free(dst);
+                return STATUS_ERR;
+            }
+            PacketDrillExpression **srcField = src->fd ? &src->fd : src->ptr ? &src->ptr : src->u32 ? &src->u32 : &src->u64;
+            PacketDrillExpression **dstField = src->fd ? &dst->fd : src->ptr ? &dst->ptr : src->u32 ? &dst->u32 : &dst->u64;
+            *dstField = new PacketDrillExpression((*srcField)->getType());
+            if (evaluate(*srcField, *dstField, error)) {
+                delete dst->events;
+                delete *dstField;
+                free(dst);
+                return STATUS_ERR;
+            }
+            out->setEpollev(dst);
+            break;
+        }
+
+        case EXPR_SOCK_EXTENDED_ERR: {
+            struct sock_extended_err_expr *src = in->getSockExtendedErr();
+            struct sock_extended_err_expr *dst = (struct sock_extended_err_expr *)malloc(sizeof(struct sock_extended_err_expr));
+            dst->ee_errno = new PacketDrillExpression(src->ee_errno->getType());
+            dst->ee_origin = new PacketDrillExpression(src->ee_origin->getType());
+            dst->ee_type = new PacketDrillExpression(src->ee_type->getType());
+            dst->ee_code = new PacketDrillExpression(src->ee_code->getType());
+            dst->ee_info = new PacketDrillExpression(src->ee_info->getType());
+            dst->ee_data = new PacketDrillExpression(src->ee_data->getType());
+            if (evaluate(src->ee_errno, dst->ee_errno, error) ||
+                evaluate(src->ee_origin, dst->ee_origin, error) ||
+                evaluate(src->ee_type, dst->ee_type, error) ||
+                evaluate(src->ee_code, dst->ee_code, error) ||
+                evaluate(src->ee_info, dst->ee_info, error) ||
+                evaluate(src->ee_data, dst->ee_data, error))
+            {
+                delete dst->ee_errno; delete dst->ee_origin; delete dst->ee_type;
+                delete dst->ee_code; delete dst->ee_info; delete dst->ee_data;
+                free(dst);
+                return STATUS_ERR;
+            }
+            out->setSockExtendedErr(dst);
+            break;
+        }
+
         case EXPR_STRING:
             if (out->unescapeCstringExpression(in->getString(), error))
                 return STATUS_ERR;
@@ -1866,6 +1970,12 @@ int PacketDrill::evaluateListExpression(PacketDrillExpression *in, PacketDrillEx
     assert(out->getType() == EXPR_LIST);
 
     out->setList(new cQueue("listExpression"));
+    // An empty array ('[]', or the implicit empty opt_cmsg alternative)
+    // parses with a null list rather than an empty cQueue -- nothing to
+    // evaluate, and evaluateExpressionList()'s cQueue::Iterator would
+    // dereference the null pointer.
+    if (!in->getList())
+        return STATUS_OK;
     return evaluateExpressionList(in->getList(), out->getList(), error);
 }
 
