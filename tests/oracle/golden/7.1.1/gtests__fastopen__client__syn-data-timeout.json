@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/client/syn-data-timeout",
+  "corpus": "gtests",
+  "script_sha256": "bd59bb3a1deee1b49bf446c8cbe1a6d9298ecc7a339bc57642c4a3581f7f74fd",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 1.371,
+  "diagnostic": null,
+  "divergence": null
+}

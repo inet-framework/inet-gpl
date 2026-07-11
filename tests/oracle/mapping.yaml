@@ -1,0 +1,182 @@
+# sysctl / --option <-> INET Tcp.ned parameter mapping for the oracle framework's
+# leg-I preprocessor. Parameter names verified against
+# src/inet/transportlayer/tcp/Tcp.ned (INET commit pinned in corpus.yaml).
+#
+# Semantics:
+#   sysctl:   known kernel sysctl -> ini override, with a value transform.
+#             `enum` transforms carry a `values` map; a script value not present
+#             in `values` is recorded as an unmapped_knob but does NOT block the
+#             run unless the entry also sets `required: true` below.
+#   option:   in-script `--flag[=value]` lines (packetdrill script options, not
+#             sysctls) -> ini override.
+#   ignore:   knobs we've deliberately decided not to model (buffer autotuning,
+#             pacing ratios, pure-timing retry counts, pacing, notsent_lowat...).
+#             Recorded as "known, intentionally unmapped" -- never surfaces as an
+#             unmapped_knob and never blocks.
+#   required: sysctl/option names where an *unrecognized* value should block the
+#             run (I_UNSUPPORTED_CONFIG) rather than silently proceed with INET's
+#             own default. Kept minimal (empty) by design: most gaps are more
+#             informative as an observed DIVERGENCE (with a kernel_source_hint)
+#             than as a pre-run block. Notably, `tcp_congestion_control` is NOT
+#             required even though every corpus script sets it to `cubic` (via
+#             defaults.sh, which INET cannot match -- no CUBIC flavour exists):
+#             blocking on that would mark ~every non-dialect-gapped script
+#             UNSUPPORTED_FEATURE and hide the more precise MATCH/DIVERGENCE
+#             signal for scripts where the CC algorithm never actually gets
+#             exercised (e.g. simple open/close). Instead it is left unmapped
+#             (INET keeps its own TcpReno default) and recorded in
+#             `unmapped_knobs`, so the comparator can flag "possibly
+#             CC-attributable" on any resulting DIVERGENCE without blocking
+#             scripts where it turns out not to matter.
+#   known_preambles: backtick-block content patterns that resolve to a fixed
+#             sysctl set, so the preprocessor doesn't need to shell-parse
+#             defaults.sh at runtime. Effective sets copied verbatim from the
+#             pinned corpus commits (see corpus.yaml) on 2026-07-11 -- re-copy
+#             if the corpus is re-pinned and defaults.sh changed.
+
+sysctl:
+  net.ipv4.tcp_sack:
+    ini: "**.tcp.sackSupport"
+    transform: bool
+  net.ipv4.tcp_window_scaling:
+    ini: "**.tcp.windowScalingSupport"
+    transform: bool
+  net.ipv4.tcp_timestamps:
+    ini: "**.tcp.timestampSupport"
+    transform: bool
+  net.ipv4.tcp_ecn:
+    ini: "**.tcp.ecnWillingness"
+    transform: bool   # 0 -> false; nonzero -> true (AccECN nuance is a dialect-gap concern, not a config one)
+  net.ipv4.tcp_congestion_control:
+    ini: "**.tcp.tcpAlgorithmClass"
+    transform: enum
+    values:
+      reno: TcpReno
+      newreno: TcpNewReno
+      vegas: TcpVegas
+      westwood: TcpWestwood
+      dctcp: DcTcp
+      none: TcpNoCongestionControl
+      # cubic (Linux default via defaults.sh), bbr, bic, htcp, illinois, highspeed,
+      # scalable, lp, veno, yeah, hybla: no INET flavour exists. Deliberately
+      # absent from `values` -> recorded as unmapped_knob; NOT set in ini
+      # (INET keeps its own default TcpReno), and NOT blocking (required below
+      # covers only the case where the script demands strict emulation of one
+      # of these and would be actively misleading run with Reno silently
+      # substituted -- see `required` list; currently none, kept as an escape
+      # hatch for a future finding that some script's assertions are Reno-vs-X
+      # sensitive enough to warrant hard-blocking).
+
+option:
+  --mss:
+    ini: "**.tcp.mss"
+    transform: int
+  --mtu:
+    ini: null
+    transform: ignore   # INET's fixed L2 MTU isn't wired to a single tcp.* param; tracked as unmapped_knob
+  # Addressing/timing options already fixed by the oracle harness itself
+  # (IPV4_FLAGS in oracle.py for leg L; the sim network's static addresses for
+  # leg I). A script setting these to the same values we already use is a
+  # no-op; recorded as unmapped rather than silently dropped so a script that
+  # ever needs a genuinely different address is still visible in the report.
+  --remote_ip: {ini: null, transform: ignore}
+  --local_ip: {ini: null, transform: ignore}
+  --ip_version: {ini: null, transform: ignore}
+  --gateway_ip: {ini: null, transform: ignore}
+  --netmask_ip: {ini: null, transform: ignore}
+  # Timing-tolerance options: handled uniformly via oracle.py's
+  # --tolerance-usecs (leg L) and **.pdapp.latency (leg I), not per-script.
+  --tolerance_usecs: {ini: null, transform: ignore}
+  --tcp_ts_tick_usecs: {ini: null, transform: ignore}
+  --strict_segments: {ini: null, transform: ignore}
+
+ignore:
+  # Buffer autotuning: INET has no receive-window autotuning at all (fixed
+  # advertisedWindow); tcp_rmem/tcp_wmem are Linux's autotuning bounds and have
+  # no faithful static translation. Every corpus script sets these via
+  # defaults.sh -- if this were "required" it would blanket-block ~all scripts,
+  # hiding the more precise DIVERGENCE/MATCH signal. Left as a known, tracked gap.
+  - net.ipv4.tcp_rmem
+  - net.ipv4.tcp_wmem
+  # Retry counts / timers that only matter for scripts specifically exercising
+  # SYN retransmission counts or FRTO, which are either already dialect-gapped
+  # or out of tier-1 scope; not worth per-script mapping yet.
+  - net.ipv4.tcp_syn_retries
+  - net.ipv4.tcp_synack_retries
+  - net.ipv4.tcp_frto
+  - net.ipv4.tcp_dsack
+  - net.ipv4.tcp_fack
+  - net.ipv4.tcp_reordering
+  - net.ipv4.tcp_slow_start_after_idle
+  - net.ipv4.tcp_early_retrans
+  - net.ipv4.tcp_recovery
+  - net.ipv4.tcp_tso_win_divisor
+  - net.ipv4.tcp_pacing_ss_ratio
+  - net.ipv4.tcp_pacing_ca_ratio
+  - net.ipv4.tcp_notsent_lowat
+  - net.ipv4.tcp_fastopen
+  - net.ipv4.tcp_fastopen_key
+  - net.ipv4.tcp_syncookies
+  - net.ipv4.tcp_ecn_option
+  - net.ipv4.tcp_metrics    # `ip tcp_metrics flush all` in defaults.sh -- no sysctl, no ini equivalent
+  - net.ipv4.tcp_min_rtt_wlen
+
+required: []   # see note in `sysctl.net.ipv4.tcp_congestion_control` above
+
+known_preambles:
+  - match: '^\./defaults\.sh$'
+    # kernel selftest corpus: tools/testing/selftests/net/packetdrill/defaults.sh
+    # (commit d96fcfe1, pinned 2026-07-10)
+    sysctls:
+      net.ipv4.tcp_rmem: "4096 540000 15728640"
+      net.ipv4.tcp_wmem: "4096 262144 4194304"
+      net.ipv4.tcp_timestamps: "1"
+      net.ipv4.tcp_syn_retries: "5"
+      net.ipv4.tcp_synack_retries: "5"
+      net.ipv4.tcp_frto: "2"
+      net.ipv4.tcp_sack: "1"
+      net.ipv4.tcp_dsack: "1"
+      net.ipv4.tcp_fack: "0"
+      net.ipv4.tcp_reordering: "3"
+      net.ipv4.tcp_congestion_control: "cubic"
+      net.ipv4.tcp_slow_start_after_idle: "0"
+      net.ipv4.tcp_early_retrans: "4"
+      net.ipv4.tcp_recovery: "1"
+      net.ipv4.tcp_tso_win_divisor: "3"
+      net.ipv4.tcp_ecn: "0"
+      net.ipv4.tcp_pacing_ss_ratio: "200"
+      net.ipv4.tcp_pacing_ca_ratio: "120"
+      net.ipv4.tcp_notsent_lowat: "4294967295"
+      net.ipv4.tcp_fastopen: "0x3"
+      net.ipv4.tcp_fastopen_key: "a1a1a1a1-b2b2b2b2-c3c3c3c3-d4d4d4d4"
+      net.ipv4.tcp_syncookies: "1"
+      # window_scaling not set explicitly by this defaults.sh -- Linux kernel
+      # default (CONFIG default, effectively "1"/on) applies. Encoded here so
+      # the mapping surfaces windowScalingSupport=true for kernel-corpus scripts;
+      # INET's own default is false, so this materially matters.
+      net.ipv4.tcp_window_scaling: "1"
+  - match: '^\.\./(common/)?defaults\.sh$'
+    # google/packetdrill gtests/net/tcp/common/defaults.sh (and net/common/defaults.sh)
+    # (commit 2c4001c4, pinned 2026-03-11) -- same content as the kernel selftest
+    # defaults.sh plus tcp_ecn_option; net-effect on our sysctl map is identical.
+    sysctls:
+      net.ipv4.tcp_rmem: "4096 540000 15728640"
+      net.ipv4.tcp_wmem: "4096 262144 4194304"
+      net.ipv4.tcp_timestamps: "1"
+      net.ipv4.tcp_syn_retries: "5"
+      net.ipv4.tcp_synack_retries: "5"
+      net.ipv4.tcp_frto: "2"
+      net.ipv4.tcp_sack: "1"
+      net.ipv4.tcp_dsack: "1"
+      net.ipv4.tcp_fack: "0"
+      net.ipv4.tcp_reordering: "3"
+      net.ipv4.tcp_congestion_control: "cubic"
+      net.ipv4.tcp_slow_start_after_idle: "0"
+      net.ipv4.tcp_early_retrans: "4"
+      net.ipv4.tcp_recovery: "1"
+      net.ipv4.tcp_tso_win_divisor: "3"
+      net.ipv4.tcp_ecn: "0"
+      net.ipv4.tcp_ecn_option: "2"
+      net.ipv4.tcp_pacing_ss_ratio: "200"
+      net.ipv4.tcp_pacing_ca_ratio: "120"
+      net.ipv4.tcp_window_scaling: "1"

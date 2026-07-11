@@ -1,0 +1,32 @@
+# Corpus pins and environment fingerprints for the TCP oracle test framework.
+# Re-pin (and re-record golden/) whenever any of these move.
+
+corpora:
+  kernel:
+    path: /home/rhornig/w/kernel/linux-packetdrill-corpus
+    subdir: tools/testing/selftests/net/packetdrill
+    git_commit: d96fcfe1b7f94ac742984ae7986b94a116abff1b
+    pinned_date: "2026-07-10"
+  gtests:
+    path: /home/rhornig/w/kernel/packetdrill-upstream
+    subdir: gtests/net/tcp
+    git_commit: 2c4001c4d6fc04a3bbd01d4b92be62717a37648a
+    pinned_date: "2026-03-11"
+
+environment:
+  kernel_release: "7.1.1"          # `uname -r` on the leg-L host; golden/ is keyed by this
+  packetdrill_binary: /etc/profiles/per-user/rhornig/bin/packetdrill  # nix profile, no --version support
+  inet_commit: f39c287ed94935bfa681895cdcb38e8e2e744369
+  inetgpl_commit: 40d129c675baa145beeba223933373a4e3a576c4
+  pinned_on: "2026-07-11"
+
+# Per-script overrides/skips, keyed by "<corpus>:<relpath-from-subdir-without-.pkt>".
+# Populated as milestones uncover scripts needing special handling (timing tolerance,
+# known-bad kernel version, etc.) Empty at framework bring-up.
+overrides: {}
+skips:
+  # Framework is IPv4-only for phase 1 (matches INET-leg addressing); these two
+  # scripts force --ip_version=ipv6 internally and are incompatible with the
+  # fixed IPv4 flag set in oracle.py. Not a kernel or INET bug -- a scope limit.
+  kernel:tcp_syncookies_ip6_9k: "forces --ip_version=ipv6, out of IPv4-only scope"
+  gtests:mtu_probe/basic-v6: "forces --ip_version=ipv6, out of IPv4-only scope"

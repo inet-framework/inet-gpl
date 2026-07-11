@@ -1,0 +1,16 @@
+{
+  "script": "inq/client",
+  "corpus": "gtests",
+  "script_sha256": "9c4310459add0ae80f98542bd5fabb7d8e3f8e882b545d3dd68aef80e46976d9",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.191,
+  "diagnostic": null,
+  "divergence": null
+}

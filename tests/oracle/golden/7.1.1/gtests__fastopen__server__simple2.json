@@ -1,0 +1,24 @@
+{
+  "script": "fastopen/server/simple2",
+  "corpus": "gtests",
+  "script_sha256": "8abcf19dcf0fad078e0f124e7b4a89e0287e896056baf3dd96982ec0afa6ea0d",
+  "leg": "linux",
+  "verdict": "L_FAIL",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.221,
+  "diagnostic": "bad value in outbound TCP option (kind=254): expected: FOEXP 1313a2da994a0951 actual: FOEXP f49b0ef989d9f624",
+  "divergence": {
+    "script_line": 25,
+    "message": "bad value in outbound TCP option (kind=254): expected: FOEXP 1313a2da994a0951 actual: FOEXP f49b0ef989d9f624",
+    "expected_packet": "0.000090 S. 0:0(0) ack 9873243 <mss 1460,sackOK,TS val 10000 ecr 1,nop,wscale 8,FOEXP 1313a2da994a0951>",
+    "actual_packet": "0.000087 S. 0:0(0) ack 9873243 win 65535 <mss 1460,sackOK,TS val 10000 ecr 1,nop,wscale 8,FOEXP f49b0ef989d9f624>",
+    "context_log": [
+      "simple2.pkt:25: error handling packet: bad value in outbound TCP option (kind=254): expected: FOEXP 1313a2da994a0951 actual: FOEXP f49b0ef989d9f624"
+    ]
+  }
+}

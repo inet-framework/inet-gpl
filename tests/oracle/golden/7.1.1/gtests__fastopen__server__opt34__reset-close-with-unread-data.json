@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/server/opt34/reset-close-with-unread-data",
+  "corpus": "gtests",
+  "script_sha256": "114761d051cac9824b2296c06a37ecc2b642c78247f156938e1e9c083e07c11a",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.599,
+  "diagnostic": null,
+  "divergence": null
+}

@@ -1,0 +1,16 @@
+{
+  "script": "tcp_sack_sack-route-refresh-ip-tos",
+  "corpus": "kernel",
+  "script_sha256": "9f85c7e66cc530b90bb63e0df4b09f5e3d0e953fc29aa22e8d7ebfcc0500093c",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.256,
+  "diagnostic": null,
+  "divergence": null
+}

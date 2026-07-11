@@ -1,0 +1,16 @@
+{
+  "script": "tcp_accecn_3rd_ack_after_synack_rxmt",
+  "corpus": "kernel",
+  "script_sha256": "10129408088723032ffc081c01088f92f383387e3c1c68fb13dbe492b8abc73c",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.337,
+  "diagnostic": null,
+  "divergence": null
+}

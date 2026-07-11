@@ -1,0 +1,16 @@
+{
+  "script": "tcp_rcv_wnd_shrink_nomem",
+  "corpus": "kernel",
+  "script_sha256": "402172e1b456195e65752509bb870660669e955e422fa5509e0d1977426463fd",
+  "leg": "linux",
+  "verdict": "L_ERROR",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.25,
+  "diagnostic": "assertion buf != ((void *)0) failed at /build/source/gtests/net/packetdrill/run_system_call.c line 1330",
+  "divergence": null
+}

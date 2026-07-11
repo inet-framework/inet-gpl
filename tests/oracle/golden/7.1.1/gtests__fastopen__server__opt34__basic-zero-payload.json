@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/server/opt34/basic-zero-payload",
+  "corpus": "gtests",
+  "script_sha256": "ef89e543b251dcdc50f0b37fdfa0a92da8c82ddaa84b71ca2fb813f22e6ed160",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.7,
+  "diagnostic": null,
+  "divergence": null
+}

@@ -1,0 +1,16 @@
+{
+  "script": "tcp_md5_md5-only-on-client-ack",
+  "corpus": "kernel",
+  "script_sha256": "d6c7099179d4e15478a48d6eaa57382f4c43c19d8f2483d9215b1d14190e8262",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.255,
+  "diagnostic": null,
+  "divergence": null
+}

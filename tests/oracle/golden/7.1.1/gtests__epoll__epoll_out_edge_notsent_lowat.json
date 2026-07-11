@@ -1,0 +1,24 @@
+{
+  "script": "epoll/epoll_out_edge_notsent_lowat",
+  "corpus": "gtests",
+  "script_sha256": "1c92e45e15289838e41e562c41c214071b1c9a196e4e2df9015893578d776ba2",
+  "leg": "linux",
+  "verdict": "L_FAIL",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.206,
+  "diagnostic": "live packet payload: expected 16000 bytes vs actual 20000 bytes",
+  "divergence": {
+    "script_line": 40,
+    "message": "live packet payload: expected 16000 bytes vs actual 20000 bytes",
+    "expected_packet": null,
+    "actual_packet": null,
+    "context_log": [
+      "epoll_out_edge_notsent_lowat.pkt:40: error handling packet: live packet payload: expected 16000 bytes vs actual 20000 bytes"
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/client/nonblocking-sendto-empty-buf",
+  "corpus": "gtests",
+  "script_sha256": "1c255999fc8725f642177106d1e1da09014d3cd3ba7331bb616c73fd68082716",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.379,
+  "diagnostic": null,
+  "divergence": null
+}

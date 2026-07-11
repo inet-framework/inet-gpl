@@ -1,0 +1,16 @@
+{
+  "script": "tcp_syscall_bad_arg_syscall-invalid-buf-ptr",
+  "corpus": "kernel",
+  "script_sha256": "370016060d7b3d10a036236fd8483399e9de0360374ceeb43dc9fdac2107d465",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.373,
+  "diagnostic": null,
+  "divergence": null
+}

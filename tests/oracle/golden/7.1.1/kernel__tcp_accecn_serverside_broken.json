@@ -1,0 +1,16 @@
+{
+  "script": "tcp_accecn_serverside_broken",
+  "corpus": "kernel",
+  "script_sha256": "7c17712b43e2d98d7d8a96021f02652c2ff3acd9c1c7371a8b2706b8e1f4b5e3",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.34,
+  "diagnostic": null,
+  "divergence": null
+}

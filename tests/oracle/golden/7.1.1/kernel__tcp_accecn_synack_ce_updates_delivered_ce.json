@@ -1,0 +1,16 @@
+{
+  "script": "tcp_accecn_synack_ce_updates_delivered_ce",
+  "corpus": "kernel",
+  "script_sha256": "58035241493e3e6f68e9acefebe4b0eef913d771e1c524bf94c34f0b8bca406b",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.327,
+  "diagnostic": null,
+  "divergence": null
+}

@@ -1,0 +1,16 @@
+{
+  "script": "zerocopy/client",
+  "corpus": "gtests",
+  "script_sha256": "d52ad05d0e340777f94509b26b7d11d3add7a9bf71821bf52b49a78c5bf5d1c0",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.216,
+  "diagnostic": null,
+  "divergence": null
+}

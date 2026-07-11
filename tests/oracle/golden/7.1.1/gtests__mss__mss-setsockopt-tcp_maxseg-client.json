@@ -1,0 +1,16 @@
+{
+  "script": "mss/mss-setsockopt-tcp_maxseg-client",
+  "corpus": "gtests",
+  "script_sha256": "9c2f99b4d76217d089645be70f7254b9865f487e25fc3087f9047b6b29ab1254",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.692,
+  "diagnostic": null,
+  "divergence": null
+}

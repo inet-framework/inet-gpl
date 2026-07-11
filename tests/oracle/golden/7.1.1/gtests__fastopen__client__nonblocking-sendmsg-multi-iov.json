@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/client/nonblocking-sendmsg-multi-iov",
+  "corpus": "gtests",
+  "script_sha256": "75f334d07c3545a85618dddc3f6b5490c37e1b4ec1b085fa4dddc7d164feb5d2",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.395,
+  "diagnostic": null,
+  "divergence": null
+}

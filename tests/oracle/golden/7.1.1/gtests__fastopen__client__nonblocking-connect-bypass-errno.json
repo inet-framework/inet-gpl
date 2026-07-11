@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/client/nonblocking-connect-bypass-errno",
+  "corpus": "gtests",
+  "script_sha256": "fe165852a52c2163edb9d4b12d3687e8abb7c2b5c3111fc84ca5d71653461751",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 13.056,
+  "diagnostic": null,
+  "divergence": null
+}

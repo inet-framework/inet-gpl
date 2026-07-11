@@ -1,0 +1,16 @@
+{
+  "script": "tcp_accecn_syn_ace_flags_acked_after_retransmit",
+  "corpus": "kernel",
+  "script_sha256": "8811816884314dc079bef31c5f5016b41d6c44a4f11b85e4f1d6513ecfd72773",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 2.339,
+  "diagnostic": null,
+  "divergence": null
+}

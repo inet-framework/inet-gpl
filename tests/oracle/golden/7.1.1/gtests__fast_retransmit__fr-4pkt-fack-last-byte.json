@@ -1,0 +1,16 @@
+{
+  "script": "fast_retransmit/fr-4pkt-fack-last-byte",
+  "corpus": "gtests",
+  "script_sha256": "48417e7646583308d05e76d64656556bd2f61052504e2173d39be926ebfe7d77",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 1.701,
+  "diagnostic": null,
+  "divergence": null
+}

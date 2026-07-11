@@ -1,0 +1,16 @@
+{
+  "script": "tcp_ooo_rcv_mss",
+  "corpus": "kernel",
+  "script_sha256": "e542cf05825856f7e5e016bf5065b355ef376b7e4f3ddec5714050bf95daab0c",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.292,
+  "diagnostic": null,
+  "divergence": null
+}

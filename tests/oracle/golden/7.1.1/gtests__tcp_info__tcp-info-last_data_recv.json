@@ -1,0 +1,16 @@
+{
+  "script": "tcp_info/tcp-info-last_data_recv",
+  "corpus": "gtests",
+  "script_sha256": "8fe43d56afc4c2dbc49efd88747987a4c7b9c85d7a946947a079908a073ea130",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 1.229,
+  "diagnostic": null,
+  "divergence": null
+}

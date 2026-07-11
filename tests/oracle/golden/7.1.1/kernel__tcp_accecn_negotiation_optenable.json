@@ -1,0 +1,16 @@
+{
+  "script": "tcp_accecn_negotiation_optenable",
+  "corpus": "kernel",
+  "script_sha256": "ab2d28766ffcb1bec96f593f23681700658f1302348144c8257277fa06489497",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.362,
+  "diagnostic": null,
+  "divergence": null
+}

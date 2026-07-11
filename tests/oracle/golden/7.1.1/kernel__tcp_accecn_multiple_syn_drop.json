@@ -1,0 +1,16 @@
+{
+  "script": "tcp_accecn_multiple_syn_drop",
+  "corpus": "kernel",
+  "script_sha256": "cfe9b3320b15551a719e52c5593b6257c8c33aed4f1efb1bd8ead86f2bab36ad",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 3.38,
+  "diagnostic": null,
+  "divergence": null
+}

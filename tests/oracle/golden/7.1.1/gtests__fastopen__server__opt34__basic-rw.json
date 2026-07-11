@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/server/opt34/basic-rw",
+  "corpus": "gtests",
+  "script_sha256": "b3f88cbd6d3e747ee444cb183cc126ece73ffb7abd54f52fb6fcb21860a2ce44",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.521,
+  "diagnostic": null,
+  "divergence": null
+}

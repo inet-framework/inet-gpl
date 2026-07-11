@@ -1,0 +1,16 @@
+{
+  "script": "tcp_fastopen_server_reset-close-with-unread-data",
+  "corpus": "kernel",
+  "script_sha256": "8a41c7ae422a8bd3e68abb6b9fe39669d8859257804e07df53bf430c9fae463e",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.215,
+  "diagnostic": null,
+  "divergence": null
+}

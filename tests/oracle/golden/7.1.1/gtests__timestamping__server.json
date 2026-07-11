@@ -1,0 +1,16 @@
+{
+  "script": "timestamping/server",
+  "corpus": "gtests",
+  "script_sha256": "34bc2b1921b69b525ee1c0f67984c8e76c0574d6cd987f17b22fdfb719b9e6d9",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.237,
+  "diagnostic": null,
+  "divergence": null
+}

@@ -1,0 +1,16 @@
+{
+  "script": "ts_recent/reset_tsval",
+  "corpus": "gtests",
+  "script_sha256": "a9a2e5f2b48a67f69dfcc4ea7d16b104093a6f5bfa8ba1d91bcf66754bcd7d9b",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 1.277,
+  "diagnostic": null,
+  "divergence": null
+}

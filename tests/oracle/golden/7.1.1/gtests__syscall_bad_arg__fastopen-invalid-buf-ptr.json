@@ -1,0 +1,16 @@
+{
+  "script": "syscall_bad_arg/fastopen-invalid-buf-ptr",
+  "corpus": "gtests",
+  "script_sha256": "1f2c1ab6dab023fb2aa37ae26b80c130c71df34376d6b54b9bb4ef39ab98f330",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.203,
+  "diagnostic": null,
+  "divergence": null
+}

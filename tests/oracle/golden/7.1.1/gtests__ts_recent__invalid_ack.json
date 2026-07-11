@@ -1,0 +1,24 @@
+{
+  "script": "ts_recent/invalid_ack",
+  "corpus": "gtests",
+  "script_sha256": "60d85d8f60329d3c18df86886d40576c540103cef565fc081d87839faab5a7f9",
+  "leg": "linux",
+  "verdict": "L_FAIL",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.395,
+  "diagnostic": "expected: 1001 (0x3e9) vs actual: 1 (0x1)",
+  "divergence": {
+    "script_line": 24,
+    "message": "expected: 1001 (0x3e9) vs actual: 1 (0x1)",
+    "expected_packet": "0.200319 . 1:1(0) ack 1001 <nop,nop,TS val 200 ecr 201>",
+    "actual_packet": "0.200306 . 1:1(0) ack 1 win 65535 <nop,nop,TS val 200 ecr 200>",
+    "context_log": [
+      "invalid_ack.pkt:24: error handling packet: live packet field tcp_ack_seq: expected: 1001 (0x3e9) vs actual: 1 (0x1)"
+    ]
+  }
+}

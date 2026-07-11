@@ -1,0 +1,16 @@
+{
+  "script": "cwnd_moderation/cwnd-moderation-ecn-enter-cwr-no-moderation-700",
+  "corpus": "gtests",
+  "script_sha256": "dca2ea623ec4a480e24a2eb522a6b982741ae663e21a46a53f9cc3e477ea4d9d",
+  "leg": "linux",
+  "verdict": "L_ERROR",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.535,
+  "diagnostic": "cwnd-moderation-ecn-enter-cwr-no-moderation-700.pkt:24: error in Python code\nTraceback (most recent call last):\n  File \"/tmp/code_Y9y6kJ\", line 239, in <module>\n    assert tcpi_snd_cwnd == 4, tcpi_snd_cwnd\n           ^^^^^^^^^^^^^^^^^^\nAssertionError: 5\ncwnd-moderation-ecn-enter-cwr-no-moderation-700.pkt: error executing code: 'python3' returned non-zero status 1",
+  "divergence": null
+}

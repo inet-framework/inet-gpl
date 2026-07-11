@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/client/syn-data-icmp-unreach-frag-needed-with-seq-ipv6",
+  "corpus": "gtests",
+  "script_sha256": "ed444c172ba6320b6339d3fe9537f510708d8e6bc66537084d4740d92f8defc5",
+  "leg": "linux",
+  "verdict": "L_ERROR",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.006,
+  "diagnostic": "syn-data-icmp-unreach-frag-needed-with-seq-ipv6.pkt:29: semantic error: bad ICMP type packet_too_big",
+  "divergence": null
+}

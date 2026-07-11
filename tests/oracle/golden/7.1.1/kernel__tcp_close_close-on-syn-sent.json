@@ -1,0 +1,16 @@
+{
+  "script": "tcp_close_close-on-syn-sent",
+  "corpus": "kernel",
+  "script_sha256": "2ca4ea47f630255f012effca41ebd106406b587332c28f624b4b3fa2056ffd95",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.279,
+  "diagnostic": null,
+  "divergence": null
+}

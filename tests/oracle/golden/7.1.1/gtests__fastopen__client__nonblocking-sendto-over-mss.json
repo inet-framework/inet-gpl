@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/client/nonblocking-sendto-over-mss",
+  "corpus": "gtests",
+  "script_sha256": "2727cb98985277d2b74711aede7c0cf78040ea9d1e20100851c2ff5c3db32d15",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.476,
+  "diagnostic": null,
+  "divergence": null
+}

@@ -1,0 +1,16 @@
+{
+  "script": "fast_retransmit/fr-4pkt",
+  "corpus": "gtests",
+  "script_sha256": "7ce31ac42d071da88a2b6e40743ca4789912b6473232db2e5cc8e108205f5770",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.763,
+  "diagnostic": null,
+  "divergence": null
+}

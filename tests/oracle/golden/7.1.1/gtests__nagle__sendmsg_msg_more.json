@@ -1,0 +1,16 @@
+{
+  "script": "nagle/sendmsg_msg_more",
+  "corpus": "gtests",
+  "script_sha256": "41e0c81d6c501a17978eb7ad974850e52bc15016195d2dfd1a5b7dc299317ec2",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.663,
+  "diagnostic": null,
+  "divergence": null
+}

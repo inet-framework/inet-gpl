@@ -1,0 +1,25 @@
+{
+  "script": "nagle/https_client",
+  "corpus": "gtests",
+  "script_sha256": "df02e8441d76886b7369da1c875e3565e51c8461d9078c31360ba27a09efe246",
+  "leg": "linux",
+  "verdict": "L_FAIL",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.43,
+  "diagnostic": "live packet payload: expected 974 bytes vs actual 1948 bytes",
+  "divergence": {
+    "script_line": 31,
+    "message": "live packet payload: expected 974 bytes vs actual 1948 bytes",
+    "expected_packet": null,
+    "actual_packet": null,
+    "context_log": [
+      "sh: line 2: ethtool: command not found",
+      "https_client.pkt:31: error handling packet: live packet payload: expected 974 bytes vs actual 1948 bytes"
+    ]
+  }
+}

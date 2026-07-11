@@ -1,0 +1,16 @@
+{
+  "script": "ecn/ecn-uses-ect0",
+  "corpus": "gtests",
+  "script_sha256": "f3352745dc9d8847bdfddeab1820341d4d2ed501194778a3f95fa38b8eeb03f5",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.18,
+  "diagnostic": null,
+  "divergence": null
+}

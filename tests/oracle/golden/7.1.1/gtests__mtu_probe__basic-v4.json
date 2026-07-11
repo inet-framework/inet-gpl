@@ -1,0 +1,16 @@
+{
+  "script": "mtu_probe/basic-v4",
+  "corpus": "gtests",
+  "script_sha256": "0a1d1b8575030cd7db5ad33e0eac66d46863a448f251472ffac38243edc431d0",
+  "leg": "linux",
+  "verdict": "L_ERROR",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.123,
+  "diagnostic": "sh: line 6: ethtool: command not found\nbasic-v4.pkt: error executing init command: non-zero status 127",
+  "divergence": null
+}

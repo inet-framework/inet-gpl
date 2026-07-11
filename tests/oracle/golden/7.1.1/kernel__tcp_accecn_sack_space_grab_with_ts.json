@@ -1,0 +1,16 @@
+{
+  "script": "tcp_accecn_sack_space_grab_with_ts",
+  "corpus": "kernel",
+  "script_sha256": "dfdb2d745ba1ad748fd7d4dd24fd99466d9cd71de888f68d6a0f6b08a93598b8",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.278,
+  "diagnostic": null,
+  "divergence": null
+}

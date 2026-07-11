@@ -1,0 +1,16 @@
+{
+  "script": "cubic/cubic-hystart-delay-min-rtt-jumps-downward",
+  "corpus": "gtests",
+  "script_sha256": "07e4ecdffa40645fda09939091314b709716946d8e8954e84c35f236f0aa1e13",
+  "leg": "linux",
+  "verdict": "L_ERROR",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.096,
+  "diagnostic": "sh: line 2: /sys/module/tcp_cubic/parameters/hystart_detect: Permission denied\ncubic-hystart-delay-min-rtt-jumps-downward.pkt: error executing init command: non-zero status 1",
+  "divergence": null
+}

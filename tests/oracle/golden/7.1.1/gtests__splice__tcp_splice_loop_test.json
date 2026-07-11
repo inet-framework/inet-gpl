@@ -1,0 +1,16 @@
+{
+  "script": "splice/tcp_splice_loop_test",
+  "corpus": "gtests",
+  "script_sha256": "4459f9f3ef31812da8f660397d911cf0efeec53cfb114dae54112cd176b18019",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.181,
+  "diagnostic": null,
+  "divergence": null
+}

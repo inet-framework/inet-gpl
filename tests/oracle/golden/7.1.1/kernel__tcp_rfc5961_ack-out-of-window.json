@@ -1,0 +1,16 @@
+{
+  "script": "tcp_rfc5961_ack-out-of-window",
+  "corpus": "kernel",
+  "script_sha256": "8732436d51d023988a4829a3d00e20475645fade4ade5efa2b04d8db3662ff5e",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.305,
+  "diagnostic": null,
+  "divergence": null
+}

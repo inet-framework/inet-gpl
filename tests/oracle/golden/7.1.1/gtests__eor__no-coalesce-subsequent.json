@@ -1,0 +1,16 @@
+{
+  "script": "eor/no-coalesce-subsequent",
+  "corpus": "gtests",
+  "script_sha256": "b6f0e0ba505315db102966eeb2ac3982dd55604837dda09daed26c3cae89b750",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.206,
+  "diagnostic": null,
+  "divergence": null
+}

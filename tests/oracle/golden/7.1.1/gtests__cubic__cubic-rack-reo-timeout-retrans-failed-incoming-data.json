@@ -1,0 +1,16 @@
+{
+  "script": "cubic/cubic-rack-reo-timeout-retrans-failed-incoming-data",
+  "corpus": "gtests",
+  "script_sha256": "d67ca45b65b6ee797407d3fb63f457d3a1fdd73c1ee35347f17d72f84f90e614",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.328,
+  "diagnostic": null,
+  "divergence": null
+}

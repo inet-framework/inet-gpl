@@ -1,0 +1,16 @@
+{
+  "script": "tcp_accecn_delivered_falseoverflow_detect",
+  "corpus": "kernel",
+  "script_sha256": "98d4d4b4450d528eadfbca882a5f1d27a3430d850fc31a603762a62a463874d5",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.377,
+  "diagnostic": null,
+  "divergence": null
+}

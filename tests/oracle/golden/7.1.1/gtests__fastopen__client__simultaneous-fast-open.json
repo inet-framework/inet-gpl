@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/client/simultaneous-fast-open",
+  "corpus": "gtests",
+  "script_sha256": "532292e2cffd49b407aa171766389e0c8919edfd2095fde310d001d9e3a39fb2",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.462,
+  "diagnostic": null,
+  "divergence": null
+}

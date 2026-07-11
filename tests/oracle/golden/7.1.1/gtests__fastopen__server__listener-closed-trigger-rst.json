@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/server/listener-closed-trigger-rst",
+  "corpus": "gtests",
+  "script_sha256": "40d0797c257c867dadb8804f0e4710e525cd1123cdfe6ec24dc76bb45f3363d3",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.381,
+  "diagnostic": null,
+  "divergence": null
+}

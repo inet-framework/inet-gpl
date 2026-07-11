@@ -1,0 +1,16 @@
+{
+  "script": "tcp_accecn_accecn_to_rfc3168",
+  "corpus": "kernel",
+  "script_sha256": "41b149a251e1a713f912f9a0a222c6a45e0774f3bed76e77d16a7330815a9df2",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.24,
+  "diagnostic": null,
+  "divergence": null
+}

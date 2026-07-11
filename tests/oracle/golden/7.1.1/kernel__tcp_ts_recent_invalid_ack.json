@@ -1,0 +1,16 @@
+{
+  "script": "tcp_ts_recent_invalid_ack",
+  "corpus": "kernel",
+  "script_sha256": "9b06f232bdef5d7d9920ebc29585cc227e95437a535fec8975515976c6033ebb",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.389,
+  "diagnostic": null,
+  "divergence": null
+}

@@ -1,0 +1,16 @@
+{
+  "script": "tcp_rto_synack_rto_max",
+  "corpus": "kernel",
+  "script_sha256": "04f9b5d032827d52c3fba9860f7a5f9a6e6a974067f749040f419416930a681e",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 6.346,
+  "diagnostic": null,
+  "divergence": null
+}

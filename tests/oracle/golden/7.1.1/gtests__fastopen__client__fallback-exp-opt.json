@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/client/fallback-exp-opt",
+  "corpus": "gtests",
+  "script_sha256": "413bf23175b354b0fa21f864675507e402573ee7ba4553b14f4a782c536898b5",
+  "leg": "linux",
+  "verdict": "L_ERROR",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.397,
+  "diagnostic": "fallback-exp-opt.pkt:49: error executing `ip tcp_metrics flush all > /dev/null 2>&1` command: non-zero status 2",
+  "divergence": null
+}

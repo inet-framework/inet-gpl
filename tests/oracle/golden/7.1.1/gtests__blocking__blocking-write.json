@@ -1,0 +1,16 @@
+{
+  "script": "blocking/blocking-write",
+  "corpus": "gtests",
+  "script_sha256": "92051dff53277fa0b39accb4e6b10289be21b6b1ce535b4e0cf67cf6c90643cd",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.738,
+  "diagnostic": null,
+  "divergence": null
+}

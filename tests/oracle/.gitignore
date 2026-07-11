@@ -1,0 +1,7 @@
+# Regenerable run artifacts -- re-created by oracle.py, not checked in.
+# golden/ IS checked in (leg-L results are the reference baseline);
+# BASELINE-*.md snapshots ARE checked in (dated report.md copies).
+out/
+build/
+__pycache__/
+*.pyc

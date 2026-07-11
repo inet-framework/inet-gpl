@@ -1,0 +1,24 @@
+{
+  "script": "notsent_lowat/notsent-lowat-default",
+  "corpus": "gtests",
+  "script_sha256": "b96dc3e7a6bc4d4f7369895120c77503cb94c18f18bccc4e9e8b5ee15903ac87",
+  "leg": "linux",
+  "verdict": "L_FAIL",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.252,
+  "diagnostic": "live packet payload: expected 16000 bytes vs actual 20000 bytes",
+  "divergence": {
+    "script_line": 28,
+    "message": "live packet payload: expected 16000 bytes vs actual 20000 bytes",
+    "expected_packet": null,
+    "actual_packet": null,
+    "context_log": [
+      "notsent-lowat-default.pkt:28: error handling packet: live packet payload: expected 16000 bytes vs actual 20000 bytes"
+    ]
+  }
+}

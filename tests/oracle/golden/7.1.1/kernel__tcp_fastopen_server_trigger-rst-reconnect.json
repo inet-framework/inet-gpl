@@ -1,0 +1,16 @@
+{
+  "script": "tcp_fastopen_server_trigger-rst-reconnect",
+  "corpus": "kernel",
+  "script_sha256": "567999b0e1dcb9e98b3aebd8074de13b267903a66ac41378ee682641b60f22cb",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 1.261,
+  "diagnostic": null,
+  "divergence": null
+}

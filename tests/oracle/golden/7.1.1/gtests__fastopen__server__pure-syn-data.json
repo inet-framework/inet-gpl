@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/server/pure-syn-data",
+  "corpus": "gtests",
+  "script_sha256": "86574a8e68a0402d19871302930273890520fa9b5d684e5b1ac73fa6285fe52e",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.243,
+  "diagnostic": null,
+  "divergence": null
+}

@@ -1,0 +1,16 @@
+{
+  "script": "tcp_fastopen_server_basic-no-setsockopt",
+  "corpus": "kernel",
+  "script_sha256": "a339e0326c1ef74025f84fc67479e78c69a54ec2fd9ae2035f00a7f44b3429ad",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.25,
+  "diagnostic": null,
+  "divergence": null
+}

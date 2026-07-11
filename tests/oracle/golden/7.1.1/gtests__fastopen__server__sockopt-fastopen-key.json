@@ -1,0 +1,24 @@
+{
+  "script": "fastopen/server/sockopt-fastopen-key",
+  "corpus": "gtests",
+  "script_sha256": "63b6edd362fe9ec5265529d011ae9d1170d2364fff17db61586c128c4f1299da",
+  "leg": "linux",
+  "verdict": "L_FAIL",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.213,
+  "diagnostic": "bad value in outbound TCP option (kind=254): expected: FOEXP 00abaaabe8e954c2 actual: FOEXP f49b0ef989d9f624",
+  "divergence": {
+    "script_line": 21,
+    "message": "bad value in outbound TCP option (kind=254): expected: FOEXP 00abaaabe8e954c2 actual: FOEXP f49b0ef989d9f624",
+    "expected_packet": "0.000100 S. 0:0(0) ack 1428933 <mss 1460,sackOK,TS val 10000 ecr 1,nop,wscale 8,FOEXP 00abaaabe8e954c2>",
+    "actual_packet": "0.000096 S. 0:0(0) ack 1428933 win 65535 <mss 1460,sackOK,TS val 10000 ecr 1,nop,wscale 8,FOEXP f49b0ef989d9f624>",
+    "context_log": [
+      "sockopt-fastopen-key.pkt:21: error handling packet: bad value in outbound TCP option (kind=254): expected: FOEXP 00abaaabe8e954c2 actual: FOEXP f49b0ef989d9f624"
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "script": "slow_start/slow-start-after-idle",
+  "corpus": "gtests",
+  "script_sha256": "e6aa937a156e292148011c1e13897b6f36d532a7c219c88747511010823452fe",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 2.541,
+  "diagnostic": null,
+  "divergence": null
+}

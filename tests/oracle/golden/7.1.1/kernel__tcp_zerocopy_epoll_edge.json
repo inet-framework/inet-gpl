@@ -1,0 +1,16 @@
+{
+  "script": "tcp_zerocopy_epoll_edge",
+  "corpus": "kernel",
+  "script_sha256": "d5a5fffd762cf5d596726915626a3731b99095fa5b89a2c52d2dcc47d0707437",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.186,
+  "diagnostic": null,
+  "divergence": null
+}

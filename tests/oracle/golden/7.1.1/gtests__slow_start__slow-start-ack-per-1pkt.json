@@ -1,0 +1,16 @@
+{
+  "script": "slow_start/slow-start-ack-per-1pkt",
+  "corpus": "gtests",
+  "script_sha256": "e9dacd1681931bf596488922f3c8e2a01ef54b61aa2fd7475b04c468bc34705f",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.52,
+  "diagnostic": null,
+  "divergence": null
+}

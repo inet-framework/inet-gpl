@@ -1,0 +1,16 @@
+{
+  "script": "cubic/cubic-rto-ss-ca-cwnd-bump",
+  "corpus": "gtests",
+  "script_sha256": "edd82fda961653e95c57eba7db52da66eaa69bfb6ea7d0c0dc5d2da95c150d02",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 1.654,
+  "diagnostic": null,
+  "divergence": null
+}

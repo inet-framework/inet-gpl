@@ -1,0 +1,16 @@
+{
+  "script": "tcp_validate_validate-established-no-flags",
+  "corpus": "kernel",
+  "script_sha256": "6b05a0e42b2ace7d14648583717e98a30d2ebd09ba54f5b5d945a903c49af20a",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.209,
+  "diagnostic": null,
+  "divergence": null
+}

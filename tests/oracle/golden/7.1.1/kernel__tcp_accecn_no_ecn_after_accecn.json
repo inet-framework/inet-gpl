@@ -1,0 +1,16 @@
+{
+  "script": "tcp_accecn_no_ecn_after_accecn",
+  "corpus": "kernel",
+  "script_sha256": "69669e0770135e9116aaa686c1c7515a7d03df37f5d126717a7a1869910470b3",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.31,
+  "diagnostic": null,
+  "divergence": null
+}

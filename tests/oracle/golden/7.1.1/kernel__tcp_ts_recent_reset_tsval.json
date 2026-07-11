@@ -1,0 +1,16 @@
+{
+  "script": "tcp_ts_recent_reset_tsval",
+  "corpus": "kernel",
+  "script_sha256": "a0a9fcb36713bbfa227ef604e1c93ba8029bc2ba23fdfc0522976748b04de0af",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 1.294,
+  "diagnostic": null,
+  "divergence": null
+}

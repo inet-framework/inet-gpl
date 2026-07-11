@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/client/syn-data-mss",
+  "corpus": "gtests",
+  "script_sha256": "4f7824b6627baed6f812a60882a31d5a273ac3070359348d3280e12541279fbb",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.987,
+  "diagnostic": null,
+  "divergence": null
+}

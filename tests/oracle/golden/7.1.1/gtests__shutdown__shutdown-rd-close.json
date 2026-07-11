@@ -1,0 +1,16 @@
+{
+  "script": "shutdown/shutdown-rd-close",
+  "corpus": "gtests",
+  "script_sha256": "43a4554bb2408bf71e7dcf987a8aeb8eeeb5032fcf30054fd1f0c3298a58c3a9",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.211,
+  "diagnostic": null,
+  "divergence": null
+}

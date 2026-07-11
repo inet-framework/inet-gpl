@@ -1,0 +1,16 @@
+{
+  "script": "close/close-remote-fin-then-close",
+  "corpus": "gtests",
+  "script_sha256": "24fb3ccd9f816b5538cffff3cac1d7b23647524290ec8705d023e129901799f0",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.228,
+  "diagnostic": null,
+  "divergence": null
+}

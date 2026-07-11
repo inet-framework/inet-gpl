@@ -1,0 +1,16 @@
+{
+  "script": "tcp_syscall_bad_arg_sendmsg-empty-iov",
+  "corpus": "kernel",
+  "script_sha256": "636bdb13860e22a2029ee8d53a6cb79603db9dbeeb143c6d1dbbf676bcce18da",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.21,
+  "diagnostic": null,
+  "divergence": null
+}

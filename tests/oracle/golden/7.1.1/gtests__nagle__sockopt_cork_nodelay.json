@@ -1,0 +1,16 @@
+{
+  "script": "nagle/sockopt_cork_nodelay",
+  "corpus": "gtests",
+  "script_sha256": "31f228dfcf4ddd8118e854fe8e5109108ae6f3159aa666fe1c0aa60f3417ebd6",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.404,
+  "diagnostic": null,
+  "divergence": null
+}

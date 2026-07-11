@@ -1,0 +1,16 @@
+{
+  "script": "tcp_timestamping_client-only-last-byte",
+  "corpus": "kernel",
+  "script_sha256": "0d5cca28c34959d578bc5e84aeb70504457a61ed964dbb962faae3fb9a3c7aee",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.244,
+  "diagnostic": null,
+  "divergence": null
+}

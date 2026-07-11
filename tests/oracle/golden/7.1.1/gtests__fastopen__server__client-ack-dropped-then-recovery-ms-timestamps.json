@@ -1,0 +1,24 @@
+{
+  "script": "fastopen/server/client-ack-dropped-then-recovery-ms-timestamps",
+  "corpus": "gtests",
+  "script_sha256": "3f04931e584c9493577c19ddca3856c1fd1eb95ac8df021b5eb3072ee3fb9062",
+  "leg": "linux",
+  "verdict": "L_FAIL",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.209,
+  "diagnostic": "expected: 256 (0x100) vs actual: 1053 (0x41d)",
+  "divergence": {
+    "script_line": 33,
+    "message": "expected: 256 (0x100) vs actual: 1053 (0x41d)",
+    "expected_packet": "0.010238 P. 1:5001(5000) ack 1001 win 256 <nop,nop,TS val 2010 ecr 1000>",
+    "actual_packet": "0.010233 P. 1:5001(5000) ack 1001 win 1053 <nop,nop,TS val 2010 ecr 1000>",
+    "context_log": [
+      "client-ack-dropped-then-recovery-ms-timestamps.pkt:33: error handling packet: live packet field tcp_window: expected: 256 (0x100) vs actual: 1053 (0x41d)"
+    ]
+  }
+}

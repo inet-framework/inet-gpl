@@ -1,0 +1,16 @@
+{
+  "script": "tcp_disorder_fin_in_FIN_WAIT",
+  "corpus": "kernel",
+  "script_sha256": "8018a1961d5b9e59f0b860f5f7c1195d4fca390a3d9d8a76b21d63a63072181f",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.1",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.184,
+  "diagnostic": null,
+  "divergence": null
+}
