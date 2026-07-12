@@ -300,6 +300,16 @@ def translate_to_ini(stripped, mapping):
                     unmapped.append(f"{key}={val}")
                     if key in required or spec.get("required"):
                         blocking.append(f"{key}={val} (no INET equivalent)")
+            elif transform == "bitmask":
+                try:
+                    ival = int(val.strip(), 0)
+                except ValueError:
+                    unmapped.append(f"{key}={val}")
+                    if key in required or spec.get("required"):
+                        blocking.append(f"{key}={val} (not an integer)")
+                else:
+                    for bit_str, bit_ini in spec.get("bits", {}).items():
+                        ini[bit_ini] = "true" if (ival & int(bit_str, 0)) else "false"
             else:
                 unmapped.append(f"{key}={val}")
         elif key in ignore:

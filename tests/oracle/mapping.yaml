@@ -47,6 +47,15 @@ sysctl:
   net.ipv4.tcp_ecn:
     ini: "**.tcp.ecnWillingness"
     transform: bool   # 0 -> false; nonzero -> true (AccECN nuance is a dialect-gap concern, not a config one)
+  net.ipv4.tcp_fastopen:
+    # THROWAWAY PREVIEW (Workstream F checkpoint, 2026-07-12): temporarily mapped out
+    # of `ignore:` to preview INET's Fast Open (F1-F3 + the client opt-in-scope fix)
+    # against the kernel before continuing to F4-F6. Bit 0 = client enabled, bit 1 =
+    # server enabled (man 7 tcp TCP_FASTOPEN); matches defaults.sh's 0x3 (both on).
+    transform: bitmask
+    bits:
+      "0x1": "**.tcp.fastopenClientEnabled"
+      "0x2": "**.tcp.fastopenServerEnabled"
   net.ipv4.tcp_congestion_control:
     ini: "**.tcp.tcpAlgorithmClass"
     transform: enum
@@ -114,7 +123,6 @@ ignore:
   - net.ipv4.tcp_pacing_ss_ratio
   - net.ipv4.tcp_pacing_ca_ratio
   - net.ipv4.tcp_notsent_lowat
-  - net.ipv4.tcp_fastopen
   - net.ipv4.tcp_fastopen_key
   - net.ipv4.tcp_syncookies
   - net.ipv4.tcp_ecn_option

@@ -245,15 +245,17 @@ TcpOption *setOptionValues(PacketDrillTcpOption *opt)
             return option;
         }
         case TCPOPT_FASTOPEN: {
-            // INET has no typed Fast Open option (RFC 7413 is not
-            // implemented) -- carry the cookie as raw bytes.
-            auto *option = new TcpOptionUnknown();
-            option->setKind(static_cast<TcpOptionNumbers>(TCPOPT_FASTOPEN));
+            // RFC 7413 kind 34 -- INET has a typed TcpOptionTcpFastOpen
+            // (Workstream F, 2026-07-12); build one, not a raw TcpOptionUnknown,
+            // so INET's option dispatch (which switches on getKind() and
+            // check_and_casts to this type) doesn't crash on a well-formed
+            // script-injected packet.
+            auto *option = new TcpOptionTcpFastOpen();
             option->setLength(length);
             const ByteVector& cookie = opt->getFastOpenCookie();
-            option->setBytesArraySize(cookie.size());
+            option->setCookieArraySize(cookie.size());
             for (size_t i = 0; i < cookie.size(); i++)
-                option->setBytes(i, cookie[i]);
+                option->setCookie(i, cookie[i]);
             return option;
         }
         case TCPOPT_EXP: {

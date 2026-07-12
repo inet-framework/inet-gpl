@@ -2274,8 +2274,28 @@ bool PacketDrillApp::compareTcpHeader(const Ptr<const TcpHeader>& storedTcp, con
                                 return false;
                             }
                             break;
+                        case TCPOPTION_TCP_FASTOPEN:
+                            // RFC 7413 kind 34 -- INET has a typed TcpOptionTcpFastOpen
+                            // (Workstream F, 2026-07-12); compare cookie bytes directly
+                            // instead of falling into the TcpOptionUnknown raw-bytes path
+                            // below, which would check_and_cast this real type and crash.
+                            if (!(storedOption->getLength() == liveOption->getLength() &&
+                                  check_and_cast<const TcpOptionTcpFastOpen *>(storedOption)->getCookieArraySize()
+                                  == check_and_cast<const TcpOptionTcpFastOpen *>(liveOption)->getCookieArraySize()))
+                            {
+                                return false;
+                            }
+                            else {
+                                const auto *storedFo = check_and_cast<const TcpOptionTcpFastOpen *>(storedOption);
+                                const auto *liveFo = check_and_cast<const TcpOptionTcpFastOpen *>(liveOption);
+                                for (unsigned int b = 0; b < storedFo->getCookieArraySize(); b++) {
+                                    if (storedFo->getCookie(b) != liveFo->getCookie(b)) {
+                                        return false;
+                                    }
+                                }
+                            }
+                            break;
                         case TCPOPT_MD5SIG:
-                        case TCPOPT_FASTOPEN:
                         case TCPOPT_EXP:
                         case TCPOPT_ACCECN0:
                         case TCPOPT_ACCECN1: {
