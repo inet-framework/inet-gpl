@@ -127,6 +127,16 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     bool epollInEdgePending = false;
     bool epollOutEdgePending = false;
 
+    // %{ }% Python-assertion blocks: each block's tcp_info-equivalent
+    // snapshot (captured via an async TCP_C_STATUS request at the block's
+    // scheduled time) plus its raw Python text are accumulated here, in
+    // script order, and executed together as one python3 subprocess at the
+    // very end of the script -- matching upstream packetdrill's actual
+    // architecture (see plan doc), not per-block synchronous execution.
+    std::string codeBlockBuffer;
+    bool codeEventPending = false;
+    const char *pendingCodeText = nullptr;
+
   private:
     void scheduleEvent();
 
@@ -172,6 +182,12 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
 
     int syscallEpollWait(struct syscall_spec *syscall, cQueue *args, char **error);
 
+    void runCodeEvent(PacketDrillEvent *event);
+
+    std::string formatTcpInfoSnapshot(TcpStatusInfo *status);
+
+    void executeCodeBlocks();
+
     int syscallSctpSendmsg(struct syscall_spec *syscall, cQueue *args, char **error);
 
     int syscallSctpSend(struct syscall_spec *syscall, cQueue *args, char **error);
@@ -215,7 +231,7 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     virtual void socketPeerClosed(TcpSocket *socket) override;
     virtual void socketClosed(TcpSocket *socket) override;
     virtual void socketFailure(TcpSocket *socket, int code) override;
-    virtual void socketStatusArrived(TcpSocket *socket, TcpStatusInfo *status) override {}
+    virtual void socketStatusArrived(TcpSocket *socket, TcpStatusInfo *status) override;
     virtual void socketDeleted(TcpSocket *socket) override {} // TODO
     //@}
 

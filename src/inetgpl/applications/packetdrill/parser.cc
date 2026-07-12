@@ -491,197 +491,199 @@ enum yysymbol_kind_t
   YYSYMBOL_HEX_INTEGER = 167,              /* HEX_INTEGER  */
   YYSYMBOL_MYWORD = 168,                   /* MYWORD  */
   YYSYMBOL_MYSTRING = 169,                 /* MYSTRING  */
-  YYSYMBOL_170_ = 170,                     /* '='  */
-  YYSYMBOL_171_ = 171,                     /* '+'  */
-  YYSYMBOL_172_ = 172,                     /* '*'  */
-  YYSYMBOL_173_ = 173,                     /* '~'  */
-  YYSYMBOL_174_ = 174,                     /* '('  */
-  YYSYMBOL_175_ = 175,                     /* ')'  */
-  YYSYMBOL_176_ = 176,                     /* ':'  */
-  YYSYMBOL_177_ = 177,                     /* ';'  */
-  YYSYMBOL_178_ = 178,                     /* '['  */
-  YYSYMBOL_179_ = 179,                     /* ']'  */
-  YYSYMBOL_180_ = 180,                     /* ','  */
-  YYSYMBOL_181_ = 181,                     /* '<'  */
-  YYSYMBOL_182_ = 182,                     /* '>'  */
-  YYSYMBOL_183_ = 183,                     /* '.'  */
-  YYSYMBOL_184_ = 184,                     /* '-'  */
-  YYSYMBOL_185_ = 185,                     /* '|'  */
-  YYSYMBOL_186_ = 186,                     /* '{'  */
-  YYSYMBOL_187_ = 187,                     /* '}'  */
-  YYSYMBOL_YYACCEPT = 188,                 /* $accept  */
-  YYSYMBOL_script = 189,                   /* script  */
-  YYSYMBOL_opt_options = 190,              /* opt_options  */
-  YYSYMBOL_options = 191,                  /* options  */
-  YYSYMBOL_option = 192,                   /* option  */
-  YYSYMBOL_option_flag = 193,              /* option_flag  */
-  YYSYMBOL_option_value = 194,             /* option_value  */
-  YYSYMBOL_events = 195,                   /* events  */
-  YYSYMBOL_event = 196,                    /* event  */
-  YYSYMBOL_event_time = 197,               /* event_time  */
-  YYSYMBOL_time = 198,                     /* time  */
-  YYSYMBOL_action = 199,                   /* action  */
-  YYSYMBOL_command_spec = 200,             /* command_spec  */
-  YYSYMBOL_packet_spec = 201,              /* packet_spec  */
-  YYSYMBOL_tcp_packet_spec = 202,          /* tcp_packet_spec  */
-  YYSYMBOL_udp_packet_spec = 203,          /* udp_packet_spec  */
-  YYSYMBOL_sctp_packet_spec = 204,         /* sctp_packet_spec  */
-  YYSYMBOL_sctp_chunk_list = 205,          /* sctp_chunk_list  */
-  YYSYMBOL_sctp_chunk = 206,               /* sctp_chunk  */
-  YYSYMBOL_opt_flags = 207,                /* opt_flags  */
-  YYSYMBOL_opt_len = 208,                  /* opt_len  */
-  YYSYMBOL_opt_val = 209,                  /* opt_val  */
-  YYSYMBOL_byte_list = 210,                /* byte_list  */
-  YYSYMBOL_chunk_types_list = 211,         /* chunk_types_list  */
-  YYSYMBOL_byte = 212,                     /* byte  */
-  YYSYMBOL_chunk_type = 213,               /* chunk_type  */
-  YYSYMBOL_opt_data_flags = 214,           /* opt_data_flags  */
-  YYSYMBOL_opt_abort_flags = 215,          /* opt_abort_flags  */
-  YYSYMBOL_opt_shutdown_complete_flags = 216, /* opt_shutdown_complete_flags  */
-  YYSYMBOL_opt_tag = 217,                  /* opt_tag  */
-  YYSYMBOL_opt_a_rwnd = 218,               /* opt_a_rwnd  */
-  YYSYMBOL_opt_os = 219,                   /* opt_os  */
-  YYSYMBOL_opt_is = 220,                   /* opt_is  */
-  YYSYMBOL_opt_tsn = 221,                  /* opt_tsn  */
-  YYSYMBOL_opt_sid = 222,                  /* opt_sid  */
-  YYSYMBOL_opt_ssn = 223,                  /* opt_ssn  */
-  YYSYMBOL_opt_ppid = 224,                 /* opt_ppid  */
-  YYSYMBOL_opt_cum_tsn = 225,              /* opt_cum_tsn  */
-  YYSYMBOL_opt_gaps = 226,                 /* opt_gaps  */
-  YYSYMBOL_opt_dups = 227,                 /* opt_dups  */
-  YYSYMBOL_sctp_data_chunk_spec = 228,     /* sctp_data_chunk_spec  */
-  YYSYMBOL_sctp_init_chunk_spec = 229,     /* sctp_init_chunk_spec  */
-  YYSYMBOL_sctp_init_ack_chunk_spec = 230, /* sctp_init_ack_chunk_spec  */
-  YYSYMBOL_sctp_sack_chunk_spec = 231,     /* sctp_sack_chunk_spec  */
-  YYSYMBOL_sctp_heartbeat_chunk_spec = 232, /* sctp_heartbeat_chunk_spec  */
-  YYSYMBOL_sctp_heartbeat_ack_chunk_spec = 233, /* sctp_heartbeat_ack_chunk_spec  */
-  YYSYMBOL_sctp_abort_chunk_spec = 234,    /* sctp_abort_chunk_spec  */
-  YYSYMBOL_sctp_shutdown_chunk_spec = 235, /* sctp_shutdown_chunk_spec  */
-  YYSYMBOL_sctp_shutdown_ack_chunk_spec = 236, /* sctp_shutdown_ack_chunk_spec  */
-  YYSYMBOL_sctp_cookie_echo_chunk_spec = 237, /* sctp_cookie_echo_chunk_spec  */
-  YYSYMBOL_sctp_cookie_ack_chunk_spec = 238, /* sctp_cookie_ack_chunk_spec  */
-  YYSYMBOL_opt_cause_list = 239,           /* opt_cause_list  */
-  YYSYMBOL_sctp_cause_list = 240,          /* sctp_cause_list  */
-  YYSYMBOL_sctp_invalid_stream_identifier_cause_spec = 241, /* sctp_invalid_stream_identifier_cause_spec  */
-  YYSYMBOL_sctp_cause_spec = 242,          /* sctp_cause_spec  */
-  YYSYMBOL_sctp_error_chunk_spec = 243,    /* sctp_error_chunk_spec  */
-  YYSYMBOL_sctp_shutdown_complete_chunk_spec = 244, /* sctp_shutdown_complete_chunk_spec  */
-  YYSYMBOL_opt_req_sn = 245,               /* opt_req_sn  */
-  YYSYMBOL_opt_resp_sn = 246,              /* opt_resp_sn  */
-  YYSYMBOL_opt_last_tsn = 247,             /* opt_last_tsn  */
-  YYSYMBOL_opt_result = 248,               /* opt_result  */
-  YYSYMBOL_opt_sender_next_tsn = 249,      /* opt_sender_next_tsn  */
-  YYSYMBOL_opt_receiver_next_tsn = 250,    /* opt_receiver_next_tsn  */
-  YYSYMBOL_opt_number_of_new_streams = 251, /* opt_number_of_new_streams  */
-  YYSYMBOL_stream_list = 252,              /* stream_list  */
-  YYSYMBOL_stream = 253,                   /* stream  */
-  YYSYMBOL_outgoing_ssn_reset_request = 254, /* outgoing_ssn_reset_request  */
-  YYSYMBOL_incoming_ssn_reset_request = 255, /* incoming_ssn_reset_request  */
-  YYSYMBOL_ssn_tsn_reset_request = 256,    /* ssn_tsn_reset_request  */
-  YYSYMBOL_reconfig_response = 257,        /* reconfig_response  */
-  YYSYMBOL_add_outgoing_streams_request = 258, /* add_outgoing_streams_request  */
-  YYSYMBOL_add_incoming_streams_request = 259, /* add_incoming_streams_request  */
-  YYSYMBOL_sctp_reconfig_chunk_spec = 260, /* sctp_reconfig_chunk_spec  */
-  YYSYMBOL_opt_parameter_list = 261,       /* opt_parameter_list  */
-  YYSYMBOL_sctp_parameter_list = 262,      /* sctp_parameter_list  */
-  YYSYMBOL_sctp_parameter = 263,           /* sctp_parameter  */
-  YYSYMBOL_sctp_heartbeat_information_parameter = 264, /* sctp_heartbeat_information_parameter  */
-  YYSYMBOL_sctp_supported_extensions_parameter = 265, /* sctp_supported_extensions_parameter  */
-  YYSYMBOL_address_types_list = 266,       /* address_types_list  */
-  YYSYMBOL_address_type = 267,             /* address_type  */
-  YYSYMBOL_sctp_supported_address_types_parameter = 268, /* sctp_supported_address_types_parameter  */
-  YYSYMBOL_sctp_state_cookie_parameter = 269, /* sctp_state_cookie_parameter  */
-  YYSYMBOL_packet_prefix = 270,            /* packet_prefix  */
-  YYSYMBOL_direction = 271,                /* direction  */
-  YYSYMBOL_opt_ip_info = 272,              /* opt_ip_info  */
-  YYSYMBOL_ip_ecn = 273,                   /* ip_ecn  */
-  YYSYMBOL_flags = 274,                    /* flags  */
-  YYSYMBOL_seq = 275,                      /* seq  */
-  YYSYMBOL_opt_ack = 276,                  /* opt_ack  */
-  YYSYMBOL_opt_window = 277,               /* opt_window  */
-  YYSYMBOL_opt_urg_ptr = 278,              /* opt_urg_ptr  */
-  YYSYMBOL_opt_tcp_options = 279,          /* opt_tcp_options  */
-  YYSYMBOL_tcp_option_list = 280,          /* tcp_option_list  */
-  YYSYMBOL_tcp_option = 281,               /* tcp_option  */
-  YYSYMBOL_opt_fastopen_cookie = 282,      /* opt_fastopen_cookie  */
-  YYSYMBOL_accecn_val = 283,               /* accecn_val  */
-  YYSYMBOL_accecn_option = 284,            /* accecn_option  */
-  YYSYMBOL_sack_block_list = 285,          /* sack_block_list  */
-  YYSYMBOL_gap_list = 286,                 /* gap_list  */
-  YYSYMBOL_gap = 287,                      /* gap  */
-  YYSYMBOL_dup_list = 288,                 /* dup_list  */
-  YYSYMBOL_dup = 289,                      /* dup  */
-  YYSYMBOL_sack_block = 290,               /* sack_block  */
-  YYSYMBOL_syscall_spec = 291,             /* syscall_spec  */
-  YYSYMBOL_opt_end_time = 292,             /* opt_end_time  */
-  YYSYMBOL_function_name = 293,            /* function_name  */
-  YYSYMBOL_function_arguments = 294,       /* function_arguments  */
-  YYSYMBOL_expression_list = 295,          /* expression_list  */
-  YYSYMBOL_expression = 296,               /* expression  */
-  YYSYMBOL_decimal_integer = 297,          /* decimal_integer  */
-  YYSYMBOL_hex_integer = 298,              /* hex_integer  */
-  YYSYMBOL_binary_expression = 299,        /* binary_expression  */
-  YYSYMBOL_array = 300,                    /* array  */
-  YYSYMBOL_msghdr = 301,                   /* msghdr  */
-  YYSYMBOL_opt_cmsg = 302,                 /* opt_cmsg  */
-  YYSYMBOL_cmsg_expr = 303,                /* cmsg_expr  */
-  YYSYMBOL_sock_extended_err = 304,        /* sock_extended_err  */
-  YYSYMBOL_iovec = 305,                    /* iovec  */
-  YYSYMBOL_epollev = 306,                  /* epollev  */
-  YYSYMBOL_srto_initial = 307,             /* srto_initial  */
-  YYSYMBOL_srto_max = 308,                 /* srto_max  */
-  YYSYMBOL_srto_min = 309,                 /* srto_min  */
-  YYSYMBOL_sctp_assoc_id = 310,            /* sctp_assoc_id  */
-  YYSYMBOL_sctp_rtoinfo = 311,             /* sctp_rtoinfo  */
-  YYSYMBOL_sasoc_asocmaxrxt = 312,         /* sasoc_asocmaxrxt  */
-  YYSYMBOL_sasoc_number_peer_destinations = 313, /* sasoc_number_peer_destinations  */
-  YYSYMBOL_sasoc_peer_rwnd = 314,          /* sasoc_peer_rwnd  */
-  YYSYMBOL_sasoc_local_rwnd = 315,         /* sasoc_local_rwnd  */
-  YYSYMBOL_sasoc_cookie_life = 316,        /* sasoc_cookie_life  */
-  YYSYMBOL_sctp_assocparams = 317,         /* sctp_assocparams  */
-  YYSYMBOL_sinit_num_ostreams = 318,       /* sinit_num_ostreams  */
-  YYSYMBOL_sinit_max_instreams = 319,      /* sinit_max_instreams  */
-  YYSYMBOL_sinit_max_attempts = 320,       /* sinit_max_attempts  */
-  YYSYMBOL_sinit_max_init_timeo = 321,     /* sinit_max_init_timeo  */
-  YYSYMBOL_sctp_initmsg = 322,             /* sctp_initmsg  */
-  YYSYMBOL_sockaddr = 323,                 /* sockaddr  */
-  YYSYMBOL_spp_address = 324,              /* spp_address  */
-  YYSYMBOL_spp_hbinterval = 325,           /* spp_hbinterval  */
-  YYSYMBOL_spp_pathmtu = 326,              /* spp_pathmtu  */
-  YYSYMBOL_spp_pathmaxrxt = 327,           /* spp_pathmaxrxt  */
-  YYSYMBOL_spp_flags = 328,                /* spp_flags  */
-  YYSYMBOL_spp_ipv6_flowlabel = 329,       /* spp_ipv6_flowlabel  */
-  YYSYMBOL_spp_dscp = 330,                 /* spp_dscp  */
-  YYSYMBOL_sctp_paddrparams = 331,         /* sctp_paddrparams  */
-  YYSYMBOL_sstat_state = 332,              /* sstat_state  */
-  YYSYMBOL_sstat_rwnd = 333,               /* sstat_rwnd  */
-  YYSYMBOL_sstat_unackdata = 334,          /* sstat_unackdata  */
-  YYSYMBOL_sstat_penddata = 335,           /* sstat_penddata  */
-  YYSYMBOL_sstat_instrms = 336,            /* sstat_instrms  */
-  YYSYMBOL_sstat_outstrms = 337,           /* sstat_outstrms  */
-  YYSYMBOL_sstat_fragmentation_point = 338, /* sstat_fragmentation_point  */
-  YYSYMBOL_sstat_primary = 339,            /* sstat_primary  */
-  YYSYMBOL_sctp_status = 340,              /* sctp_status  */
-  YYSYMBOL_sinfo_stream = 341,             /* sinfo_stream  */
-  YYSYMBOL_sinfo_ssn = 342,                /* sinfo_ssn  */
-  YYSYMBOL_sinfo_flags = 343,              /* sinfo_flags  */
-  YYSYMBOL_sinfo_ppid = 344,               /* sinfo_ppid  */
-  YYSYMBOL_sinfo_context = 345,            /* sinfo_context  */
-  YYSYMBOL_sinfo_timetolive = 346,         /* sinfo_timetolive  */
-  YYSYMBOL_sinfo_tsn = 347,                /* sinfo_tsn  */
-  YYSYMBOL_sinfo_cumtsn = 348,             /* sinfo_cumtsn  */
-  YYSYMBOL_sctp_sndrcvinfo = 349,          /* sctp_sndrcvinfo  */
-  YYSYMBOL_srs_flags = 350,                /* srs_flags  */
-  YYSYMBOL_sctp_reset_streams = 351,       /* sctp_reset_streams  */
-  YYSYMBOL_sctp_add_streams = 352,         /* sctp_add_streams  */
-  YYSYMBOL_sctp_assoc_value = 353,         /* sctp_assoc_value  */
-  YYSYMBOL_sack_delay = 354,               /* sack_delay  */
-  YYSYMBOL_sack_freq = 355,                /* sack_freq  */
-  YYSYMBOL_sctp_sackinfo = 356,            /* sctp_sackinfo  */
-  YYSYMBOL_opt_errno = 357,                /* opt_errno  */
-  YYSYMBOL_opt_note = 358,                 /* opt_note  */
-  YYSYMBOL_note = 359,                     /* note  */
-  YYSYMBOL_word_list = 360                 /* word_list  */
+  YYSYMBOL_CODE = 170,                     /* CODE  */
+  YYSYMBOL_171_ = 171,                     /* '='  */
+  YYSYMBOL_172_ = 172,                     /* '+'  */
+  YYSYMBOL_173_ = 173,                     /* '*'  */
+  YYSYMBOL_174_ = 174,                     /* '~'  */
+  YYSYMBOL_175_ = 175,                     /* '('  */
+  YYSYMBOL_176_ = 176,                     /* ')'  */
+  YYSYMBOL_177_ = 177,                     /* ':'  */
+  YYSYMBOL_178_ = 178,                     /* ';'  */
+  YYSYMBOL_179_ = 179,                     /* '['  */
+  YYSYMBOL_180_ = 180,                     /* ']'  */
+  YYSYMBOL_181_ = 181,                     /* ','  */
+  YYSYMBOL_182_ = 182,                     /* '<'  */
+  YYSYMBOL_183_ = 183,                     /* '>'  */
+  YYSYMBOL_184_ = 184,                     /* '.'  */
+  YYSYMBOL_185_ = 185,                     /* '-'  */
+  YYSYMBOL_186_ = 186,                     /* '|'  */
+  YYSYMBOL_187_ = 187,                     /* '{'  */
+  YYSYMBOL_188_ = 188,                     /* '}'  */
+  YYSYMBOL_YYACCEPT = 189,                 /* $accept  */
+  YYSYMBOL_script = 190,                   /* script  */
+  YYSYMBOL_opt_options = 191,              /* opt_options  */
+  YYSYMBOL_options = 192,                  /* options  */
+  YYSYMBOL_option = 193,                   /* option  */
+  YYSYMBOL_option_flag = 194,              /* option_flag  */
+  YYSYMBOL_option_value = 195,             /* option_value  */
+  YYSYMBOL_events = 196,                   /* events  */
+  YYSYMBOL_event = 197,                    /* event  */
+  YYSYMBOL_event_time = 198,               /* event_time  */
+  YYSYMBOL_time = 199,                     /* time  */
+  YYSYMBOL_action = 200,                   /* action  */
+  YYSYMBOL_command_spec = 201,             /* command_spec  */
+  YYSYMBOL_code_spec = 202,                /* code_spec  */
+  YYSYMBOL_packet_spec = 203,              /* packet_spec  */
+  YYSYMBOL_tcp_packet_spec = 204,          /* tcp_packet_spec  */
+  YYSYMBOL_udp_packet_spec = 205,          /* udp_packet_spec  */
+  YYSYMBOL_sctp_packet_spec = 206,         /* sctp_packet_spec  */
+  YYSYMBOL_sctp_chunk_list = 207,          /* sctp_chunk_list  */
+  YYSYMBOL_sctp_chunk = 208,               /* sctp_chunk  */
+  YYSYMBOL_opt_flags = 209,                /* opt_flags  */
+  YYSYMBOL_opt_len = 210,                  /* opt_len  */
+  YYSYMBOL_opt_val = 211,                  /* opt_val  */
+  YYSYMBOL_byte_list = 212,                /* byte_list  */
+  YYSYMBOL_chunk_types_list = 213,         /* chunk_types_list  */
+  YYSYMBOL_byte = 214,                     /* byte  */
+  YYSYMBOL_chunk_type = 215,               /* chunk_type  */
+  YYSYMBOL_opt_data_flags = 216,           /* opt_data_flags  */
+  YYSYMBOL_opt_abort_flags = 217,          /* opt_abort_flags  */
+  YYSYMBOL_opt_shutdown_complete_flags = 218, /* opt_shutdown_complete_flags  */
+  YYSYMBOL_opt_tag = 219,                  /* opt_tag  */
+  YYSYMBOL_opt_a_rwnd = 220,               /* opt_a_rwnd  */
+  YYSYMBOL_opt_os = 221,                   /* opt_os  */
+  YYSYMBOL_opt_is = 222,                   /* opt_is  */
+  YYSYMBOL_opt_tsn = 223,                  /* opt_tsn  */
+  YYSYMBOL_opt_sid = 224,                  /* opt_sid  */
+  YYSYMBOL_opt_ssn = 225,                  /* opt_ssn  */
+  YYSYMBOL_opt_ppid = 226,                 /* opt_ppid  */
+  YYSYMBOL_opt_cum_tsn = 227,              /* opt_cum_tsn  */
+  YYSYMBOL_opt_gaps = 228,                 /* opt_gaps  */
+  YYSYMBOL_opt_dups = 229,                 /* opt_dups  */
+  YYSYMBOL_sctp_data_chunk_spec = 230,     /* sctp_data_chunk_spec  */
+  YYSYMBOL_sctp_init_chunk_spec = 231,     /* sctp_init_chunk_spec  */
+  YYSYMBOL_sctp_init_ack_chunk_spec = 232, /* sctp_init_ack_chunk_spec  */
+  YYSYMBOL_sctp_sack_chunk_spec = 233,     /* sctp_sack_chunk_spec  */
+  YYSYMBOL_sctp_heartbeat_chunk_spec = 234, /* sctp_heartbeat_chunk_spec  */
+  YYSYMBOL_sctp_heartbeat_ack_chunk_spec = 235, /* sctp_heartbeat_ack_chunk_spec  */
+  YYSYMBOL_sctp_abort_chunk_spec = 236,    /* sctp_abort_chunk_spec  */
+  YYSYMBOL_sctp_shutdown_chunk_spec = 237, /* sctp_shutdown_chunk_spec  */
+  YYSYMBOL_sctp_shutdown_ack_chunk_spec = 238, /* sctp_shutdown_ack_chunk_spec  */
+  YYSYMBOL_sctp_cookie_echo_chunk_spec = 239, /* sctp_cookie_echo_chunk_spec  */
+  YYSYMBOL_sctp_cookie_ack_chunk_spec = 240, /* sctp_cookie_ack_chunk_spec  */
+  YYSYMBOL_opt_cause_list = 241,           /* opt_cause_list  */
+  YYSYMBOL_sctp_cause_list = 242,          /* sctp_cause_list  */
+  YYSYMBOL_sctp_invalid_stream_identifier_cause_spec = 243, /* sctp_invalid_stream_identifier_cause_spec  */
+  YYSYMBOL_sctp_cause_spec = 244,          /* sctp_cause_spec  */
+  YYSYMBOL_sctp_error_chunk_spec = 245,    /* sctp_error_chunk_spec  */
+  YYSYMBOL_sctp_shutdown_complete_chunk_spec = 246, /* sctp_shutdown_complete_chunk_spec  */
+  YYSYMBOL_opt_req_sn = 247,               /* opt_req_sn  */
+  YYSYMBOL_opt_resp_sn = 248,              /* opt_resp_sn  */
+  YYSYMBOL_opt_last_tsn = 249,             /* opt_last_tsn  */
+  YYSYMBOL_opt_result = 250,               /* opt_result  */
+  YYSYMBOL_opt_sender_next_tsn = 251,      /* opt_sender_next_tsn  */
+  YYSYMBOL_opt_receiver_next_tsn = 252,    /* opt_receiver_next_tsn  */
+  YYSYMBOL_opt_number_of_new_streams = 253, /* opt_number_of_new_streams  */
+  YYSYMBOL_stream_list = 254,              /* stream_list  */
+  YYSYMBOL_stream = 255,                   /* stream  */
+  YYSYMBOL_outgoing_ssn_reset_request = 256, /* outgoing_ssn_reset_request  */
+  YYSYMBOL_incoming_ssn_reset_request = 257, /* incoming_ssn_reset_request  */
+  YYSYMBOL_ssn_tsn_reset_request = 258,    /* ssn_tsn_reset_request  */
+  YYSYMBOL_reconfig_response = 259,        /* reconfig_response  */
+  YYSYMBOL_add_outgoing_streams_request = 260, /* add_outgoing_streams_request  */
+  YYSYMBOL_add_incoming_streams_request = 261, /* add_incoming_streams_request  */
+  YYSYMBOL_sctp_reconfig_chunk_spec = 262, /* sctp_reconfig_chunk_spec  */
+  YYSYMBOL_opt_parameter_list = 263,       /* opt_parameter_list  */
+  YYSYMBOL_sctp_parameter_list = 264,      /* sctp_parameter_list  */
+  YYSYMBOL_sctp_parameter = 265,           /* sctp_parameter  */
+  YYSYMBOL_sctp_heartbeat_information_parameter = 266, /* sctp_heartbeat_information_parameter  */
+  YYSYMBOL_sctp_supported_extensions_parameter = 267, /* sctp_supported_extensions_parameter  */
+  YYSYMBOL_address_types_list = 268,       /* address_types_list  */
+  YYSYMBOL_address_type = 269,             /* address_type  */
+  YYSYMBOL_sctp_supported_address_types_parameter = 270, /* sctp_supported_address_types_parameter  */
+  YYSYMBOL_sctp_state_cookie_parameter = 271, /* sctp_state_cookie_parameter  */
+  YYSYMBOL_packet_prefix = 272,            /* packet_prefix  */
+  YYSYMBOL_direction = 273,                /* direction  */
+  YYSYMBOL_opt_ip_info = 274,              /* opt_ip_info  */
+  YYSYMBOL_ip_ecn = 275,                   /* ip_ecn  */
+  YYSYMBOL_flags = 276,                    /* flags  */
+  YYSYMBOL_seq = 277,                      /* seq  */
+  YYSYMBOL_opt_ack = 278,                  /* opt_ack  */
+  YYSYMBOL_opt_window = 279,               /* opt_window  */
+  YYSYMBOL_opt_urg_ptr = 280,              /* opt_urg_ptr  */
+  YYSYMBOL_opt_tcp_options = 281,          /* opt_tcp_options  */
+  YYSYMBOL_tcp_option_list = 282,          /* tcp_option_list  */
+  YYSYMBOL_tcp_option = 283,               /* tcp_option  */
+  YYSYMBOL_opt_fastopen_cookie = 284,      /* opt_fastopen_cookie  */
+  YYSYMBOL_accecn_val = 285,               /* accecn_val  */
+  YYSYMBOL_accecn_option = 286,            /* accecn_option  */
+  YYSYMBOL_sack_block_list = 287,          /* sack_block_list  */
+  YYSYMBOL_gap_list = 288,                 /* gap_list  */
+  YYSYMBOL_gap = 289,                      /* gap  */
+  YYSYMBOL_dup_list = 290,                 /* dup_list  */
+  YYSYMBOL_dup = 291,                      /* dup  */
+  YYSYMBOL_sack_block = 292,               /* sack_block  */
+  YYSYMBOL_syscall_spec = 293,             /* syscall_spec  */
+  YYSYMBOL_opt_end_time = 294,             /* opt_end_time  */
+  YYSYMBOL_function_name = 295,            /* function_name  */
+  YYSYMBOL_function_arguments = 296,       /* function_arguments  */
+  YYSYMBOL_expression_list = 297,          /* expression_list  */
+  YYSYMBOL_expression = 298,               /* expression  */
+  YYSYMBOL_decimal_integer = 299,          /* decimal_integer  */
+  YYSYMBOL_hex_integer = 300,              /* hex_integer  */
+  YYSYMBOL_binary_expression = 301,        /* binary_expression  */
+  YYSYMBOL_array = 302,                    /* array  */
+  YYSYMBOL_msghdr = 303,                   /* msghdr  */
+  YYSYMBOL_opt_cmsg = 304,                 /* opt_cmsg  */
+  YYSYMBOL_cmsg_expr = 305,                /* cmsg_expr  */
+  YYSYMBOL_sock_extended_err = 306,        /* sock_extended_err  */
+  YYSYMBOL_iovec = 307,                    /* iovec  */
+  YYSYMBOL_epollev = 308,                  /* epollev  */
+  YYSYMBOL_srto_initial = 309,             /* srto_initial  */
+  YYSYMBOL_srto_max = 310,                 /* srto_max  */
+  YYSYMBOL_srto_min = 311,                 /* srto_min  */
+  YYSYMBOL_sctp_assoc_id = 312,            /* sctp_assoc_id  */
+  YYSYMBOL_sctp_rtoinfo = 313,             /* sctp_rtoinfo  */
+  YYSYMBOL_sasoc_asocmaxrxt = 314,         /* sasoc_asocmaxrxt  */
+  YYSYMBOL_sasoc_number_peer_destinations = 315, /* sasoc_number_peer_destinations  */
+  YYSYMBOL_sasoc_peer_rwnd = 316,          /* sasoc_peer_rwnd  */
+  YYSYMBOL_sasoc_local_rwnd = 317,         /* sasoc_local_rwnd  */
+  YYSYMBOL_sasoc_cookie_life = 318,        /* sasoc_cookie_life  */
+  YYSYMBOL_sctp_assocparams = 319,         /* sctp_assocparams  */
+  YYSYMBOL_sinit_num_ostreams = 320,       /* sinit_num_ostreams  */
+  YYSYMBOL_sinit_max_instreams = 321,      /* sinit_max_instreams  */
+  YYSYMBOL_sinit_max_attempts = 322,       /* sinit_max_attempts  */
+  YYSYMBOL_sinit_max_init_timeo = 323,     /* sinit_max_init_timeo  */
+  YYSYMBOL_sctp_initmsg = 324,             /* sctp_initmsg  */
+  YYSYMBOL_sockaddr = 325,                 /* sockaddr  */
+  YYSYMBOL_spp_address = 326,              /* spp_address  */
+  YYSYMBOL_spp_hbinterval = 327,           /* spp_hbinterval  */
+  YYSYMBOL_spp_pathmtu = 328,              /* spp_pathmtu  */
+  YYSYMBOL_spp_pathmaxrxt = 329,           /* spp_pathmaxrxt  */
+  YYSYMBOL_spp_flags = 330,                /* spp_flags  */
+  YYSYMBOL_spp_ipv6_flowlabel = 331,       /* spp_ipv6_flowlabel  */
+  YYSYMBOL_spp_dscp = 332,                 /* spp_dscp  */
+  YYSYMBOL_sctp_paddrparams = 333,         /* sctp_paddrparams  */
+  YYSYMBOL_sstat_state = 334,              /* sstat_state  */
+  YYSYMBOL_sstat_rwnd = 335,               /* sstat_rwnd  */
+  YYSYMBOL_sstat_unackdata = 336,          /* sstat_unackdata  */
+  YYSYMBOL_sstat_penddata = 337,           /* sstat_penddata  */
+  YYSYMBOL_sstat_instrms = 338,            /* sstat_instrms  */
+  YYSYMBOL_sstat_outstrms = 339,           /* sstat_outstrms  */
+  YYSYMBOL_sstat_fragmentation_point = 340, /* sstat_fragmentation_point  */
+  YYSYMBOL_sstat_primary = 341,            /* sstat_primary  */
+  YYSYMBOL_sctp_status = 342,              /* sctp_status  */
+  YYSYMBOL_sinfo_stream = 343,             /* sinfo_stream  */
+  YYSYMBOL_sinfo_ssn = 344,                /* sinfo_ssn  */
+  YYSYMBOL_sinfo_flags = 345,              /* sinfo_flags  */
+  YYSYMBOL_sinfo_ppid = 346,               /* sinfo_ppid  */
+  YYSYMBOL_sinfo_context = 347,            /* sinfo_context  */
+  YYSYMBOL_sinfo_timetolive = 348,         /* sinfo_timetolive  */
+  YYSYMBOL_sinfo_tsn = 349,                /* sinfo_tsn  */
+  YYSYMBOL_sinfo_cumtsn = 350,             /* sinfo_cumtsn  */
+  YYSYMBOL_sctp_sndrcvinfo = 351,          /* sctp_sndrcvinfo  */
+  YYSYMBOL_srs_flags = 352,                /* srs_flags  */
+  YYSYMBOL_sctp_reset_streams = 353,       /* sctp_reset_streams  */
+  YYSYMBOL_sctp_add_streams = 354,         /* sctp_add_streams  */
+  YYSYMBOL_sctp_assoc_value = 355,         /* sctp_assoc_value  */
+  YYSYMBOL_sack_delay = 356,               /* sack_delay  */
+  YYSYMBOL_sack_freq = 357,                /* sack_freq  */
+  YYSYMBOL_sctp_sackinfo = 358,            /* sctp_sackinfo  */
+  YYSYMBOL_opt_errno = 359,                /* opt_errno  */
+  YYSYMBOL_opt_note = 360,                 /* opt_note  */
+  YYSYMBOL_note = 361,                     /* note  */
+  YYSYMBOL_word_list = 362                 /* word_list  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -1012,19 +1014,19 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  7
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   1184
+#define YYLAST   1186
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  188
+#define YYNTOKENS  189
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  173
+#define YYNNTS  174
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  403
+#define YYNRULES  405
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  1075
+#define YYNSTATES  1077
 
 /* YYMAXUTOK -- Last valid token kind.  */
-#define YYMAXUTOK   424
+#define YYMAXUTOK   425
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -1042,15 +1044,15 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-     174,   175,   172,   171,   180,   184,   183,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,   176,   177,
-     181,   170,   182,     2,     2,     2,     2,     2,     2,     2,
+     175,   176,   173,   172,   181,   185,   184,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,   177,   178,
+     182,   171,   183,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,   178,     2,   179,     2,     2,     2,     2,     2,     2,
+       2,   179,     2,   180,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,   186,   185,   187,   173,     2,     2,     2,
+       2,     2,     2,   187,   186,   188,   174,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -1080,54 +1082,54 @@ static const yytype_uint8 yytranslate[] =
      135,   136,   137,   138,   139,   140,   141,   142,   143,   144,
      145,   146,   147,   148,   149,   150,   151,   152,   153,   154,
      155,   156,   157,   158,   159,   160,   161,   162,   163,   164,
-     165,   166,   167,   168,   169
+     165,   166,   167,   168,   169,   170
 };
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   386,   386,   392,   394,   401,   405,   412,   417,   421,
-     422,   423,   428,   432,   439,   469,   475,   481,   486,   493,
-     503,   509,   518,   525,   529,   536,   543,   546,   549,   555,
-     581,   600,   620,   622,   628,   629,   630,   631,   632,   633,
-     634,   635,   636,   637,   638,   639,   640,   641,   646,   647,
-     653,   662,   663,   672,   673,   674,   678,   679,   684,   685,
-     686,   691,   697,   706,   712,   718,   721,   724,   727,   730,
-     733,   736,   739,   742,   745,   748,   751,   754,   757,   760,
-     766,   767,   773,   779,   823,   824,   830,   836,   859,   860,
-     866,   872,   895,   896,   905,   906,   915,   916,   925,   926,
-     935,   936,   945,   946,   955,   956,   966,   967,   973,   982,
-     983,   992,   993,   994,   999,  1000,  1001,  1006,  1015,  1020,
-    1025,  1030,  1036,  1042,  1047,  1052,  1057,  1073,  1078,  1079,
-    1080,  1084,  1086,  1091,  1097,  1102,  1106,  1111,  1117,  1123,
-    1127,  1133,  1137,  1143,  1147,  1153,  1157,  1163,  1169,  1173,
-    1179,  1185,  1189,  1195,  1199,  1203,  1209,  1212,  1222,  1225,
-    1231,  1234,  1240,  1246,  1249,  1255,  1261,  1273,  1279,  1280,
-    1281,  1285,  1289,  1297,  1298,  1299,  1300,  1301,  1302,  1303,
-    1304,  1305,  1306,  1311,  1314,  1330,  1333,  1338,  1340,  1343,
-    1349,  1353,  1354,  1358,  1361,  1367,  1370,  1373,  1383,  1391,
-    1395,  1406,  1409,  1415,  1432,  1435,  1438,  1442,  1448,  1468,
-    1471,  1480,  1483,  1492,  1495,  1504,  1507,  1510,  1517,  1521,
-    1529,  1532,  1535,  1542,  1549,  1552,  1556,  1570,  1579,  1589,
-    1599,  1605,  1608,  1621,  1630,  1634,  1638,  1642,  1646,  1650,
-    1657,  1661,  1667,  1668,  1672,  1678,  1690,  1691,  1695,  1701,
-    1713,  1726,  1738,  1741,  1747,  1754,  1757,  1763,  1767,  1774,
-    1777,  1779,  1782,  1788,  1794,  1800,  1804,  1809,  1814,  1817,
-    1820,  1823,  1826,  1829,  1832,  1835,  1838,  1841,  1844,  1847,
-    1850,  1853,  1856,  1859,  1862,  1865,  1873,  1879,  1885,  1896,
-    1900,  1907,  1922,  1923,  1927,  1940,  1959,  1968,  1974,  1980,
-    1986,  1995,  2001,  2007,  2010,  2014,  2017,  2021,  2024,  2028,
-    2032,  2041,  2053,  2059,  2063,  2069,  2073,  2079,  2083,  2089,
-    2093,  2099,  2103,  2115,  2131,  2137,  2141,  2147,  2151,  2157,
-    2161,  2167,  2171,  2184,  2198,  2199,  2203,  2209,  2213,  2219,
-    2223,  2229,  2233,  2237,  2243,  2247,  2253,  2257,  2271,  2288,
-    2292,  2298,  2302,  2308,  2312,  2318,  2322,  2328,  2332,  2338,
-    2342,  2348,  2352,  2357,  2372,  2390,  2396,  2400,  2406,  2410,
-    2414,  2420,  2424,  2430,  2434,  2440,  2444,  2450,  2454,  2460,
-    2465,  2480,  2497,  2504,  2509,  2515,  2527,  2542,  2556,  2574,
-    2581,  2591,  2597,  2602,  2608,  2611,  2619,  2630,  2633,  2641,
-    2644,  2650,  2656,  2659
+       0,   389,   389,   395,   397,   404,   408,   415,   420,   424,
+     425,   426,   431,   435,   442,   472,   478,   484,   489,   496,
+     506,   512,   521,   528,   532,   536,   543,   550,   557,   560,
+     563,   569,   595,   614,   634,   636,   642,   643,   644,   645,
+     646,   647,   648,   649,   650,   651,   652,   653,   654,   655,
+     660,   661,   667,   676,   677,   686,   687,   688,   692,   693,
+     698,   699,   700,   705,   711,   720,   726,   732,   735,   738,
+     741,   744,   747,   750,   753,   756,   759,   762,   765,   768,
+     771,   774,   780,   781,   787,   793,   837,   838,   844,   850,
+     873,   874,   880,   886,   909,   910,   919,   920,   929,   930,
+     939,   940,   949,   950,   959,   960,   969,   970,   980,   981,
+     987,   996,   997,  1006,  1007,  1008,  1013,  1014,  1015,  1020,
+    1029,  1034,  1039,  1044,  1050,  1056,  1061,  1066,  1071,  1087,
+    1092,  1093,  1094,  1098,  1100,  1105,  1111,  1116,  1120,  1125,
+    1131,  1137,  1141,  1147,  1151,  1157,  1161,  1167,  1171,  1177,
+    1183,  1187,  1193,  1199,  1203,  1209,  1213,  1217,  1223,  1226,
+    1236,  1239,  1245,  1248,  1254,  1260,  1263,  1269,  1275,  1287,
+    1293,  1294,  1295,  1299,  1303,  1311,  1312,  1313,  1314,  1315,
+    1316,  1317,  1318,  1319,  1320,  1325,  1328,  1344,  1347,  1352,
+    1354,  1357,  1363,  1367,  1368,  1372,  1375,  1381,  1384,  1387,
+    1397,  1405,  1409,  1420,  1423,  1429,  1446,  1449,  1452,  1456,
+    1462,  1482,  1485,  1494,  1497,  1506,  1509,  1518,  1521,  1524,
+    1531,  1535,  1543,  1546,  1549,  1556,  1563,  1566,  1570,  1584,
+    1593,  1603,  1613,  1619,  1622,  1635,  1644,  1648,  1652,  1656,
+    1660,  1664,  1671,  1675,  1681,  1682,  1686,  1692,  1704,  1705,
+    1709,  1715,  1727,  1740,  1752,  1755,  1761,  1768,  1771,  1777,
+    1781,  1788,  1791,  1793,  1796,  1802,  1808,  1814,  1818,  1823,
+    1828,  1831,  1834,  1837,  1840,  1843,  1846,  1849,  1852,  1855,
+    1858,  1861,  1864,  1867,  1870,  1873,  1876,  1879,  1887,  1893,
+    1899,  1910,  1914,  1921,  1936,  1937,  1941,  1954,  1973,  1982,
+    1988,  1994,  2000,  2009,  2015,  2021,  2024,  2028,  2031,  2035,
+    2038,  2042,  2046,  2055,  2067,  2073,  2077,  2083,  2087,  2093,
+    2097,  2103,  2107,  2113,  2117,  2129,  2145,  2151,  2155,  2161,
+    2165,  2171,  2175,  2181,  2185,  2198,  2212,  2213,  2217,  2223,
+    2227,  2233,  2237,  2243,  2247,  2251,  2257,  2261,  2267,  2271,
+    2285,  2302,  2306,  2312,  2316,  2322,  2326,  2332,  2336,  2342,
+    2346,  2352,  2356,  2362,  2366,  2371,  2386,  2404,  2410,  2414,
+    2420,  2424,  2428,  2434,  2438,  2444,  2448,  2454,  2458,  2464,
+    2468,  2474,  2479,  2494,  2511,  2518,  2523,  2529,  2541,  2556,
+    2570,  2588,  2595,  2605,  2611,  2616,  2622,  2625,  2633,  2644,
+    2647,  2655,  2658,  2664,  2670,  2673
 };
 #endif
 
@@ -1178,17 +1180,18 @@ static const char *const yytname[] =
   "SASOC_PEER_RWND", "SASOC_LOCAL_RWND", "SASOC_COOKIE_LIFE",
   "SAS_ASSOC_ID", "SAS_INSTRMS", "SAS_OUTSTRMS",
   "MYINVALID_STREAM_IDENTIFIER", "ISID", "MYFLOAT", "INTEGER",
-  "HEX_INTEGER", "MYWORD", "MYSTRING", "'='", "'+'", "'*'", "'~'", "'('",
-  "')'", "':'", "';'", "'['", "']'", "','", "'<'", "'>'", "'.'", "'-'",
-  "'|'", "'{'", "'}'", "$accept", "script", "opt_options", "options",
-  "option", "option_flag", "option_value", "events", "event", "event_time",
-  "time", "action", "command_spec", "packet_spec", "tcp_packet_spec",
-  "udp_packet_spec", "sctp_packet_spec", "sctp_chunk_list", "sctp_chunk",
-  "opt_flags", "opt_len", "opt_val", "byte_list", "chunk_types_list",
-  "byte", "chunk_type", "opt_data_flags", "opt_abort_flags",
-  "opt_shutdown_complete_flags", "opt_tag", "opt_a_rwnd", "opt_os",
-  "opt_is", "opt_tsn", "opt_sid", "opt_ssn", "opt_ppid", "opt_cum_tsn",
-  "opt_gaps", "opt_dups", "sctp_data_chunk_spec", "sctp_init_chunk_spec",
+  "HEX_INTEGER", "MYWORD", "MYSTRING", "CODE", "'='", "'+'", "'*'", "'~'",
+  "'('", "')'", "':'", "';'", "'['", "']'", "','", "'<'", "'>'", "'.'",
+  "'-'", "'|'", "'{'", "'}'", "$accept", "script", "opt_options",
+  "options", "option", "option_flag", "option_value", "events", "event",
+  "event_time", "time", "action", "command_spec", "code_spec",
+  "packet_spec", "tcp_packet_spec", "udp_packet_spec", "sctp_packet_spec",
+  "sctp_chunk_list", "sctp_chunk", "opt_flags", "opt_len", "opt_val",
+  "byte_list", "chunk_types_list", "byte", "chunk_type", "opt_data_flags",
+  "opt_abort_flags", "opt_shutdown_complete_flags", "opt_tag",
+  "opt_a_rwnd", "opt_os", "opt_is", "opt_tsn", "opt_sid", "opt_ssn",
+  "opt_ppid", "opt_cum_tsn", "opt_gaps", "opt_dups",
+  "sctp_data_chunk_spec", "sctp_init_chunk_spec",
   "sctp_init_ack_chunk_spec", "sctp_sack_chunk_spec",
   "sctp_heartbeat_chunk_spec", "sctp_heartbeat_ack_chunk_spec",
   "sctp_abort_chunk_spec", "sctp_shutdown_chunk_spec",
@@ -1238,12 +1241,12 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-721)
+#define YYPACT_NINF (-723)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
 
-#define YYTABLE_NINF (-385)
+#define YYTABLE_NINF (-387)
 
 #define yytable_value_is_error(Yyn) \
   0
@@ -1252,114 +1255,114 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int16 yypact[] =
 {
-     -30,  -721,    30,  -102,   -30,  -721,  -126,  -721,  -721,  -721,
-     -42,  -721,  -102,  -721,    12,  -117,  -721,   -31,  -107,  -721,
-     -42,  -721,  -721,  -721,  -721,  -721,  -721,  -721,  -721,  -721,
-      29,  -721,  -721,   -96,   -42,  -721,  -721,  -721,  -721,   -25,
-    -721,   -12,     7,   132,  -136,  -721,    90,  -721,   -42,   116,
-     295,  -721,   151,   120,  -721,  -721,   129,     6,   182,  -721,
-     159,   147,   179,   183,   203,   205,   210,   217,   222,   225,
-     231,   235,   241,   243,   245,   228,  -721,  -721,  -721,  -721,
-    -721,  -721,  -721,  -721,  -721,  -721,  -721,  -721,  -721,  -721,
-    -721,  -721,  -721,   257,   442,  -721,   284,   293,  -721,  -721,
-    -721,   470,  -721,    19,   302,  -134,   297,  -721,  -721,  -721,
-    -721,  -721,  -721,  -721,  -721,  -721,  -721,  -721,  -721,  -721,
-    -721,  -721,  -721,  -721,  -721,  -721,  -721,    33,  -721,   391,
-     392,   392,   392,   392,   393,   392,   392,   392,   392,   392,
-     394,   392,   392,   295,   321,   322,   477,   324,     3,  -721,
-    -721,   184,   311,   323,   318,   325,   326,   327,   328,   329,
-     330,   331,   332,   334,   335,   336,   337,   338,   339,   340,
-     341,   342,   343,   344,   345,   346,   314,   347,   348,   349,
-     350,   351,   352,   353,  -721,    33,    33,  -145,   354,   355,
-     356,   357,   358,   359,   360,   364,   362,   363,   365,   366,
-     367,   369,   372,   370,   371,   373,  -721,   376,  -721,   379,
-     481,   361,   377,   380,  -721,   388,   390,   514,    33,    33,
-      33,    65,    17,    57,    65,    72,    73,    74,    33,    65,
-      65,    65,    46,    65,    33,    75,    65,    65,   395,   404,
-     400,   402,   466,   374,   461,   382,   436,   297,   297,   385,
-     385,    42,   430,    23,   463,   463,   475,   475,    59,  -721,
-     456,  -721,    14,   386,   430,  -721,    62,  -721,   456,   253,
-     396,   398,  -721,   401,   387,  -721,  -721,  -721,   383,   397,
-     399,  -130,   -46,   -44,  -721,  -721,  -721,   403,  -721,   561,
-    -721,  -721,  -721,   405,  -721,  -721,  -721,  -721,  -721,  -721,
-     141,   406,   407,   408,   409,   410,   297,   411,   412,   297,
-    -721,  -721,   413,   414,   415,   426,   417,   428,   419,   431,
-     420,   432,   423,   434,   425,   437,   429,   438,   440,   384,
-     416,  -721,  -721,  -721,  -721,  -721,  -721,  -721,   441,   433,
-    -721,  -721,  -721,   444,   435,   439,   443,   427,   445,  -721,
-    -721,  -721,  -721,   446,   447,  -721,   449,   448,  -721,  -721,
-    -721,   450,  -721,  -721,  -721,  -721,   451,  -721,   454,   455,
-     457,   458,   459,   460,   462,   464,   465,  -721,  -721,  -721,
-    -721,  -721,  -721,   467,  -721,  -721,  -721,  -721,  -721,  -721,
-     469,  -721,   142,  -721,  -721,   563,   452,   538,   389,   533,
-     525,   468,  -721,   490,   497,   476,   474,   471,   418,   472,
-      76,   508,    77,   482,    78,   511,    79,   527,    80,   493,
-      81,   518,   479,    82,  -721,  -721,  -114,    83,   543,    84,
-     548,   548,    39,  -721,  -721,    85,  -721,   545,   487,   631,
-     548,    40,   556,   557,   528,   528,   526,   528,   528,   528,
-     265,  -721,   478,   491,   492,  -721,   636,  -721,   495,  -721,
-     494,   496,   496,   227,    88,  -721,  -721,   489,   660,   498,
-     499,   500,   501,   502,   503,   485,   486,   504,   505,   506,
-     507,   509,   510,   512,  -721,  -721,   513,   480,  -721,  -721,
-     520,   515,  -721,  -721,   521,   516,  -721,  -721,   522,   517,
-    -721,  -721,   523,   519,  -721,  -721,   524,   529,   530,  -721,
-    -721,  -721,  -721,  -721,  -721,   531,   532,  -721,  -721,   534,
-     537,   539,   535,   540,  -721,  -721,   536,  -721,   541,   542,
-     544,   547,   552,   553,   558,   559,   550,   207,   562,   551,
-     554,   555,   560,  -721,  -721,  -721,  -721,   568,   565,   495,
-    -721,  -721,  -721,  -721,  -721,   570,   570,   283,  -721,   670,
-     564,    33,    33,    33,    33,    33,    33,   466,   404,    33,
-     436,   575,   374,   400,   571,   572,    86,  -721,    87,   549,
-      91,   569,    92,   620,    93,   578,    33,   614,   595,    94,
-     574,    95,   580,   580,  -721,   631,    96,     2,  -721,   576,
-    -721,    97,    13,    18,    99,   526,  -721,   573,   100,   546,
-    -721,   567,   567,   681,   577,  -721,  -721,   671,   673,  -721,
-     579,   677,   -36,   146,   150,   155,   158,   -33,   566,   581,
-     164,   582,   584,   583,   585,   586,   587,  -721,  -721,  -721,
-    -721,   588,   590,  -721,  -721,   589,   591,  -721,  -721,   592,
-     593,  -721,  -721,   594,   596,   297,   597,   599,   598,  -721,
-    -721,   601,   600,  -721,  -721,   602,   603,   604,   606,   607,
-     608,  -721,    50,   605,   609,   610,   611,   613,   240,   615,
-     -15,  -721,  -721,   616,   612,  -721,  -721,   618,   214,   623,
-     619,   621,   629,  -721,   570,   570,   633,   627,   706,  -721,
-    -721,  -721,  -721,   669,   527,   508,  -721,  -721,   637,   493,
-     482,   635,  -721,   101,   622,   103,  -721,   105,   688,   106,
-     652,   176,   683,   626,   107,   643,   108,   647,   647,  -721,
-    -721,  -721,   628,  -721,  -721,   219,  -721,    26,   641,   731,
-     732,  -721,  -721,  -721,  -721,  -721,  -721,  -721,  -721,  -721,
-    -721,  -721,  -721,  -721,  -721,  -721,  -721,  -721,  -721,   237,
-    -721,  -721,  -721,  -721,  -721,   252,  -721,   648,   630,   109,
-    -721,   672,   110,  -721,  -721,  -721,   727,   729,   634,   388,
-     640,   642,   625,   624,   638,   639,   644,   645,  -721,  -721,
-     646,   649,  -721,  -721,  -721,  -721,   650,   651,  -721,  -721,
-     653,   654,  -721,   655,   656,   658,   657,  -721,  -721,   662,
-     659,  -721,  -721,   663,   661,   665,  -721,  -721,   274,  -721,
-     111,   676,   664,   678,   679,   668,   240,   674,   -15,   680,
-     266,   685,  -721,  -721,   682,   675,  -721,  -721,   570,   570,
-     684,   667,    33,    33,   620,  -721,   686,   578,   549,   690,
-     112,  -721,    33,   699,   113,   666,   691,   114,   694,  -721,
-     115,   707,   117,   543,   543,  -721,   687,   689,   270,  -721,
-      28,  -721,   811,   818,  -721,  -721,  -721,  -721,   118,  -721,
-     692,  -721,   272,  -721,    54,   693,  -721,  -721,   815,   697,
-     171,   -32,   695,   698,   696,   700,   701,  -721,  -721,   297,
-     702,   703,  -721,  -721,   704,   705,   709,  -721,  -721,   708,
-     710,  -721,  -721,   711,   712,  -721,  -721,   373,   373,  -721,
-     713,  -721,   716,  -721,   119,   714,   715,  -721,  -721,   717,
-     718,   685,  -721,  -721,  -721,   719,   720,   722,   626,  -721,
-     782,   688,   626,   652,   622,  -721,   122,   776,   123,   721,
-    -721,   124,   773,    68,  -721,   723,   724,  -721,  -721,   725,
-     730,   275,  -721,  -721,  -721,   733,  -721,  -721,    70,  -721,
-     803,   734,   726,   735,   736,   737,   738,  -721,  -721,   728,
-     739,  -721,  -721,   740,   741,  -721,  -721,   742,   744,  -721,
-    -721,  -721,  -721,  -721,  -721,   743,  -721,   747,   685,  -721,
-    -721,  -721,   745,   826,    33,   699,  -721,   666,  -721,   125,
-    -721,   126,   748,   127,   791,  -721,  -721,   281,   749,   746,
-     -26,   751,   752,  -721,  -721,  -721,  -721,   750,   753,  -721,
-    -721,   757,  -113,   754,   759,    33,   814,   776,   721,   858,
-    -721,   128,   797,  -721,  -721,   755,    -9,   758,   756,   761,
-    -721,  -721,  -721,   765,  -721,   830,   760,    33,  -721,   748,
-      65,   766,  -721,   144,   762,   763,   626,   822,  -721,  -721,
-    -721,   767,    33,   193,  -721
+     -27,  -723,    51,   -34,   -27,  -723,  -139,  -723,  -723,  -723,
+    -104,  -723,   -34,  -723,    34,   -41,  -723,   140,   -37,  -723,
+    -104,  -723,  -723,  -723,  -723,  -723,  -723,  -723,  -723,  -723,
+    -723,  -723,    35,  -723,  -723,   -17,  -104,  -723,  -723,  -723,
+    -723,    -7,  -723,    89,     0,   136,  -132,  -723,   151,  -723,
+    -104,   104,   240,  -723,    88,   153,  -723,  -723,   177,     6,
+     181,  -723,   188,   178,   195,   198,   209,   215,   242,   244,
+     254,   276,   279,   288,   294,   297,   298,   221,  -723,  -723,
+    -723,  -723,  -723,  -723,  -723,  -723,  -723,  -723,  -723,  -723,
+    -723,  -723,  -723,  -723,  -723,   301,   468,  -723,   305,   306,
+    -723,  -723,  -723,   479,  -723,    12,   302,   -53,   299,  -723,
+    -723,  -723,  -723,  -723,  -723,  -723,  -723,  -723,  -723,  -723,
+    -723,  -723,  -723,  -723,  -723,  -723,  -723,  -723,  -723,    21,
+    -723,   391,   392,   392,   392,   392,   394,   392,   392,   392,
+     392,   392,   395,   392,   392,   240,   322,   323,   478,   325,
+     -26,  -723,  -723,   226,   311,   324,   318,   326,   327,   329,
+     330,   332,   333,   334,   335,   336,   337,   338,   339,   340,
+     341,   342,   343,   344,   345,   346,   347,   348,   313,   315,
+     321,   349,   350,   351,   352,   353,  -723,    21,    21,  -120,
+     354,   355,   356,   358,   359,   360,   361,   364,   319,   362,
+     365,   363,   366,   368,   367,   369,   370,   371,  -723,   375,
+    -723,   380,   498,   377,   378,   379,  -723,   390,   389,   518,
+      21,    21,    21,    44,    16,    17,    44,    20,    43,    47,
+      21,    44,    44,    44,    28,    44,    21,    70,    44,    44,
+     393,   408,   372,   406,   470,   382,   465,   415,   416,   299,
+     299,   385,   385,     2,   469,    60,   462,   462,   480,   480,
+      53,  -723,   456,  -723,    39,   384,   469,  -723,    57,  -723,
+     456,   253,   387,   402,  -723,   403,   388,  -723,  -723,  -723,
+     383,   396,   397,   -33,   -23,   -22,  -723,  -723,  -723,   398,
+    -723,   564,  -723,  -723,  -723,   399,  -723,  -723,  -723,  -723,
+    -723,  -723,   102,   400,   401,   404,   405,   407,   299,   409,
+     410,   299,  -723,  -723,   411,   412,   413,   418,   414,   425,
+     417,   426,   419,   428,   420,   431,   422,   433,   424,   435,
+     436,   386,   440,  -723,  -723,  -723,  -723,  -723,  -723,  -723,
+     438,   429,  -723,  -723,  -723,   441,   430,   432,   437,   434,
+     439,  -723,  -723,  -723,  -723,   444,   442,  -723,   445,   446,
+    -723,  -723,  -723,   447,  -723,  -723,  -723,  -723,   448,  -723,
+     451,   452,   453,   454,   455,   457,   458,   459,   460,  -723,
+    -723,  -723,  -723,  -723,  -723,   461,  -723,  -723,  -723,  -723,
+    -723,  -723,   449,  -723,   131,  -723,  -723,   566,   450,   541,
+     328,   535,   530,   471,  -723,   495,   467,   476,   474,   472,
+     482,   473,    71,   508,    72,   483,    73,   523,    74,   589,
+      75,   497,    76,   584,   481,    77,  -723,  -723,  -119,    78,
+     545,    79,   549,   549,    37,  -723,  -723,    80,  -723,   546,
+     488,   632,   549,    42,   557,   558,   528,   528,   529,   528,
+     528,   528,   265,  -723,   475,   490,   493,  -723,   640,  -723,
+     496,  -723,   499,   500,   500,   227,  -111,  -723,  -723,   492,
+     658,   494,   501,   502,   503,   504,   505,   485,   489,   506,
+     507,   509,   510,   511,   512,   513,  -723,  -723,   514,   491,
+    -723,  -723,   515,   516,  -723,  -723,   522,   517,  -723,  -723,
+     524,   519,  -723,  -723,   525,   520,  -723,  -723,   531,   526,
+     527,  -723,  -723,  -723,  -723,  -723,  -723,   532,   533,  -723,
+    -723,   534,   536,   537,   484,   538,  -723,  -723,   539,  -723,
+     540,   542,   543,   547,   550,   552,   555,   559,   548,   228,
+     560,   551,   553,   554,   556,  -723,  -723,  -723,  -723,   521,
+     561,   496,  -723,  -723,  -723,  -723,  -723,   562,   562,   357,
+    -723,   664,   563,    21,    21,    21,    21,    21,    21,   470,
+     408,    21,   416,   569,   382,   372,   568,   570,    81,  -723,
+      82,   581,    83,   575,    84,   615,    85,   571,    21,   617,
+     565,    86,   574,    87,   580,   580,  -723,   632,    91,    19,
+    -723,   591,  -723,    92,    22,    26,    93,   529,  -723,   576,
+      94,   607,  -723,   544,   544,   672,   577,  -723,  -723,   675,
+     684,  -723,   567,   710,   -20,   154,   163,   170,   175,   -19,
+     572,   573,   207,   578,   579,   582,   583,   586,   585,  -723,
+    -723,  -723,  -723,   587,   588,  -723,  -723,   590,   592,  -723,
+    -723,   594,   593,  -723,  -723,   597,   595,   299,   599,   596,
+     600,  -723,  -723,   601,   598,  -723,  -723,   604,   602,   603,
+     605,   606,   608,  -723,    62,   610,   609,   611,   612,   614,
+     220,   616,    -6,  -723,  -723,   618,   620,  -723,  -723,   624,
+     230,   626,   621,   622,   623,  -723,   562,   562,   634,   628,
+     709,  -723,  -723,  -723,  -723,   702,   589,   508,  -723,  -723,
+     638,   497,   483,   625,  -723,    95,   619,    96,  -723,    97,
+     690,    99,   648,   121,   685,   627,   100,   643,   101,   649,
+     649,  -723,  -723,  -723,   629,  -723,  -723,   232,  -723,    27,
+     646,   732,   736,  -723,  -723,  -723,  -723,  -723,  -723,  -723,
+    -723,  -723,  -723,  -723,  -723,  -723,  -723,  -723,  -723,  -723,
+    -723,   236,  -723,  -723,  -723,  -723,  -723,   239,  -723,   630,
+     631,   103,  -723,   671,   105,  -723,  -723,  -723,   729,   733,
+     635,   390,   636,   637,   633,   639,   641,   642,   644,   645,
+    -723,  -723,   647,   650,  -723,  -723,  -723,  -723,   653,   651,
+    -723,  -723,   655,   652,  -723,   654,   657,   659,   656,  -723,
+    -723,   660,   661,  -723,  -723,   663,   662,   665,  -723,  -723,
+     261,  -723,   106,   668,   667,   670,   674,   669,   220,   673,
+      -6,   677,   249,   686,  -723,  -723,   679,   676,  -723,  -723,
+     562,   562,   678,   680,    21,    21,   615,  -723,   691,   571,
+     581,   688,   107,  -723,    21,   704,   108,   666,   689,   109,
+     716,  -723,   110,   706,   111,   545,   545,  -723,   681,   683,
+     251,  -723,    32,  -723,   810,   812,  -723,  -723,  -723,  -723,
+     112,  -723,   700,  -723,   260,  -723,    64,   701,  -723,  -723,
+     809,   687,   212,   -10,   682,   693,   692,   694,   695,  -723,
+    -723,   299,   696,   697,  -723,  -723,   698,   699,   703,  -723,
+    -723,   705,   707,  -723,  -723,   711,   712,  -723,  -723,   371,
+     371,  -723,   708,  -723,   715,  -723,   113,   713,   714,  -723,
+    -723,   718,   717,   686,  -723,  -723,  -723,   719,   720,   724,
+     627,  -723,   775,   690,   627,   648,   619,  -723,   114,   762,
+     115,   734,  -723,   116,   784,    66,  -723,   721,   722,  -723,
+    -723,   723,   727,   269,  -723,  -723,  -723,   726,  -723,  -723,
+      68,  -723,   811,   725,   728,   730,   731,   735,   737,  -723,
+    -723,   738,   739,  -723,  -723,   741,   740,  -723,  -723,   742,
+     743,  -723,  -723,  -723,  -723,  -723,  -723,   744,  -723,   748,
+     686,  -723,  -723,  -723,   745,   833,    21,   704,  -723,   666,
+    -723,   117,  -723,   118,   754,   119,   798,  -723,  -723,   271,
+     746,   747,   142,   750,   751,  -723,  -723,  -723,  -723,   752,
+     749,  -723,  -723,   755,   -52,   753,   758,    21,   822,   762,
+     734,   867,  -723,   123,   806,  -723,  -723,   756,   143,   757,
+     759,   760,  -723,  -723,  -723,   764,  -723,   839,   761,    21,
+    -723,   754,    44,   765,  -723,   144,   763,   766,   627,   837,
+    -723,  -723,  -723,   767,    21,   217,  -723
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -1368,159 +1371,159 @@ static const yytype_int16 yypact[] =
 static const yytype_int16 yydefact[] =
 {
        3,     8,     0,     0,     4,     5,     0,     1,    20,    21,
-       0,    17,     2,    12,   252,    16,     6,     0,    15,    13,
-       0,    25,   199,   200,    14,    24,    22,    26,    27,    28,
-     201,   198,    23,     0,     0,     9,    10,    11,     7,     0,
-     253,     0,     0,     0,     0,   254,     0,    18,     0,     0,
-       0,   203,     0,   204,   205,   207,     0,     0,     0,    19,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,    31,    32,    34,    35,    36,
-      37,    38,    39,    40,    41,    42,    43,    44,    47,    45,
-      46,   202,   206,     0,   209,   259,     0,     0,   286,   287,
-     265,   266,   255,     0,     0,     0,   257,   260,   261,   268,
-     270,   281,   283,   285,   284,   282,   273,   277,   271,   269,
-     276,   275,   278,   279,   280,   272,   274,     0,    30,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,   211,     0,     0,   267,
-     289,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,   256,     0,     0,   397,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,   129,
-       0,     0,     0,     0,     0,   169,    33,     0,   210,     0,
-     213,     0,     0,     0,   290,     0,     0,     0,     0,     0,
+       0,    17,     2,    12,   254,    16,     6,     0,    15,    13,
+       0,    26,    27,   201,   202,    14,    24,    25,    22,    28,
+      29,    30,   203,   200,    23,     0,     0,     9,    10,    11,
+       7,     0,   255,     0,     0,     0,     0,   256,     0,    18,
+       0,     0,     0,   205,     0,   206,   207,   209,     0,     0,
+       0,    19,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,    33,    34,    36,
+      37,    38,    39,    40,    41,    42,    43,    44,    45,    46,
+      49,    47,    48,   204,   208,     0,   211,   261,     0,     0,
+     288,   289,   267,   268,   257,     0,     0,     0,   259,   262,
+     263,   270,   272,   283,   285,   287,   286,   284,   275,   279,
+     273,   271,   278,   277,   280,   281,   282,   274,   276,     0,
+      32,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,   213,     0,
+       0,   269,   291,     0,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,   258,   288,     0,
-     399,     0,     0,     0,     0,     0,     0,     0,     0,   123,
-       0,   125,     0,     0,     0,   127,     0,   137,     0,     0,
-       0,     0,   212,     0,   215,   264,   262,   263,     0,     0,
-       0,     0,     0,     0,   309,   307,   308,     0,   334,     0,
-     335,   366,   365,     0,   302,   301,   325,   324,   392,   391,
-       0,     0,     0,     0,   286,   265,     0,   268,     0,   349,
-     313,   312,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,   258,     0,     0,   399,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,   398,   251,   400,    80,    82,    81,    83,     0,     0,
-      48,    50,    49,     0,     0,     0,     0,     0,     0,    84,
-      86,    85,    87,     0,     0,   128,     0,   130,   135,   131,
-     136,     0,    88,    90,    89,    91,     0,   168,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,   177,   178,   179,
-     180,   181,   182,   170,   171,   173,   175,   176,   174,   167,
-       0,   214,     0,    29,   296,     0,     0,     0,     0,     0,
-       0,     0,   390,     0,     0,     0,     0,     0,     0,     0,
+       0,   131,     0,     0,     0,     0,     0,   171,    35,     0,
+     212,     0,   215,     0,     0,     0,   292,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,   396,   402,     0,     0,     0,     0,
-       0,     0,     0,   121,   122,     0,   124,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,   208,     0,     0,     0,   220,     0,   221,     0,   224,
-       0,   231,   231,     0,     0,   218,   230,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,   260,
+     290,     0,   401,     0,     0,     0,     0,     0,     0,     0,
+       0,   125,     0,   127,     0,     0,     0,   129,     0,   139,
+       0,     0,     0,     0,   214,     0,   217,   266,   264,   265,
+       0,     0,     0,     0,     0,     0,   311,   309,   310,     0,
+     336,     0,   337,   368,   367,     0,   304,   303,   327,   326,
+     394,   393,     0,     0,     0,     0,   288,   267,     0,   270,
+       0,   351,   315,   314,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,   304,   303,     0,     0,   315,   314,
-       0,     0,   327,   326,     0,     0,   337,   336,     0,     0,
-     351,   350,     0,     0,   368,   367,     0,     0,     0,   394,
-     393,   403,   401,    51,    52,     0,     0,    92,    93,     0,
-       0,     0,     0,     0,   109,   110,     0,   132,     0,     0,
+       0,     0,     0,   400,   253,   402,    82,    84,    83,    85,
+       0,     0,    50,    52,    51,     0,     0,     0,     0,     0,
+       0,    86,    88,    87,    89,     0,     0,   130,     0,   132,
+     137,   133,   138,     0,    90,    92,    91,    93,     0,   170,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,   179,
+     180,   181,   182,   183,   184,   172,   173,   175,   177,   178,
+     176,   169,     0,   216,     0,    31,   298,     0,     0,     0,
+       0,     0,     0,     0,   392,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,   172,   217,   223,   222,     0,     0,   225,
-     240,   227,   232,   228,   229,     0,     0,     0,   216,     0,
+       0,     0,     0,     0,     0,     0,   398,   404,     0,     0,
+       0,     0,     0,     0,     0,   123,   124,     0,   126,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,   311,     0,     0,
+       0,     0,     0,   210,     0,     0,     0,   222,     0,   223,
+       0,   226,     0,   233,   233,     0,     0,   220,   232,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,   183,     0,     0,     0,   126,     0,
-     195,     0,     0,     0,     0,     0,   160,     0,     0,     0,
-     162,     0,     0,     0,     0,   241,   233,   234,   237,   219,
+       0,     0,     0,     0,     0,     0,   306,   305,     0,     0,
+     317,   316,     0,     0,   329,   328,     0,     0,   339,   338,
+       0,     0,   353,   352,     0,     0,   370,   369,     0,     0,
+       0,   396,   395,   405,   403,    53,    54,     0,     0,    94,
+      95,     0,     0,     0,     0,     0,   111,   112,     0,   134,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,   306,   305,   317,
-     316,     0,     0,   329,   328,     0,     0,   341,   340,     0,
-       0,   353,   352,     0,     0,   369,     0,     0,     0,   100,
-     101,     0,     0,    94,    95,     0,     0,     0,     0,     0,
-       0,    53,     0,     0,     0,     0,     0,     0,    58,     0,
-     187,   139,   138,     0,     0,   141,   140,     0,     0,     0,
-       0,     0,     0,   250,     0,     0,     0,     0,     0,   297,
-     298,   299,   300,     0,     0,     0,   389,   395,     0,     0,
-       0,     0,   388,     0,     0,     0,   332,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,   184,
-     134,   133,     0,    62,    61,     0,    56,     0,     0,     0,
-       0,   185,    65,    66,    67,    69,    70,    71,    72,    73,
-      74,    75,    76,    77,    78,    68,    79,    64,    63,     0,
-      59,   193,   191,   192,   190,     0,   188,     0,     0,     0,
-     163,     0,     0,   166,   165,   226,   235,   238,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,   319,   318,
-       0,     0,   331,   330,   339,   338,     0,     0,   355,   354,
-       0,     0,   371,     0,     0,     0,     0,   102,   103,     0,
-       0,    96,    97,     0,     0,     0,    54,    55,     0,   111,
-     242,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,   156,   145,   144,     0,     0,   153,   152,     0,     0,
-       0,     0,     0,     0,     0,   310,     0,     0,     0,     0,
-       0,   323,     0,     0,     0,     0,     0,     0,     0,   386,
-       0,     0,     0,     0,     0,    57,     0,     0,     0,   243,
-       0,   120,     0,     0,   186,    60,   194,   189,     0,   158,
-       0,   157,     0,   154,     0,     0,   236,   239,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,   321,   320,   342,
-       0,     0,   357,   356,     0,     0,     0,   373,   372,     0,
-       0,   104,   105,     0,     0,    98,    99,   169,   169,   112,
-       0,   113,     0,   114,   246,     0,     0,   143,   142,     0,
-       0,   156,   148,   146,   147,     0,     0,     0,     0,   294,
-       0,     0,     0,     0,     0,   387,     0,     0,     0,     0,
-     370,     0,     0,     0,   117,     0,     0,   245,   244,     0,
-       0,     0,   247,   196,   197,     0,   161,   155,     0,   164,
-       0,     0,     0,     0,     0,     0,     0,   344,   343,     0,
-       0,   359,   358,     0,     0,   375,   374,     0,     0,   106,
-     107,   108,   118,   119,   115,     0,   116,     0,   156,   151,
-     149,   150,     0,     0,     0,     0,   385,     0,   322,     0,
-     348,     0,     0,     0,     0,   249,   248,     0,     0,     0,
-       0,     0,     0,   346,   345,   361,   360,     0,     0,   377,
-     376,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-     364,     0,     0,   381,   159,     0,   292,     0,     0,     0,
-     362,   379,   378,     0,   333,     0,     0,     0,   347,     0,
-       0,     0,   291,     0,     0,     0,     0,     0,   363,   380,
-     293,     0,     0,     0,   295
+       0,     0,     0,     0,     0,   174,   219,   225,   224,     0,
+       0,   227,   242,   229,   234,   230,   231,     0,     0,     0,
+     218,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,   313,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,   185,     0,     0,     0,
+     128,     0,   197,     0,     0,     0,     0,     0,   162,     0,
+       0,     0,   164,     0,     0,     0,     0,   243,   235,   236,
+     239,   221,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,   308,
+     307,   319,   318,     0,     0,   331,   330,     0,     0,   343,
+     342,     0,     0,   355,   354,     0,     0,   371,     0,     0,
+       0,   102,   103,     0,     0,    96,    97,     0,     0,     0,
+       0,     0,     0,    55,     0,     0,     0,     0,     0,     0,
+      60,     0,   189,   141,   140,     0,     0,   143,   142,     0,
+       0,     0,     0,     0,     0,   252,     0,     0,     0,     0,
+       0,   299,   300,   301,   302,     0,     0,     0,   391,   397,
+       0,     0,     0,     0,   390,     0,     0,     0,   334,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,   186,   136,   135,     0,    64,    63,     0,    58,     0,
+       0,     0,     0,   187,    67,    68,    69,    71,    72,    73,
+      74,    75,    76,    77,    78,    79,    80,    70,    81,    66,
+      65,     0,    61,   195,   193,   194,   192,     0,   190,     0,
+       0,     0,   165,     0,     0,   168,   167,   228,   237,   240,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+     321,   320,     0,     0,   333,   332,   341,   340,     0,     0,
+     357,   356,     0,     0,   373,     0,     0,     0,     0,   104,
+     105,     0,     0,    98,    99,     0,     0,     0,    56,    57,
+       0,   113,   244,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,   158,   147,   146,     0,     0,   155,   154,
+       0,     0,     0,     0,     0,     0,     0,   312,     0,     0,
+       0,     0,     0,   325,     0,     0,     0,     0,     0,     0,
+       0,   388,     0,     0,     0,     0,     0,    59,     0,     0,
+       0,   245,     0,   122,     0,     0,   188,    62,   196,   191,
+       0,   160,     0,   159,     0,   156,     0,     0,   238,   241,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,   323,
+     322,   344,     0,     0,   359,   358,     0,     0,     0,   375,
+     374,     0,     0,   106,   107,     0,     0,   100,   101,   171,
+     171,   114,     0,   115,     0,   116,   248,     0,     0,   145,
+     144,     0,     0,   158,   150,   148,   149,     0,     0,     0,
+       0,   296,     0,     0,     0,     0,     0,   389,     0,     0,
+       0,     0,   372,     0,     0,     0,   119,     0,     0,   247,
+     246,     0,     0,     0,   249,   198,   199,     0,   163,   157,
+       0,   166,     0,     0,     0,     0,     0,     0,     0,   346,
+     345,     0,     0,   361,   360,     0,     0,   377,   376,     0,
+       0,   108,   109,   110,   120,   121,   117,     0,   118,     0,
+     158,   153,   151,   152,     0,     0,     0,     0,   387,     0,
+     324,     0,   350,     0,     0,     0,     0,   251,   250,     0,
+       0,     0,     0,     0,     0,   348,   347,   363,   362,     0,
+       0,   379,   378,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,   366,     0,     0,   383,   161,     0,   294,     0,
+       0,     0,   364,   381,   380,     0,   335,     0,     0,     0,
+     349,     0,     0,     0,   293,     0,     0,     0,     0,     0,
+     365,   382,   295,     0,     0,     0,   297
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int16 yypgoto[] =
 {
-    -721,  -721,  -721,  -721,   866,  -721,  -721,  -721,   859,  -721,
-     130,  -721,  -721,  -721,  -721,  -721,  -721,  -721,   764,   333,
-    -237,   291,  -721,  -721,   104,    69,  -721,  -721,  -721,   768,
-    -403,   307,   177,  -387,  -721,  -721,  -721,   769,  -721,  -721,
-    -721,  -721,  -721,  -721,  -721,  -721,  -721,  -721,  -721,  -721,
-    -721,  -721,  -721,  -721,   617,  -721,  -721,   -37,   368,  -721,
-    -721,  -721,  -721,   317,   -60,     8,  -721,  -721,  -721,  -721,
-    -721,  -721,  -721,  -439,  -721,   632,   224,  -721,  -721,   131,
-    -721,  -721,  -721,  -721,  -721,  -721,  -721,  -721,  -721,  -721,
-    -721,  -721,  -721,   421,   484,  -552,  -721,  -721,  -721,    22,
-    -721,   -49,   422,  -721,  -721,  -721,  -721,   848,  -127,  -213,
-    -721,   770,  -720,  -721,  -721,  -721,  -721,  -721,  -721,   771,
-     424,   247,  -223,  -721,   772,   381,   246,   121,     9,  -721,
-    -721,  -721,  -721,  -721,  -721,   774,   775,   453,   133,   251,
-      16,   -47,   -77,  -721,   777,   473,   254,   134,    21,   -45,
-     -73,   -98,  -721,  -721,  -721,  -721,  -721,  -721,  -721,  -721,
-    -721,  -721,   779,  -721,  -721,  -721,   778,   483,  -721,  -721,
-    -721,   780,  -721
+    -723,  -723,  -723,  -723,   881,  -723,  -723,  -723,   875,  -723,
+      18,  -723,  -723,  -723,  -723,  -723,  -723,  -723,  -723,   772,
+     331,  -250,   373,  -723,  -723,   120,    63,  -723,  -723,  -723,
+     768,  -378,   303,   166,  -420,  -723,  -723,  -723,   769,  -723,
+    -723,  -723,  -723,  -723,  -723,  -723,  -723,  -723,  -723,  -723,
+    -723,  -723,  -723,  -723,  -723,   613,  -723,  -723,  -116,   374,
+    -723,  -723,  -723,  -723,   308,   -71,     9,  -723,  -723,  -723,
+    -723,  -723,  -723,  -723,  -466,  -723,   487,   202,  -723,  -723,
+     122,  -723,  -723,  -723,  -723,  -723,  -723,  -723,  -723,  -723,
+    -723,  -723,  -723,  -723,   421,   486,  -554,  -723,  -723,  -723,
+      24,  -723,   -56,   423,  -723,  -723,  -723,  -723,   841,  -129,
+    -215,  -723,   770,  -722,  -723,  -723,  -723,  -723,  -723,  -723,
+     771,   427,   246,  -225,  -723,   773,   381,   243,   125,    11,
+    -723,  -723,  -723,  -723,  -723,  -723,   774,   776,   443,   126,
+     252,    23,   -48,   -79,  -723,   777,   463,   250,   124,    31,
+     -47,   -77,   -97,  -723,  -723,  -723,  -723,  -723,  -723,  -723,
+    -723,  -723,  -723,   779,  -723,  -723,  -723,   778,   464,  -723,
+    -723,  -723,   780,  -723
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int16 yydefgoto[] =
 {
-       0,     2,     3,     4,     5,     6,    38,    12,    13,    14,
-      15,    24,    25,    26,    27,    28,    29,    75,    76,   191,
-     339,   529,   735,   759,   736,   760,   189,   196,   203,   344,
-     520,   666,   814,   516,   662,   810,   914,   354,   674,   822,
-      77,    78,    79,    80,    81,    82,    83,    84,    85,    86,
-      87,   263,   357,   358,   359,    88,    89,   536,   539,   830,
-     688,   835,   936,   690,   882,   883,   377,   378,   379,   380,
-     381,   382,    90,   270,   383,   384,   385,   386,   765,   766,
-     387,   388,    30,    31,    44,    52,    56,    94,   146,   210,
-     274,   393,   464,   465,   553,   617,   466,   549,   868,   869,
-     961,   962,   550,    32,    33,    46,    58,   105,   106,   107,
-     108,   109,   110,   111,  1056,   112,   113,   114,   115,   176,
-     316,   487,   287,   116,   177,   318,   491,   642,   791,   117,
-     178,   320,   495,   646,   118,   119,   179,   322,   650,   499,
-     797,   901,   980,   120,   180,   324,   503,   654,   801,   905,
-     984,  1028,   121,   181,   326,   507,   657,   805,   910,   988,
-    1032,   122,   182,   123,   124,   125,   183,   329,   126,   250,
-     332,   331,   426
+       0,     2,     3,     4,     5,     6,    40,    12,    13,    14,
+      15,    25,    26,    27,    28,    29,    30,    31,    77,    78,
+     193,   341,   531,   737,   761,   738,   762,   191,   198,   205,
+     346,   522,   668,   816,   518,   664,   812,   916,   356,   676,
+     824,    79,    80,    81,    82,    83,    84,    85,    86,    87,
+      88,    89,   265,   359,   360,   361,    90,    91,   538,   541,
+     832,   690,   837,   938,   692,   884,   885,   379,   380,   381,
+     382,   383,   384,    92,   272,   385,   386,   387,   388,   767,
+     768,   389,   390,    32,    33,    46,    54,    58,    96,   148,
+     212,   276,   395,   466,   467,   555,   619,   468,   551,   870,
+     871,   963,   964,   552,    34,    35,    48,    60,   107,   108,
+     109,   110,   111,   112,   113,  1058,   114,   115,   116,   117,
+     178,   318,   489,   289,   118,   179,   320,   493,   644,   793,
+     119,   180,   322,   497,   648,   120,   121,   181,   324,   652,
+     501,   799,   903,   982,   122,   182,   326,   505,   656,   803,
+     907,   986,  1030,   123,   183,   328,   509,   659,   807,   912,
+     990,  1034,   124,   184,   125,   126,   127,   185,   331,   128,
+     252,   334,   333,   428
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -1528,115 +1531,112 @@ static const yytype_int16 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int16 yytable[] =
 {
-     187,   293,   278,   806,   618,   671,   301,   302,   303,    95,
-     308,    96,    97,   312,   313,    20,   677,   355,     1,    21,
-     288,   679,    95,   249,    96,    97,   340,   361,   521,   819,
-       7,   923,    53,    41,   762,   763,    95,   530,    96,    97,
-     186,   184,   522,   531,    17,   334,   185,    54,    55,    95,
-     397,    96,    97,   732,   511,   186,    34,   932,   247,   248,
-     291,   512,   349,     8,     9,   362,    39,  1042,   284,    10,
-      11,   989,    45,   999,  1043,   294,   296,   298,   310,   484,
-     488,   492,   496,   500,   504,   509,   513,   517,   524,   637,
-     639,   281,   282,   283,   643,   647,   651,   659,   663,   669,
-     675,   300,   681,   685,   788,   306,   792,   309,   794,   798,
-     807,   811,   832,   836,   866,   897,   902,   907,   911,    42,
-     915,   927,   959,     8,     9,   977,   981,   985,  1023,  1025,
-    1029,  1051,   338,   532,   398,    35,   399,    36,    37,   186,
-      18,   186,   776,   777,   698,   452,    48,   703,   940,   186,
-      40,   764,   186,   186,  1036,   453,   454,   455,   456,   186,
-     457,   458,    49,   459,    47,   460,   461,   462,   463,   212,
-     213,  1055,    98,    99,   100,   101,   186,   356,    59,   802,
-     672,   102,   803,    50,   103,    98,    99,   100,   101,   341,
-     342,   678,   104,    22,    23,   523,   680,   103,   150,    98,
-      99,   100,   101,   289,   820,   104,   924,    43,   335,   336,
-     337,   103,   304,    99,   305,   101,   733,   734,   971,   104,
-     933,   934,   974,   292,   103,   350,   351,   352,   363,   364,
-     365,   285,   104,   286,   990,   991,  1000,  1001,   295,   297,
-     299,   311,   485,   489,   493,   497,   501,   505,   510,   514,
-     518,   525,   638,   640,   555,   556,   367,   644,   648,   652,
-     660,   664,   670,   676,    57,   682,   686,   789,   557,   793,
-     558,   795,   799,   808,   812,   833,   837,   867,   898,   903,
-     908,   912,    60,   916,   928,   960,   886,   887,   978,   982,
-     986,  1024,  1026,  1030,  1052,    93,   453,   454,   455,   456,
-      51,   457,   458,    92,   459,   152,   460,   461,   462,   463,
-     153,   742,   743,   744,   745,   746,   747,   748,   749,   750,
-     751,   752,   753,   754,  1067,   129,   186,   755,   402,   186,
-      91,   186,   154,   699,   128,   186,   155,   700,   346,   156,
-     186,   368,   701,   186,   157,   702,  1070,   369,   370,   186,
-     346,   706,   127,   368,   158,   159,   186,   130,   939,   369,
-     370,   131,   160,   214,   185,   756,    61,    62,    63,    64,
-      65,    66,    67,    68,    69,    70,    71,    72,   186,   371,
-    1074,   132,    73,   133,   372,   373,   606,   607,   134,   374,
-     375,   371,   376,   770,   771,   135,   372,   373,   817,   818,
-     136,   374,   375,   137,   376,   143,   757,   758,   537,   138,
-     540,   541,   542,   139,   161,   162,   825,   826,   163,   140,
-      74,   141,   164,   142,   165,   166,   167,   470,   471,   472,
-     473,   827,   828,   144,   622,   623,   624,   625,   626,   627,
-     733,   734,   630,   168,   169,   879,   880,   170,   171,   921,
-     922,   930,   931,   145,   996,   997,   172,   173,   147,   655,
-    1033,   931,   174,   175,   192,   193,   194,   148,   197,   198,
-     199,   200,   201,   149,   204,   205,   917,   918,   955,   956,
-     347,   348,   186,   188,   190,   195,   202,   207,   208,   209,
-     211,   215,   217,   216,   239,   218,   219,   220,   221,   222,
-     223,   224,   225,   273,   226,   227,   228,   229,   230,   231,
-     232,   233,   234,   235,   236,   237,   238,   280,   315,   319,
-     321,   323,   325,   338,   251,   327,   253,   240,   241,   242,
-     243,   244,   245,   246,   258,   252,   275,   254,   255,   256,
-     257,   259,   266,   260,   261,   272,   262,   264,   265,   267,
-     271,   268,   276,   269,    98,   277,   317,   328,   279,   330,
-     346,   314,   343,   353,   390,   360,   841,   391,   392,   153,
-     394,   424,   467,   469,   396,   389,   474,   395,   159,   482,
-     506,   162,   498,   400,   425,   401,   403,   404,   405,  -382,
-    -383,  -384,   406,   407,   408,   409,   410,   411,   412,   413,
-     415,   414,   416,   417,   418,   419,   433,   420,   422,   421,
-     423,   427,   477,   428,   429,   430,   435,   164,   169,   431,
-     171,   432,   468,   486,   434,   172,   436,   437,   438,   494,
-     439,   440,   441,   442,   483,   443,   444,   445,   446,   490,
-     447,   502,   448,   449,   451,   508,   515,   450,   519,   526,
-     356,   528,   533,   534,   538,   535,   547,   545,   546,   559,
-     544,   548,   551,   560,   552,   567,   568,   577,   561,   562,
-     563,   564,   565,   566,   569,   620,   649,   656,   661,   687,
-     574,   665,   575,   576,   673,   570,   571,   572,   645,   573,
-     578,   580,   582,   584,   586,   579,   581,   583,   692,   585,
-     694,   589,   695,   684,   591,   689,   596,   641,   697,   587,
-     588,   597,   590,   781,   594,   890,   891,   592,   632,   593,
-     595,   598,   601,   602,   599,   899,   600,   653,   603,   604,
-     605,   609,   608,   610,   613,   611,   616,   635,   636,   658,
-     612,   614,   780,   693,   621,   796,   704,   804,   809,   813,
-     821,   823,   824,   696,   708,   838,   839,   900,   713,   715,
-     909,   705,   717,   709,   719,   710,   711,   721,   723,   707,
-     714,   724,   726,   718,   712,   737,   720,   829,   716,   722,
-     725,   790,   768,   727,   728,   729,   730,   731,   769,   738,
-     739,   740,   741,   772,   761,   775,   767,   787,   773,   778,
-     774,   779,   800,   784,   103,   844,   834,   816,   831,   840,
-     842,   845,   843,   913,   925,   849,   850,   904,   846,   847,
-     852,   926,   929,   854,   848,   937,   857,   972,   935,   856,
-     893,   853,   860,   862,   855,   979,   851,  1065,   858,   861,
-     987,   863,   889,   871,   859,   864,   870,   874,   872,   873,
-     878,   881,   884,   876,  1002,   885,   896,   906,  1019,  1031,
-    1047,  1050,  1053,  1061,   888,   920,   919,   938,   942,  1071,
-      16,    19,   946,   983,   948,   941,   943,  1020,   951,   957,
-     944,   953,   867,   947,   950,   949,   668,   965,   945,   968,
-     952,   954,   970,   963,   964,   875,  1004,   966,  1009,   969,
-     667,  1027,   992,   993,   994,   815,   995,   206,  1046,  1015,
-    1011,   998,  1013,   960,  1003,  1005,  1035,  1007,  1034,  1018,
-    1039,  1012,   865,  1006,  1014,  1008,  1010,  1041,  1057,   691,
-    1063,  1037,  1038,  1044,  1045,  1060,  1066,  1072,  1017,   967,
-    1040,  1059,  1054,  1058,   958,  1073,   554,  1062,  1016,  1068,
-    1069,   151,   783,   976,   634,   782,   786,   973,  1021,   877,
-    1048,  1064,  1022,   785,   975,  1049,     0,     0,     0,   895,
-       0,   615,     0,   683,     0,     0,     0,   892,   619,     0,
-       0,   894,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,   629,     0,     0,     0,   290,     0,     0,     0,
-       0,     0,   307,     0,     0,     0,     0,     0,     0,     0,
+     189,   295,   280,   808,   620,   336,   303,   304,   305,    97,
+     310,    98,    99,   314,   315,    97,   363,    98,    99,   290,
+     293,     1,   673,   296,    97,   679,    98,    99,    18,   681,
+     821,    97,    17,    98,    99,   925,    55,    20,    42,    43,
+     524,    21,   357,   764,   765,   533,   298,   286,   251,   513,
+     300,     7,    56,    57,    49,   523,   351,   514,   249,   250,
+     364,     8,     9,   342,   532,   734,   188,   934,    61,   991,
+     559,  1001,   560,   312,   486,   490,   494,   498,   502,   506,
+     511,   515,   519,   526,   639,   641,   645,   649,   653,   661,
+     665,   283,   284,   285,   671,   677,   683,   687,   790,   794,
+     796,   302,   800,   809,   813,   308,   834,   311,   838,   868,
+     899,   904,   909,   913,   917,   929,   961,   979,   983,   987,
+    1025,  1027,  1031,   186,   804,    44,  1053,   805,   187,  1044,
+     340,     8,     9,    36,   454,   534,  1045,    41,    10,    11,
+     214,   215,   778,   779,   455,   456,   457,   458,   399,   459,
+     460,    47,   461,   188,   462,   463,   464,   465,   400,   401,
+     766,   700,   705,   188,   188,    50,   188,   188,   337,   338,
+     339,   942,   100,   101,   102,   103,   188,    52,   100,   101,
+     102,   103,   104,   294,   525,   105,   297,   100,   101,   102,
+     103,   105,   152,   106,   306,   101,   307,   103,   674,   106,
+     105,   680,   358,   291,    22,   682,   822,   105,   106,   299,
+     287,   926,   288,   301,    45,   106,    23,    24,   973,   352,
+     353,   354,   976,   365,   366,   367,   343,   344,   735,   736,
+     935,   936,   992,   993,  1002,  1003,   313,   487,   491,   495,
+     499,   503,   507,   512,   516,   520,   527,   640,   642,   646,
+     650,   654,   662,   666,   557,   558,   369,   672,   678,   684,
+     688,   791,   795,   797,    51,   801,   810,   814,    93,   835,
+      62,   839,   869,   900,   905,   910,   914,   918,   930,   962,
+     980,   984,   988,  1026,  1028,  1032,   888,   889,   188,  1054,
+     404,   744,   745,   746,   747,   748,   749,   750,   751,   752,
+     753,   754,   755,   756,    53,   154,    37,   757,    38,    39,
+     155,    63,    64,    65,    66,    67,    68,    69,    70,    71,
+      72,    73,    74,  1038,  1057,  1069,    59,    75,   188,   188,
+     188,   539,   156,   542,   543,   544,   157,    94,   348,   158,
+     188,   370,   701,    95,   159,   758,  1072,   371,   372,   188,
+     348,   702,   129,   370,   160,   161,   188,   131,   703,   371,
+     372,   188,   162,   704,   130,    76,   472,   473,   474,   475,
+     455,   456,   457,   458,   132,   459,   460,   133,   461,   373,
+     462,   463,   464,   465,   374,   375,   759,   760,   134,   376,
+     377,   373,   378,   188,   135,   708,   374,   375,   188,   145,
+     941,   376,   377,   188,   378,  1076,   216,   187,   608,   609,
+     772,   773,   819,   820,   163,   164,   827,   828,   165,   829,
+     830,   136,   166,   137,   167,   168,   169,   735,   736,   881,
+     882,   923,   924,   138,   624,   625,   626,   627,   628,   629,
+     932,   933,   632,   170,   171,   919,   920,   172,   173,   998,
+     999,  1035,   933,   957,   958,   139,   174,   175,   140,   657,
+     349,   350,   176,   177,   194,   195,   196,   141,   199,   200,
+     201,   202,   203,   142,   206,   207,   143,   144,   146,   147,
+     149,   150,   151,   190,   192,   188,   197,   204,   209,   210,
+     211,   213,   217,   219,   241,   218,   242,   220,   221,   261,
+     222,   223,   243,   224,   225,   226,   227,   228,   229,   230,
+     231,   232,   233,   234,   235,   236,   237,   238,   239,   240,
+     275,   282,   317,   321,   323,   253,   327,   255,   319,   325,
+     244,   245,   246,   247,   248,   260,   254,   330,   268,   256,
+     257,   258,   259,   262,   264,   263,   274,   266,   267,   269,
+     273,   270,   271,   277,   278,   279,   100,   281,   329,   316,
+     332,   345,   340,   355,   362,   348,   843,   391,   392,   393,
+     394,   396,   155,   398,   426,   469,   471,   397,   476,   402,
+     403,   405,   406,   161,   164,   407,  -384,   166,  -385,   412,
+    -386,   408,   409,   410,   411,   413,   414,   416,   415,   418,
+     417,   419,   420,   421,   422,   423,   424,   425,   427,   429,
+     430,   432,   431,   433,   435,   437,   434,   479,   171,   436,
+     173,   470,   438,   488,   439,   453,   174,   440,   441,   442,
+     443,   444,   445,   446,   447,   485,   448,   449,   450,   451,
+     492,   496,   452,   484,   500,   504,   508,   510,   517,   521,
+     528,   358,   530,   535,   536,   537,   547,   540,   546,   548,
+     549,   562,   550,   561,   596,   563,   569,   553,   554,   622,
+     570,   651,   564,   565,   566,   567,   568,   571,   663,   579,
+     658,   667,   691,   576,   577,   578,   580,   615,   572,   694,
+     573,   574,   575,   582,   647,   584,   586,   581,   583,   675,
+     585,   587,   588,   591,   696,   593,   686,   589,   590,   660,
+     598,   599,   634,   697,   592,   892,   893,   594,   595,   597,
+     655,   603,   600,   604,   601,   901,   605,   602,   618,   607,
+     606,   610,   611,   612,   637,   613,   638,   614,   616,   643,
+     689,   699,   698,   695,   623,   782,   783,   798,   811,   806,
+     710,   815,   825,   706,   707,   823,   826,   840,   715,   831,
+     841,   717,   902,   711,   712,   719,   709,   713,   721,   716,
+     723,   725,   726,   714,   720,   728,   722,   724,   792,   727,
+     718,   739,   911,   729,   730,   731,   732,   789,   733,   777,
+     740,   770,   741,   742,   743,   771,   763,   774,   802,   769,
+     780,   775,   776,   781,   786,   836,   105,   844,   845,   818,
+     833,   842,   915,   927,   846,   928,   851,   906,   852,   939,
+     974,   981,   848,   849,   854,   850,   856,   847,   859,   858,
+     931,   862,   855,   857,   864,   895,   937,  1067,   853,   872,
+     860,   874,   863,   865,   861,   875,   866,   873,   880,   876,
+     886,   989,   883,   878,   898,   908,   891,   887,   940,   890,
+     922,   921,  1004,   943,   944,  1021,  1033,   948,  1049,   950,
+    1052,  1055,  1063,   945,   959,   946,   953,  1022,   949,   952,
+     951,   869,   955,   947,  1073,    16,   985,    19,   954,   967,
+     970,   877,   956,   965,   966,   972,   817,   968,   669,  1006,
+     971,   994,   995,   996,   997,  1000,  1005,  1029,  1048,  1011,
+    1017,  1007,  1013,  1015,   962,  1036,  1009,   208,  1037,  1008,
+    1020,  1014,   693,  1041,  1016,  1010,  1043,  1012,  1059,  1019,
+    1065,  1039,  1040,  1046,  1047,  1062,  1068,  1042,  1074,   545,
+     867,  1061,   969,  1018,  1056,  1075,   153,  1060,   960,  1064,
+     556,  1070,   879,   785,  1071,   788,   636,   978,   784,  1023,
+    1050,   787,  1024,  1051,  1066,     0,   975,     0,     0,     0,
+     670,     0,   894,   896,   617,   897,   977,     0,     0,     0,
+     621,   685,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,   631,   292,     0,
+       0,     0,     0,     0,   309,     0,     0,     0,     0,     0,
+       0,     0,   630,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,   347,     0,     0,     0,     0,
+       0,     0,   335,     0,     0,     0,   633,   635,     0,   368,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-     628,     0,     0,   345,     0,     0,     0,     0,     0,     0,
-     333,     0,     0,     0,     0,     0,     0,   366,     0,     0,
-       0,     0,     0,     0,     0,   633,     0,     0,     0,     0,
-       0,     0,     0,   631,     0,   527,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,   543,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,   529,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
@@ -1645,121 +1645,121 @@ static const yytype_int16 yytable[] =
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,   476,     0,     0,   475,     0,     0,     0,   481,
-       0,     0,   478,   480,   479
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,   478,     0,     0,     0,   477,     0,
+       0,     0,   483,     0,   480,   482,   481
 };
 
 static const yytype_int16 yycheck[] =
 {
-     127,   224,   215,   723,   556,     3,   229,   230,   231,     3,
-     233,     5,     6,   236,   237,     3,     3,     3,    48,     7,
-       3,     3,     3,   168,     5,     6,     3,   264,   431,     3,
-       0,     3,   168,     4,    49,    50,     3,   440,     5,     6,
-     185,   175,     3,     3,   170,     3,   180,   183,   184,     3,
-     180,     5,     6,     3,   168,   185,   173,     3,   185,   186,
-       3,   175,     3,   165,   166,     3,   173,   180,     3,   171,
-     172,     3,   168,     3,   187,     3,     3,     3,     3,     3,
+     129,   226,   217,   725,   558,     3,   231,   232,   233,     3,
+     235,     5,     6,   238,   239,     3,   266,     5,     6,     3,
+       3,    48,     3,     3,     3,     3,     5,     6,    10,     3,
+       3,     3,   171,     5,     6,     3,   168,     3,    20,     4,
+       3,     7,     3,    49,    50,     3,     3,     3,   168,   168,
+       3,     0,   184,   185,    36,   433,     3,   176,   187,   188,
+       3,   165,   166,     3,   442,     3,   186,     3,    50,     3,
+     181,     3,   183,     3,     3,     3,     3,     3,     3,     3,
        3,     3,     3,     3,     3,     3,     3,     3,     3,     3,
-       3,   218,   219,   220,     3,     3,     3,     3,     3,     3,
-       3,   228,     3,     3,     3,   232,     3,   234,     3,     3,
-       3,     3,     3,     3,     3,     3,     3,     3,     3,    90,
-       3,     3,     3,   165,   166,     3,     3,     3,     3,     3,
-       3,     3,    93,    93,   180,   166,   180,   168,   169,   185,
-      10,   185,   694,   695,   180,     3,   171,   180,   180,   185,
-      20,   166,   185,   185,   180,    13,    14,    15,    16,   185,
-      18,    19,   174,    21,    34,    23,    24,    25,    26,   166,
-     167,   180,   166,   167,   168,   169,   185,   163,    48,     3,
-     178,   175,     6,   176,   178,   166,   167,   168,   169,   166,
-     167,   178,   186,   181,   182,   432,   178,   178,   179,   166,
-     167,   168,   169,   186,   178,   186,   178,   178,   166,   167,
-     168,   178,   166,   167,   168,   169,   166,   167,   938,   186,
-     166,   167,   942,   166,   178,   166,   167,   168,   166,   167,
-     168,   166,   186,   168,   166,   167,   166,   167,   166,   166,
+       3,   220,   221,   222,     3,     3,     3,     3,     3,     3,
+       3,   230,     3,     3,     3,   234,     3,   236,     3,     3,
+       3,     3,     3,     3,     3,     3,     3,     3,     3,     3,
+       3,     3,     3,   176,     3,    90,     3,     6,   181,   181,
+      93,   165,   166,   174,     3,    93,   188,   174,   172,   173,
+     166,   167,   696,   697,    13,    14,    15,    16,   181,    18,
+      19,   168,    21,   186,    23,    24,    25,    26,   181,   181,
+     166,   181,   181,   186,   186,   172,   186,   186,   166,   167,
+     168,   181,   166,   167,   168,   169,   186,   177,   166,   167,
+     168,   169,   176,   166,   434,   179,   166,   166,   167,   168,
+     169,   179,   180,   187,   166,   167,   168,   169,   179,   187,
+     179,   179,   163,   187,   170,   179,   179,   179,   187,   166,
+     166,   179,   168,   166,   179,   187,   182,   183,   940,   166,
+     167,   168,   944,   166,   167,   168,   166,   167,   166,   167,
+     166,   167,   166,   167,   166,   167,   166,   166,   166,   166,
      166,   166,   166,   166,   166,   166,   166,   166,   166,   166,
      166,   166,   166,   166,    27,    28,     3,   166,   166,   166,
-     166,   166,   166,   166,   174,   166,   166,   166,   180,   166,
-     182,   166,   166,   166,   166,   166,   166,   166,   166,   166,
-     166,   166,   166,   166,   166,   166,   838,   839,   166,   166,
-     166,   166,   166,   166,   166,   166,    13,    14,    15,    16,
-     168,    18,    19,   183,    21,     3,    23,    24,    25,    26,
+     166,   166,   166,   166,   175,   166,   166,   166,   180,   166,
+     166,   166,   166,   166,   166,   166,   166,   166,   166,   166,
+     166,   166,   166,   166,   166,   166,   840,   841,   186,   166,
+     188,    71,    72,    73,    74,    75,    76,    77,    78,    79,
+      80,    81,    82,    83,   168,     3,   166,    87,   168,   169,
        8,    71,    72,    73,    74,    75,    76,    77,    78,    79,
-      80,    81,    82,    83,   180,   178,   185,    87,   187,   185,
-     179,   185,    30,   187,   175,   185,    34,   187,    85,    37,
-     185,    88,   187,   185,    42,   187,  1066,    94,    95,   185,
-      85,   187,   170,    88,    52,    53,   185,   178,   187,    94,
-      95,   178,    60,   179,   180,   125,    71,    72,    73,    74,
-      75,    76,    77,    78,    79,    80,    81,    82,   185,   126,
-     187,   178,    87,   178,   131,   132,   179,   180,   178,   136,
-     137,   126,   139,   179,   180,   178,   131,   132,   179,   180,
-     178,   136,   137,   178,   139,   177,   166,   167,   445,   178,
-     447,   448,   449,   178,   112,   113,   179,   180,   116,   178,
-     125,   178,   120,   178,   122,   123,   124,    38,    39,    40,
-      41,   179,   180,   176,   561,   562,   563,   564,   565,   566,
-     166,   167,   569,   141,   142,   179,   180,   145,   146,   179,
-     180,   179,   180,    11,   179,   180,   154,   155,   174,   586,
-     179,   180,   160,   161,   131,   132,   133,   174,   135,   136,
-     137,   138,   139,     3,   141,   142,   863,   864,   917,   918,
-     256,   257,   185,    92,    92,    92,    92,   166,   166,    12,
-     166,   180,   174,   170,   180,   170,   170,   170,   170,   170,
-     170,   170,   170,    22,   170,   170,   170,   170,   170,   170,
-     170,   170,   170,   170,   170,   170,   170,     3,   114,   117,
-      54,   147,    61,    93,   170,   143,   170,   180,   180,   180,
-     180,   180,   180,   180,   170,   180,   175,   180,   180,   180,
-     180,   179,   170,   180,   179,   166,   180,   180,   179,   179,
-     174,   180,   175,   180,   166,   175,   156,   121,   168,   174,
-      85,   166,    99,   107,   166,   179,   779,   166,   181,     8,
-     187,   187,     9,    35,   175,   179,    43,   180,    53,   161,
-      62,   113,    55,   180,   168,   180,   180,   180,   180,   180,
-     180,   180,   180,   180,   180,   180,   170,   180,   170,   180,
-     180,   170,   170,   180,   170,   180,   179,   170,   170,   180,
-     170,   170,   122,   180,   170,   180,   170,   120,   142,   180,
-     146,   178,   170,   115,   179,   154,   179,   178,   180,   118,
-     180,   180,   178,   178,   162,   178,   178,   178,   178,   157,
-     178,   148,   178,   178,   175,   166,   103,   180,   100,   104,
-     163,    20,    96,    96,   128,   127,    20,   166,   166,   170,
-     182,   166,   168,     3,   168,   180,   180,   187,   170,   170,
-     170,   170,   170,   170,   170,     5,    56,    63,   104,   133,
-     170,   101,   170,   170,   108,   180,   180,   180,   119,   180,
-     170,   170,   170,   170,   170,   180,   180,   180,    17,   180,
-      29,   170,    29,   130,   170,   138,   170,   158,    31,   180,
-     180,   170,   180,    44,   179,   842,   843,   180,   143,   180,
-     180,   179,   170,   170,   180,   852,   179,   149,   170,   170,
-     180,   180,   170,   179,   166,   180,   166,   166,   166,   144,
-     180,   176,    36,   166,   180,    57,   180,    64,   105,   102,
-     109,    20,    20,   174,   170,    28,    27,    58,   170,   170,
-      66,   180,   170,   180,   170,   180,   180,   170,   170,   187,
-     180,   170,   170,   180,   187,   170,   180,   129,   187,   180,
-     180,   159,   170,   180,   180,   179,   179,   179,   170,   180,
-     180,   180,   179,   170,   179,   166,   180,   162,   179,   166,
-     179,   174,   150,   166,   178,   180,   134,   179,   178,   175,
-     170,   187,   170,   106,     3,   170,   170,   151,   180,   180,
-     170,     3,   130,   170,   180,    10,   170,    45,   135,   174,
-     144,   180,   170,   170,   180,    59,   187,  1060,   180,   180,
-      67,   180,   175,   179,   187,   180,   170,   179,   170,   170,
-     170,   166,   170,   179,    51,   180,   166,   166,    32,    68,
-      46,     3,    65,    33,   180,   176,   179,   170,   170,    47,
-       4,    12,   170,   152,   170,   180,   180,  1004,   170,   166,
-     180,   170,   166,   180,   175,   180,   595,   170,   187,   170,
-     180,   179,   170,   179,   179,   826,   170,   179,   170,   179,
-     593,   153,   179,   179,   179,   728,   176,   143,  1035,   166,
-     170,   178,   170,   166,   180,   180,   170,   180,   169,   174,
-     170,   180,   818,   187,   180,   187,   187,   170,   170,   612,
-    1057,   180,   180,   179,   175,   170,   170,   170,   998,   931,
-     187,   180,   187,   187,   922,  1072,   462,   187,   997,   187,
-     187,   103,   705,   944,   573,   704,   710,   941,  1005,   828,
-    1037,  1059,  1007,   709,   943,  1038,    -1,    -1,    -1,   848,
-      -1,   549,    -1,   605,    -1,    -1,    -1,   844,   557,    -1,
-      -1,   847,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,   568,    -1,    -1,    -1,   222,    -1,    -1,    -1,
-      -1,    -1,   232,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      80,    81,    82,   181,   181,   181,   175,    87,   186,   186,
+     186,   447,    30,   449,   450,   451,    34,   184,    85,    37,
+     186,    88,   188,   166,    42,   125,  1068,    94,    95,   186,
+      85,   188,   171,    88,    52,    53,   186,   179,   188,    94,
+      95,   186,    60,   188,   176,   125,    38,    39,    40,    41,
+      13,    14,    15,    16,   179,    18,    19,   179,    21,   126,
+      23,    24,    25,    26,   131,   132,   166,   167,   179,   136,
+     137,   126,   139,   186,   179,   188,   131,   132,   186,   178,
+     188,   136,   137,   186,   139,   188,   180,   181,   180,   181,
+     180,   181,   180,   181,   112,   113,   180,   181,   116,   180,
+     181,   179,   120,   179,   122,   123,   124,   166,   167,   180,
+     181,   180,   181,   179,   563,   564,   565,   566,   567,   568,
+     180,   181,   571,   141,   142,   865,   866,   145,   146,   180,
+     181,   180,   181,   919,   920,   179,   154,   155,   179,   588,
+     258,   259,   160,   161,   133,   134,   135,   179,   137,   138,
+     139,   140,   141,   179,   143,   144,   179,   179,   177,    11,
+     175,   175,     3,    92,    92,   186,    92,    92,   166,   166,
+      12,   166,   181,   175,   181,   171,   181,   171,   171,   180,
+     171,   171,   181,   171,   171,   171,   171,   171,   171,   171,
+     171,   171,   171,   171,   171,   171,   171,   171,   171,   171,
+      22,     3,   114,   117,    54,   171,    61,   171,   156,   147,
+     181,   181,   181,   181,   181,   171,   181,   121,   171,   181,
+     181,   181,   181,   181,   181,   180,   166,   181,   180,   180,
+     175,   181,   181,   176,   176,   176,   166,   168,   143,   166,
+     175,    99,    93,   107,   180,    85,   781,   180,   166,   166,
+     182,   188,     8,   176,   188,     9,    35,   181,    43,   181,
+     181,   181,   181,    53,   113,   181,   181,   120,   181,   171,
+     181,   181,   181,   181,   181,   181,   171,   171,   181,   171,
+     181,   181,   171,   181,   171,   181,   171,   171,   168,   171,
+     181,   181,   171,   181,   180,   171,   179,   122,   142,   180,
+     146,   171,   180,   115,   179,   176,   154,   181,   181,   181,
+     179,   179,   179,   179,   179,   162,   179,   179,   179,   179,
+     157,   118,   181,   161,    55,   148,    62,   166,   103,   100,
+     104,   163,    20,    96,    96,   127,   166,   128,   183,   166,
+      20,     3,   166,   171,   180,   171,   181,   168,   168,     5,
+     181,    56,   171,   171,   171,   171,   171,   171,   104,   188,
+      63,   101,   138,   171,   171,   171,   171,   166,   181,    17,
+     181,   181,   181,   171,   119,   171,   171,   181,   181,   108,
+     181,   181,   171,   171,    29,   171,   130,   181,   181,   144,
+     171,   171,   143,    29,   181,   844,   845,   181,   181,   181,
+     149,   171,   180,   171,   181,   854,   171,   180,   166,   181,
+     171,   171,   181,   180,   166,   181,   166,   181,   177,   158,
+     133,    31,   175,   166,   181,    36,    44,    57,   105,    64,
+     171,   102,    20,   181,   181,   109,    20,    28,   171,   129,
+      27,   171,    58,   181,   181,   171,   188,   181,   171,   181,
+     171,   171,   171,   188,   181,   171,   181,   181,   159,   181,
+     188,   171,    66,   181,   181,   180,   180,   162,   180,   166,
+     181,   171,   181,   181,   180,   171,   180,   171,   150,   181,
+     166,   180,   180,   175,   166,   134,   179,   171,   171,   180,
+     179,   176,   106,     3,   181,     3,   171,   151,   171,    10,
+      45,    59,   181,   181,   171,   181,   171,   188,   171,   175,
+     130,   171,   181,   181,   171,   144,   135,  1062,   188,   171,
+     181,   171,   181,   181,   188,   171,   181,   180,   171,   180,
+     171,    67,   166,   180,   166,   166,   176,   181,   171,   181,
+     177,   180,    51,   181,   171,    32,    68,   171,    46,   171,
+       3,    65,    33,   181,   166,   181,   171,  1006,   181,   176,
+     181,   166,   171,   188,    47,     4,   152,    12,   181,   171,
+     171,   828,   180,   180,   180,   171,   730,   180,   595,   171,
+     180,   180,   180,   180,   177,   179,   181,   153,  1037,   171,
+     166,   181,   171,   171,   166,   169,   181,   145,   171,   188,
+     175,   181,   614,   171,   181,   188,   171,   188,   171,  1000,
+    1059,   181,   181,   180,   176,   171,   171,   188,   171,   452,
+     820,   181,   933,   999,   188,  1074,   105,   188,   924,   188,
+     464,   188,   830,   707,   188,   712,   575,   946,   706,  1007,
+    1039,   711,  1009,  1040,  1061,    -1,   943,    -1,    -1,    -1,
+     597,    -1,   846,   849,   551,   850,   945,    -1,    -1,    -1,
+     559,   607,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,   570,   224,    -1,
+      -1,    -1,    -1,    -1,   234,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,   569,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,   257,    -1,    -1,    -1,    -1,
+      -1,    -1,   252,    -1,    -1,    -1,   572,   574,    -1,   270,
       -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-     567,    -1,    -1,   255,    -1,    -1,    -1,    -1,    -1,    -1,
-     250,    -1,    -1,    -1,    -1,    -1,    -1,   268,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,   572,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,   570,    -1,   438,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,   450,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,   440,    -1,    -1,    -1,    -1,    -1,    -1,
       -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
       -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
       -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
@@ -1768,168 +1768,171 @@ static const yytype_int16 yycheck[] =
       -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
       -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
       -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,   401,    -1,    -1,   400,    -1,    -1,    -1,   407,
-      -1,    -1,   404,   406,   405
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,   403,    -1,    -1,    -1,   402,    -1,
+      -1,    -1,   409,    -1,   406,   408,   407
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
    state STATE-NUM.  */
 static const yytype_int16 yystos[] =
 {
-       0,    48,   189,   190,   191,   192,   193,     0,   165,   166,
-     171,   172,   195,   196,   197,   198,   192,   170,   198,   196,
-       3,     7,   181,   182,   199,   200,   201,   202,   203,   204,
-     270,   271,   291,   292,   173,   166,   168,   169,   194,   173,
-     198,     4,    90,   178,   272,   168,   293,   198,   171,   174,
-     176,   168,   273,   168,   183,   184,   274,   174,   294,   198,
-     166,    71,    72,    73,    74,    75,    76,    77,    78,    79,
-      80,    81,    82,    87,   125,   205,   206,   228,   229,   230,
-     231,   232,   233,   234,   235,   236,   237,   238,   243,   244,
-     260,   179,   183,   166,   275,     3,     5,     6,   166,   167,
-     168,   169,   175,   178,   186,   295,   296,   297,   298,   299,
-     300,   301,   303,   304,   305,   306,   311,   317,   322,   323,
-     331,   340,   349,   351,   352,   353,   356,   170,   175,   178,
-     178,   178,   178,   178,   178,   178,   178,   178,   178,   178,
-     178,   178,   178,   177,   176,    11,   276,   174,   174,     3,
-     179,   295,     3,     8,    30,    34,    37,    42,    52,    53,
-      60,   112,   113,   116,   120,   122,   123,   124,   141,   142,
-     145,   146,   154,   155,   160,   161,   307,   312,   318,   324,
-     332,   341,   350,   354,   175,   180,   185,   296,    92,   214,
-      92,   207,   207,   207,   207,    92,   215,   207,   207,   207,
-     207,   207,    92,   216,   207,   207,   206,   166,   166,    12,
-     277,   166,   166,   167,   179,   180,   170,   174,   170,   170,
-     170,   170,   170,   170,   170,   170,   170,   170,   170,   170,
-     170,   170,   170,   170,   170,   170,   170,   170,   170,   180,
-     180,   180,   180,   180,   180,   180,   180,   296,   296,   168,
-     357,   170,   180,   170,   180,   180,   180,   180,   170,   179,
-     180,   179,   180,   239,   180,   179,   170,   179,   180,   180,
-     261,   174,   166,    22,   278,   175,   175,   175,   297,   168,
-       3,   296,   296,   296,     3,   166,   168,   310,     3,   186,
-     323,     3,   166,   310,     3,   166,     3,   166,     3,   166,
-     296,   310,   310,   310,   166,   168,   296,   299,   310,   296,
-       3,   166,   310,   310,   166,   114,   308,   156,   313,   117,
-     319,    54,   325,   147,   333,    61,   342,   143,   121,   355,
-     174,   359,   358,   359,     3,   166,   167,   168,    93,   208,
-       3,   166,   167,    99,   217,   217,    85,   264,   264,     3,
-     166,   167,   168,   107,   225,     3,   163,   240,   241,   242,
-     179,   208,     3,   166,   167,   168,   225,     3,    88,    94,
-      95,   126,   131,   132,   136,   137,   139,   254,   255,   256,
-     257,   258,   259,   262,   263,   264,   265,   268,   269,   179,
-     166,   166,   181,   279,   187,   180,   175,   180,   180,   180,
-     180,   180,   187,   180,   180,   180,   180,   180,   180,   180,
-     170,   180,   170,   180,   170,   180,   170,   180,   170,   180,
-     170,   180,   170,   170,   187,   168,   360,   170,   180,   170,
-     180,   180,   178,   179,   179,   170,   179,   178,   180,   180,
-     180,   178,   178,   178,   178,   178,   178,   178,   178,   178,
-     180,   175,     3,    13,    14,    15,    16,    18,    19,    21,
-      23,    24,    25,    26,   280,   281,   284,     9,   170,    35,
-      38,    39,    40,    41,    43,   324,   307,   122,   354,   350,
-     332,   312,   161,   162,     3,   166,   115,   309,     3,   166,
-     157,   314,     3,   166,   118,   320,     3,   166,    55,   327,
-       3,   166,   148,   334,     3,   166,    62,   343,   166,     3,
-     166,   168,   175,     3,   166,   103,   221,     3,   166,   100,
-     218,   218,     3,   208,     3,   166,   104,   242,    20,   209,
-     218,     3,    93,    96,    96,   127,   245,   245,   128,   246,
-     245,   245,   245,   263,   182,   166,   166,    20,   166,   285,
-     290,   168,   168,   282,   282,    27,    28,   180,   182,   170,
-       3,   170,   170,   170,   170,   170,   170,   180,   180,   170,
-     180,   180,   180,   180,   170,   170,   170,   187,   170,   180,
-     170,   180,   170,   180,   170,   180,   170,   180,   180,   170,
-     180,   170,   180,   180,   179,   180,   170,   170,   179,   180,
-     179,   170,   170,   170,   170,   180,   179,   180,   170,   180,
-     179,   180,   180,   166,   176,   290,   166,   283,   283,   281,
-       5,   180,   296,   296,   296,   296,   296,   296,   325,   308,
-     296,   355,   143,   333,   313,   166,   166,     3,   166,     3,
-     166,   158,   315,     3,   166,   119,   321,     3,   166,    56,
-     326,     3,   166,   149,   335,   296,    63,   344,   144,     3,
-     166,   104,   222,     3,   166,   101,   219,   219,   209,     3,
-     166,     3,   178,   108,   226,     3,   166,     3,   178,     3,
-     178,     3,   166,   246,   130,     3,   166,   133,   248,   138,
-     251,   251,    17,   166,    29,    29,   174,    31,   180,   187,
-     187,   187,   187,   180,   180,   180,   187,   187,   170,   180,
-     180,   180,   187,   170,   180,   170,   187,   170,   180,   170,
-     180,   170,   180,   170,   170,   180,   170,   180,   180,   179,
-     179,   179,     3,   166,   167,   210,   212,   170,   180,   180,
-     180,   179,    71,    72,    73,    74,    75,    76,    77,    78,
-      79,    80,    81,    82,    83,    87,   125,   166,   167,   211,
-     213,   179,    49,    50,   166,   266,   267,   180,   170,   170,
-     179,   180,   170,   179,   179,   166,   283,   283,   166,   174,
-      36,    44,   327,   309,   166,   334,   314,   162,     3,   166,
-     159,   316,     3,   166,     3,   166,    57,   328,     3,   166,
-     150,   336,     3,     6,    64,   345,   300,     3,   166,   105,
-     223,     3,   166,   102,   220,   220,   179,   179,   180,     3,
-     178,   109,   227,    20,    20,   179,   180,   179,   180,   129,
-     247,   178,     3,   166,   134,   249,     3,   166,    28,    27,
-     175,   297,   170,   170,   180,   187,   180,   180,   180,   170,
-     170,   187,   170,   180,   170,   180,   174,   170,   180,   187,
-     170,   180,   170,   180,   180,   212,     3,   166,   286,   287,
-     170,   179,   170,   170,   179,   213,   179,   267,   170,   179,
-     180,   166,   252,   253,   170,   180,   283,   283,   180,   175,
-     296,   296,   326,   144,   335,   315,   166,     3,   166,   296,
-      58,   329,     3,   166,   151,   337,   166,     3,   166,    66,
-     346,     3,   166,   106,   224,     3,   166,   221,   221,   179,
-     176,   179,   180,     3,   178,     3,     3,     3,   166,   130,
-     179,   180,     3,   166,   167,   135,   250,    10,   170,   187,
-     180,   180,   170,   180,   180,   187,   170,   180,   170,   180,
-     175,   170,   180,   170,   179,   261,   261,   166,   287,     3,
-     166,   288,   289,   179,   179,   170,   179,   253,   170,   179,
-     170,   300,    45,   328,   300,   336,   316,     3,   166,    59,
-     330,     3,   166,   152,   338,     3,   166,    67,   347,     3,
-     166,   167,   179,   179,   179,   176,   179,   180,   178,     3,
-     166,   167,    51,   180,   170,   180,   187,   180,   187,   170,
-     187,   170,   180,   170,   180,   166,   289,   252,   174,    32,
-     296,   329,   337,     3,   166,     3,   166,   153,   339,     3,
-     166,    68,   348,   179,   169,   170,   180,   180,   180,   170,
-     187,   170,   180,   187,   179,   175,   296,    46,   330,   338,
-       3,     3,   166,    65,   187,   180,   302,   170,   187,   180,
-     170,    33,   187,   296,   339,   310,   170,   180,   187,   187,
-     300,    47,   170,   296,   187
+       0,    48,   190,   191,   192,   193,   194,     0,   165,   166,
+     172,   173,   196,   197,   198,   199,   193,   171,   199,   197,
+       3,     7,   170,   182,   183,   200,   201,   202,   203,   204,
+     205,   206,   272,   273,   293,   294,   174,   166,   168,   169,
+     195,   174,   199,     4,    90,   179,   274,   168,   295,   199,
+     172,   175,   177,   168,   275,   168,   184,   185,   276,   175,
+     296,   199,   166,    71,    72,    73,    74,    75,    76,    77,
+      78,    79,    80,    81,    82,    87,   125,   207,   208,   230,
+     231,   232,   233,   234,   235,   236,   237,   238,   239,   240,
+     245,   246,   262,   180,   184,   166,   277,     3,     5,     6,
+     166,   167,   168,   169,   176,   179,   187,   297,   298,   299,
+     300,   301,   302,   303,   305,   306,   307,   308,   313,   319,
+     324,   325,   333,   342,   351,   353,   354,   355,   358,   171,
+     176,   179,   179,   179,   179,   179,   179,   179,   179,   179,
+     179,   179,   179,   179,   179,   178,   177,    11,   278,   175,
+     175,     3,   180,   297,     3,     8,    30,    34,    37,    42,
+      52,    53,    60,   112,   113,   116,   120,   122,   123,   124,
+     141,   142,   145,   146,   154,   155,   160,   161,   309,   314,
+     320,   326,   334,   343,   352,   356,   176,   181,   186,   298,
+      92,   216,    92,   209,   209,   209,   209,    92,   217,   209,
+     209,   209,   209,   209,    92,   218,   209,   209,   208,   166,
+     166,    12,   279,   166,   166,   167,   180,   181,   171,   175,
+     171,   171,   171,   171,   171,   171,   171,   171,   171,   171,
+     171,   171,   171,   171,   171,   171,   171,   171,   171,   171,
+     171,   181,   181,   181,   181,   181,   181,   181,   181,   298,
+     298,   168,   359,   171,   181,   171,   181,   181,   181,   181,
+     171,   180,   181,   180,   181,   241,   181,   180,   171,   180,
+     181,   181,   263,   175,   166,    22,   280,   176,   176,   176,
+     299,   168,     3,   298,   298,   298,     3,   166,   168,   312,
+       3,   187,   325,     3,   166,   312,     3,   166,     3,   166,
+       3,   166,   298,   312,   312,   312,   166,   168,   298,   301,
+     312,   298,     3,   166,   312,   312,   166,   114,   310,   156,
+     315,   117,   321,    54,   327,   147,   335,    61,   344,   143,
+     121,   357,   175,   361,   360,   361,     3,   166,   167,   168,
+      93,   210,     3,   166,   167,    99,   219,   219,    85,   266,
+     266,     3,   166,   167,   168,   107,   227,     3,   163,   242,
+     243,   244,   180,   210,     3,   166,   167,   168,   227,     3,
+      88,    94,    95,   126,   131,   132,   136,   137,   139,   256,
+     257,   258,   259,   260,   261,   264,   265,   266,   267,   270,
+     271,   180,   166,   166,   182,   281,   188,   181,   176,   181,
+     181,   181,   181,   181,   188,   181,   181,   181,   181,   181,
+     181,   181,   171,   181,   171,   181,   171,   181,   171,   181,
+     171,   181,   171,   181,   171,   171,   188,   168,   362,   171,
+     181,   171,   181,   181,   179,   180,   180,   171,   180,   179,
+     181,   181,   181,   179,   179,   179,   179,   179,   179,   179,
+     179,   179,   181,   176,     3,    13,    14,    15,    16,    18,
+      19,    21,    23,    24,    25,    26,   282,   283,   286,     9,
+     171,    35,    38,    39,    40,    41,    43,   326,   309,   122,
+     356,   352,   334,   314,   161,   162,     3,   166,   115,   311,
+       3,   166,   157,   316,     3,   166,   118,   322,     3,   166,
+      55,   329,     3,   166,   148,   336,     3,   166,    62,   345,
+     166,     3,   166,   168,   176,     3,   166,   103,   223,     3,
+     166,   100,   220,   220,     3,   210,     3,   166,   104,   244,
+      20,   211,   220,     3,    93,    96,    96,   127,   247,   247,
+     128,   248,   247,   247,   247,   265,   183,   166,   166,    20,
+     166,   287,   292,   168,   168,   284,   284,    27,    28,   181,
+     183,   171,     3,   171,   171,   171,   171,   171,   171,   181,
+     181,   171,   181,   181,   181,   181,   171,   171,   171,   188,
+     171,   181,   171,   181,   171,   181,   171,   181,   171,   181,
+     181,   171,   181,   171,   181,   181,   180,   181,   171,   171,
+     180,   181,   180,   171,   171,   171,   171,   181,   180,   181,
+     171,   181,   180,   181,   181,   166,   177,   292,   166,   285,
+     285,   283,     5,   181,   298,   298,   298,   298,   298,   298,
+     327,   310,   298,   357,   143,   335,   315,   166,   166,     3,
+     166,     3,   166,   158,   317,     3,   166,   119,   323,     3,
+     166,    56,   328,     3,   166,   149,   337,   298,    63,   346,
+     144,     3,   166,   104,   224,     3,   166,   101,   221,   221,
+     211,     3,   166,     3,   179,   108,   228,     3,   166,     3,
+     179,     3,   179,     3,   166,   248,   130,     3,   166,   133,
+     250,   138,   253,   253,    17,   166,    29,    29,   175,    31,
+     181,   188,   188,   188,   188,   181,   181,   181,   188,   188,
+     171,   181,   181,   181,   188,   171,   181,   171,   188,   171,
+     181,   171,   181,   171,   181,   171,   171,   181,   171,   181,
+     181,   180,   180,   180,     3,   166,   167,   212,   214,   171,
+     181,   181,   181,   180,    71,    72,    73,    74,    75,    76,
+      77,    78,    79,    80,    81,    82,    83,    87,   125,   166,
+     167,   213,   215,   180,    49,    50,   166,   268,   269,   181,
+     171,   171,   180,   181,   171,   180,   180,   166,   285,   285,
+     166,   175,    36,    44,   329,   311,   166,   336,   316,   162,
+       3,   166,   159,   318,     3,   166,     3,   166,    57,   330,
+       3,   166,   150,   338,     3,     6,    64,   347,   302,     3,
+     166,   105,   225,     3,   166,   102,   222,   222,   180,   180,
+     181,     3,   179,   109,   229,    20,    20,   180,   181,   180,
+     181,   129,   249,   179,     3,   166,   134,   251,     3,   166,
+      28,    27,   176,   299,   171,   171,   181,   188,   181,   181,
+     181,   171,   171,   188,   171,   181,   171,   181,   175,   171,
+     181,   188,   171,   181,   171,   181,   181,   214,     3,   166,
+     288,   289,   171,   180,   171,   171,   180,   215,   180,   269,
+     171,   180,   181,   166,   254,   255,   171,   181,   285,   285,
+     181,   176,   298,   298,   328,   144,   337,   317,   166,     3,
+     166,   298,    58,   331,     3,   166,   151,   339,   166,     3,
+     166,    66,   348,     3,   166,   106,   226,     3,   166,   223,
+     223,   180,   177,   180,   181,     3,   179,     3,     3,     3,
+     166,   130,   180,   181,     3,   166,   167,   135,   252,    10,
+     171,   188,   181,   181,   171,   181,   181,   188,   171,   181,
+     171,   181,   176,   171,   181,   171,   180,   263,   263,   166,
+     289,     3,   166,   290,   291,   180,   180,   171,   180,   255,
+     171,   180,   171,   302,    45,   330,   302,   338,   318,     3,
+     166,    59,   332,     3,   166,   152,   340,     3,   166,    67,
+     349,     3,   166,   167,   180,   180,   180,   177,   180,   181,
+     179,     3,   166,   167,    51,   181,   171,   181,   188,   181,
+     188,   171,   188,   171,   181,   171,   181,   166,   291,   254,
+     175,    32,   298,   331,   339,     3,   166,     3,   166,   153,
+     341,     3,   166,    68,   350,   180,   169,   171,   181,   181,
+     181,   171,   188,   171,   181,   188,   180,   176,   298,    46,
+     332,   340,     3,     3,   166,    65,   188,   181,   304,   171,
+     188,   181,   171,    33,   188,   298,   341,   312,   171,   181,
+     188,   188,   302,    47,   171,   298,   188
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int16 yyr1[] =
 {
-       0,   188,   189,   190,   190,   191,   191,   192,   193,   194,
-     194,   194,   195,   195,   196,   197,   197,   197,   197,   197,
-     198,   198,   199,   199,   199,   200,   201,   201,   201,   202,
-     203,   204,   205,   205,   206,   206,   206,   206,   206,   206,
-     206,   206,   206,   206,   206,   206,   206,   206,   207,   207,
-     207,   208,   208,   209,   209,   209,   210,   210,   211,   211,
-     211,   212,   212,   213,   213,   213,   213,   213,   213,   213,
-     213,   213,   213,   213,   213,   213,   213,   213,   213,   213,
-     214,   214,   214,   214,   215,   215,   215,   215,   216,   216,
-     216,   216,   217,   217,   218,   218,   219,   219,   220,   220,
-     221,   221,   222,   222,   223,   223,   224,   224,   224,   225,
-     225,   226,   226,   226,   227,   227,   227,   228,   229,   230,
-     231,   232,   233,   234,   235,   236,   237,   238,   239,   239,
-     239,   240,   240,   241,   241,   242,   243,   244,   245,   245,
-     246,   246,   247,   247,   248,   248,   249,   249,   249,   250,
-     250,   250,   251,   251,   252,   252,   253,   253,   254,   254,
-     255,   255,   256,   257,   257,   258,   259,   260,   261,   261,
-     261,   262,   262,   263,   263,   263,   263,   263,   263,   263,
-     263,   263,   263,   264,   264,   265,   265,   266,   266,   266,
-     267,   267,   267,   268,   268,   269,   269,   269,   270,   271,
-     271,   272,   272,   273,   274,   274,   274,   274,   275,   276,
-     276,   277,   277,   278,   278,   279,   279,   279,   280,   280,
-     281,   281,   281,   281,   281,   281,   281,   281,   281,   281,
-     281,   282,   282,   283,   284,   284,   284,   284,   284,   284,
-     285,   285,   286,   286,   286,   287,   288,   288,   288,   289,
-     290,   291,   292,   292,   293,   294,   294,   295,   295,   296,
-     296,   296,   296,   296,   296,   296,   296,   296,   296,   296,
-     296,   296,   296,   296,   296,   296,   296,   296,   296,   296,
-     296,   296,   296,   296,   296,   296,   297,   298,   299,   300,
-     300,   301,   302,   302,   303,   304,   305,   306,   306,   306,
-     306,   307,   307,   308,   308,   309,   309,   310,   310,   310,
-     311,   311,   312,   312,   313,   313,   314,   314,   315,   315,
-     316,   316,   317,   317,   318,   318,   319,   319,   320,   320,
-     321,   321,   322,   323,   324,   324,   325,   325,   326,   326,
-     327,   327,   328,   329,   329,   330,   330,   331,   331,   332,
-     333,   333,   334,   334,   335,   335,   336,   336,   337,   337,
-     338,   338,   339,   340,   340,   341,   341,   342,   342,   343,
-     344,   344,   345,   345,   346,   346,   347,   347,   348,   348,
-     349,   349,   350,   350,   350,   351,   351,   352,   352,   353,
-     353,   354,   354,   355,   355,   356,   356,   357,   357,   358,
-     358,   359,   360,   360
+       0,   189,   190,   191,   191,   192,   192,   193,   194,   195,
+     195,   195,   196,   196,   197,   198,   198,   198,   198,   198,
+     199,   199,   200,   200,   200,   200,   201,   202,   203,   203,
+     203,   204,   205,   206,   207,   207,   208,   208,   208,   208,
+     208,   208,   208,   208,   208,   208,   208,   208,   208,   208,
+     209,   209,   209,   210,   210,   211,   211,   211,   212,   212,
+     213,   213,   213,   214,   214,   215,   215,   215,   215,   215,
+     215,   215,   215,   215,   215,   215,   215,   215,   215,   215,
+     215,   215,   216,   216,   216,   216,   217,   217,   217,   217,
+     218,   218,   218,   218,   219,   219,   220,   220,   221,   221,
+     222,   222,   223,   223,   224,   224,   225,   225,   226,   226,
+     226,   227,   227,   228,   228,   228,   229,   229,   229,   230,
+     231,   232,   233,   234,   235,   236,   237,   238,   239,   240,
+     241,   241,   241,   242,   242,   243,   243,   244,   245,   246,
+     247,   247,   248,   248,   249,   249,   250,   250,   251,   251,
+     251,   252,   252,   252,   253,   253,   254,   254,   255,   255,
+     256,   256,   257,   257,   258,   259,   259,   260,   261,   262,
+     263,   263,   263,   264,   264,   265,   265,   265,   265,   265,
+     265,   265,   265,   265,   265,   266,   266,   267,   267,   268,
+     268,   268,   269,   269,   269,   270,   270,   271,   271,   271,
+     272,   273,   273,   274,   274,   275,   276,   276,   276,   276,
+     277,   278,   278,   279,   279,   280,   280,   281,   281,   281,
+     282,   282,   283,   283,   283,   283,   283,   283,   283,   283,
+     283,   283,   283,   284,   284,   285,   286,   286,   286,   286,
+     286,   286,   287,   287,   288,   288,   288,   289,   290,   290,
+     290,   291,   292,   293,   294,   294,   295,   296,   296,   297,
+     297,   298,   298,   298,   298,   298,   298,   298,   298,   298,
+     298,   298,   298,   298,   298,   298,   298,   298,   298,   298,
+     298,   298,   298,   298,   298,   298,   298,   298,   299,   300,
+     301,   302,   302,   303,   304,   304,   305,   306,   307,   308,
+     308,   308,   308,   309,   309,   310,   310,   311,   311,   312,
+     312,   312,   313,   313,   314,   314,   315,   315,   316,   316,
+     317,   317,   318,   318,   319,   319,   320,   320,   321,   321,
+     322,   322,   323,   323,   324,   325,   326,   326,   327,   327,
+     328,   328,   329,   329,   330,   331,   331,   332,   332,   333,
+     333,   334,   335,   335,   336,   336,   337,   337,   338,   338,
+     339,   339,   340,   340,   341,   342,   342,   343,   343,   344,
+     344,   345,   346,   346,   347,   347,   348,   348,   349,   349,
+     350,   350,   351,   351,   352,   352,   352,   353,   353,   354,
+     354,   355,   355,   356,   356,   357,   357,   358,   358,   359,
+     359,   360,   360,   361,   362,   362
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
@@ -1937,45 +1940,45 @@ static const yytype_int8 yyr2[] =
 {
        0,     2,     2,     0,     1,     1,     2,     3,     1,     1,
        1,     1,     1,     2,     2,     2,     1,     1,     3,     5,
-       1,     1,     1,     1,     1,     1,     1,     1,     1,     8,
-       5,     4,     1,     3,     1,     1,     1,     1,     1,     1,
-       1,     1,     1,     1,     1,     1,     1,     1,     3,     3,
-       3,     3,     3,     3,     5,     5,     1,     3,     0,     1,
-       3,     1,     1,     1,     1,     1,     1,     1,     1,     1,
        1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
-       3,     3,     3,     3,     3,     3,     3,     3,     3,     3,
-       3,     3,     3,     3,     3,     3,     3,     3,     3,     3,
-       3,     3,     3,     3,     3,     3,     3,     3,     3,     3,
-       3,     3,     5,     5,     3,     5,     5,    14,    15,    15,
-      12,     6,     6,     4,     6,     4,     8,     4,     2,     0,
-       2,     1,     3,     6,     6,     1,     5,     4,     3,     3,
-       3,     3,     3,     3,     3,     3,     3,     3,     3,     3,
-       3,     3,     3,     3,     1,     3,     0,     1,     8,    14,
-       4,    10,     4,     6,    10,     6,     6,     5,     2,     0,
-       2,     1,     3,     1,     1,     1,     1,     1,     1,     1,
-       1,     1,     1,     4,     6,     6,     8,     0,     1,     3,
-       1,     1,     1,     6,     8,     4,    10,    10,     1,     1,
-       1,     0,     3,     1,     1,     1,     2,     1,     6,     0,
-       2,     0,     2,     0,     2,     0,     3,     3,     1,     3,
-       1,     1,     2,     2,     1,     2,     5,     2,     2,     2,
-       1,     0,     1,     1,     3,     5,     7,     3,     5,     7,
-       1,     2,     0,     1,     3,     3,     0,     1,     3,     3,
-       3,     7,     0,     2,     1,     2,     3,     1,     3,     1,
-       1,     1,     4,     4,     4,     1,     1,     2,     1,     1,
+       1,     8,     5,     4,     1,     3,     1,     1,     1,     1,
        1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
-       1,     1,     1,     1,     1,     1,     1,     1,     3,     2,
-       3,    20,     0,     4,    13,    25,     5,     9,     9,     9,
-       9,     3,     3,     3,     3,     3,     3,     1,     1,     1,
-      11,     7,     3,     3,     3,     3,     3,     3,     3,     3,
-       3,     3,    15,    11,     3,     3,     3,     3,     3,     3,
-       3,     3,     9,    19,     3,     3,     3,     3,     3,     3,
-       3,     3,     3,     3,     3,     3,     3,    19,    15,     3,
+       3,     3,     3,     3,     3,     3,     5,     5,     1,     3,
+       0,     1,     3,     1,     1,     1,     1,     1,     1,     1,
+       1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
+       1,     1,     3,     3,     3,     3,     3,     3,     3,     3,
        3,     3,     3,     3,     3,     3,     3,     3,     3,     3,
-       3,     3,     3,    21,    17,     3,     3,     3,     3,     3,
-       6,     3,     3,     3,     3,     3,     3,     3,     3,     3,
-      21,    17,     3,     3,     3,    15,    11,    13,     9,     9,
-       5,     3,     3,     3,     3,     9,     5,     0,     2,     0,
-       1,     3,     1,     2
+       3,     3,     3,     3,     3,     3,     3,     3,     3,     3,
+       3,     3,     3,     3,     5,     5,     3,     5,     5,    14,
+      15,    15,    12,     6,     6,     4,     6,     4,     8,     4,
+       2,     0,     2,     1,     3,     6,     6,     1,     5,     4,
+       3,     3,     3,     3,     3,     3,     3,     3,     3,     3,
+       3,     3,     3,     3,     3,     3,     1,     3,     0,     1,
+       8,    14,     4,    10,     4,     6,    10,     6,     6,     5,
+       2,     0,     2,     1,     3,     1,     1,     1,     1,     1,
+       1,     1,     1,     1,     1,     4,     6,     6,     8,     0,
+       1,     3,     1,     1,     1,     6,     8,     4,    10,    10,
+       1,     1,     1,     0,     3,     1,     1,     1,     2,     1,
+       6,     0,     2,     0,     2,     0,     2,     0,     3,     3,
+       1,     3,     1,     1,     2,     2,     1,     2,     5,     2,
+       2,     2,     1,     0,     1,     1,     3,     5,     7,     3,
+       5,     7,     1,     2,     0,     1,     3,     3,     0,     1,
+       3,     3,     3,     7,     0,     2,     1,     2,     3,     1,
+       3,     1,     1,     1,     4,     4,     4,     1,     1,     2,
+       1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
+       1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
+       3,     2,     3,    20,     0,     4,    13,    25,     5,     9,
+       9,     9,     9,     3,     3,     3,     3,     3,     3,     1,
+       1,     1,    11,     7,     3,     3,     3,     3,     3,     3,
+       3,     3,     3,     3,    15,    11,     3,     3,     3,     3,
+       3,     3,     3,     3,     9,    19,     3,     3,     3,     3,
+       3,     3,     3,     3,     3,     3,     3,     3,     3,    19,
+      15,     3,     3,     3,     3,     3,     3,     3,     3,     3,
+       3,     3,     3,     3,     3,    21,    17,     3,     3,     3,
+       3,     3,     6,     3,     3,     3,     3,     3,     3,     3,
+       3,     3,    21,    17,     3,     3,     3,    15,    11,    13,
+       9,     9,     5,     3,     3,     3,     3,     9,     5,     0,
+       2,     0,     1,     3,     1,     2
 };
 
 
@@ -2552,99 +2555,99 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* script: opt_options events  */
-#line 386 "parser.y"
+#line 389 "parser.y"
                      {
     (yyval.string) = NULL;    /* The parser output is in out_script */
 }
-#line 2560 "parser.cc"
+#line 2563 "parser.cc"
     break;
 
   case 3: /* opt_options: %empty  */
-#line 392 "parser.y"
+#line 395 "parser.y"
   { (yyval.option) = NULL;
     parse_and_finalize_config(invocation);}
-#line 2567 "parser.cc"
+#line 2570 "parser.cc"
     break;
 
   case 4: /* opt_options: options  */
-#line 394 "parser.y"
+#line 397 "parser.y"
           {
     (yyval.option) = (yyvsp[0].option);
     parse_and_finalize_config(invocation);
 }
-#line 2576 "parser.cc"
+#line 2579 "parser.cc"
     break;
 
   case 5: /* options: option  */
-#line 401 "parser.y"
+#line 404 "parser.y"
          {
     out_script->addOption((yyvsp[0].option));
     (yyval.option) = (yyvsp[0].option);    /* return the tail so we can append to it */
 }
-#line 2585 "parser.cc"
+#line 2588 "parser.cc"
     break;
 
   case 6: /* options: options option  */
-#line 405 "parser.y"
+#line 408 "parser.y"
                  {
     out_script->addOption((yyvsp[0].option));
     (yyval.option) = (yyvsp[0].option);    /* return the tail so we can append to it */
 }
-#line 2594 "parser.cc"
+#line 2597 "parser.cc"
     break;
 
   case 7: /* option: option_flag '=' option_value  */
-#line 412 "parser.y"
+#line 415 "parser.y"
                                {
     (yyval.option) = new PacketDrillOption((yyvsp[-2].string), (yyvsp[0].string));
 }
-#line 2602 "parser.cc"
+#line 2605 "parser.cc"
     break;
 
   case 8: /* option_flag: OPTION  */
-#line 417 "parser.y"
+#line 420 "parser.y"
          { (yyval.string) = (yyvsp[0].reserved); }
-#line 2608 "parser.cc"
+#line 2611 "parser.cc"
     break;
 
   case 9: /* option_value: INTEGER  */
-#line 421 "parser.y"
+#line 424 "parser.y"
             { (yyval.string) = strdup(yytext); }
-#line 2614 "parser.cc"
+#line 2617 "parser.cc"
     break;
 
   case 10: /* option_value: MYWORD  */
-#line 422 "parser.y"
+#line 425 "parser.y"
             { (yyval.string) = (yyvsp[0].string); }
-#line 2620 "parser.cc"
+#line 2623 "parser.cc"
     break;
 
   case 11: /* option_value: MYSTRING  */
-#line 423 "parser.y"
+#line 426 "parser.y"
             { (yyval.string) = (yyvsp[0].string); }
-#line 2626 "parser.cc"
+#line 2629 "parser.cc"
     break;
 
   case 12: /* events: event  */
-#line 428 "parser.y"
+#line 431 "parser.y"
         {
     out_script->addEvent((yyvsp[0].event));    /* save pointer to event list as output of parser */
     (yyval.event) = (yyvsp[0].event);    /* return the tail so that we can append to it */
 }
-#line 2635 "parser.cc"
+#line 2638 "parser.cc"
     break;
 
   case 13: /* events: events event  */
-#line 432 "parser.y"
+#line 435 "parser.y"
                {
     out_script->addEvent((yyvsp[0].event));
     (yyval.event) = (yyvsp[0].event);    /* return the tail so that we can append to it */
 }
-#line 2644 "parser.cc"
+#line 2647 "parser.cc"
     break;
 
   case 14: /* event: event_time action  */
-#line 439 "parser.y"
+#line 442 "parser.y"
                     {
     (yyval.event) = (yyvsp[0].event);
     (yyval.event)->setLineNumber((yyvsp[-1].event)->getLineNumber());    /* use timestamp's line */
@@ -2672,43 +2675,43 @@ yyreduce:
     }
     delete((yyvsp[-1].event));
 }
-#line 2676 "parser.cc"
+#line 2679 "parser.cc"
     break;
 
   case 15: /* event_time: '+' time  */
-#line 469 "parser.y"
+#line 472 "parser.y"
            {
     (yyval.event) = new PacketDrillEvent(INVALID_EVENT);
     (yyval.event)->setLineNumber((yylsp[0]).first_line);
     (yyval.event)->setEventTime((yyvsp[0].time_usecs));
     (yyval.event)->setTimeType(RELATIVE_TIME);
 }
-#line 2687 "parser.cc"
+#line 2690 "parser.cc"
     break;
 
   case 16: /* event_time: time  */
-#line 475 "parser.y"
+#line 478 "parser.y"
        {
     (yyval.event) = new PacketDrillEvent(INVALID_EVENT);
     (yyval.event)->setLineNumber((yylsp[0]).first_line);
     (yyval.event)->setEventTime((yyvsp[0].time_usecs));
     (yyval.event)->setTimeType(ABSOLUTE_TIME);
 }
-#line 2698 "parser.cc"
+#line 2701 "parser.cc"
     break;
 
   case 17: /* event_time: '*'  */
-#line 481 "parser.y"
+#line 484 "parser.y"
       {
     (yyval.event) = new PacketDrillEvent(INVALID_EVENT);
     (yyval.event)->setLineNumber((yylsp[0]).first_line);
     (yyval.event)->setTimeType(ANY_TIME);
 }
-#line 2708 "parser.cc"
+#line 2711 "parser.cc"
     break;
 
   case 18: /* event_time: time '~' time  */
-#line 486 "parser.y"
+#line 489 "parser.y"
                 {
     (yyval.event) = new PacketDrillEvent(INVALID_EVENT);
     (yyval.event)->setLineNumber((yylsp[-2]).first_line);
@@ -2716,11 +2719,11 @@ yyreduce:
     (yyval.event)->setEventTime((yyvsp[-2].time_usecs));
     (yyval.event)->setEventTimeEnd((yyvsp[0].time_usecs));
 }
-#line 2720 "parser.cc"
+#line 2723 "parser.cc"
     break;
 
   case 19: /* event_time: '+' time '~' '+' time  */
-#line 493 "parser.y"
+#line 496 "parser.y"
                         {
     (yyval.event) = new PacketDrillEvent(INVALID_EVENT);
     (yyval.event)->setLineNumber((yylsp[-4]).first_line);
@@ -2728,33 +2731,33 @@ yyreduce:
     (yyval.event)->setEventTime((yyvsp[-3].time_usecs));
     (yyval.event)->setEventTimeEnd((yyvsp[0].time_usecs));
 }
-#line 2732 "parser.cc"
+#line 2735 "parser.cc"
     break;
 
   case 20: /* time: MYFLOAT  */
-#line 503 "parser.y"
+#line 506 "parser.y"
           {
     if ((yyvsp[0].floating) < 0) {
         semantic_error("negative time");
     }
     (yyval.time_usecs) = (int64_t)((yyvsp[0].floating) * 1.0e6); /* convert float secs to s64 microseconds */
 }
-#line 2743 "parser.cc"
+#line 2746 "parser.cc"
     break;
 
   case 21: /* time: INTEGER  */
-#line 509 "parser.y"
+#line 512 "parser.y"
           {
     if ((yyvsp[0].integer) < 0) {
         semantic_error("negative time");
     }
     (yyval.time_usecs) = (int64_t)((yyvsp[0].integer) * 1000000); /* convert int secs to s64 microseconds */
 }
-#line 2754 "parser.cc"
+#line 2757 "parser.cc"
     break;
 
   case 22: /* action: packet_spec  */
-#line 518 "parser.y"
+#line 521 "parser.y"
               {
     if ((yyvsp[0].packet)) {
         (yyval.event) = new PacketDrillEvent(PACKET_EVENT);  (yyval.event)->setPacket((yyvsp[0].packet));
@@ -2762,62 +2765,80 @@ yyreduce:
         (yyval.event) = NULL;
     }
 }
-#line 2766 "parser.cc"
+#line 2769 "parser.cc"
     break;
 
   case 23: /* action: syscall_spec  */
-#line 525 "parser.y"
+#line 528 "parser.y"
                {
     (yyval.event) = new PacketDrillEvent(SYSCALL_EVENT);
     (yyval.event)->setSyscall((yyvsp[0].syscall));
 }
-#line 2775 "parser.cc"
+#line 2778 "parser.cc"
     break;
 
   case 24: /* action: command_spec  */
-#line 529 "parser.y"
+#line 532 "parser.y"
                {
     (yyval.event) = new PacketDrillEvent(COMMAND_EVENT);
     (yyval.event)->setCommand((yyvsp[0].command));
 }
-#line 2784 "parser.cc"
+#line 2787 "parser.cc"
     break;
 
-  case 25: /* command_spec: BACK_QUOTED  */
+  case 25: /* action: code_spec  */
 #line 536 "parser.y"
+            {
+    (yyval.event) = new PacketDrillEvent(CODE_EVENT);
+    (yyval.event)->setCode((yyvsp[0].code));
+}
+#line 2796 "parser.cc"
+    break;
+
+  case 26: /* command_spec: BACK_QUOTED  */
+#line 543 "parser.y"
                     {
     (yyval.command) = (struct command_spec *)calloc(1, sizeof(struct command_spec));
     (yyval.command)->command_line = (yyvsp[0].reserved);
 }
-#line 2793 "parser.cc"
+#line 2805 "parser.cc"
     break;
 
-  case 26: /* packet_spec: tcp_packet_spec  */
-#line 543 "parser.y"
+  case 27: /* code_spec: CODE  */
+#line 550 "parser.y"
+             {
+    (yyval.code) = (struct code_spec *)calloc(1, sizeof(struct code_spec));
+    (yyval.code)->text = (yyvsp[0].string);
+}
+#line 2814 "parser.cc"
+    break;
+
+  case 28: /* packet_spec: tcp_packet_spec  */
+#line 557 "parser.y"
                   {
     (yyval.packet) = (yyvsp[0].packet);
 }
-#line 2801 "parser.cc"
+#line 2822 "parser.cc"
     break;
 
-  case 27: /* packet_spec: udp_packet_spec  */
-#line 546 "parser.y"
+  case 29: /* packet_spec: udp_packet_spec  */
+#line 560 "parser.y"
                   {
     (yyval.packet) = (yyvsp[0].packet);
 }
-#line 2809 "parser.cc"
+#line 2830 "parser.cc"
     break;
 
-  case 28: /* packet_spec: sctp_packet_spec  */
-#line 549 "parser.y"
+  case 30: /* packet_spec: sctp_packet_spec  */
+#line 563 "parser.y"
                    {
     (yyval.packet) = (yyvsp[0].packet);
 }
-#line 2817 "parser.cc"
+#line 2838 "parser.cc"
     break;
 
-  case 29: /* tcp_packet_spec: packet_prefix opt_ip_info flags seq opt_ack opt_window opt_urg_ptr opt_tcp_options  */
-#line 555 "parser.y"
+  case 31: /* tcp_packet_spec: packet_prefix opt_ip_info flags seq opt_ack opt_window opt_urg_ptr opt_tcp_options  */
+#line 569 "parser.y"
                                                                                      {
     char *error = NULL;
     PacketDrillPacket *outer = (yyvsp[-7].packet), *inner = NULL;
@@ -2841,11 +2862,11 @@ yyreduce:
 
     (yyval.packet) = inner;
 }
-#line 2845 "parser.cc"
+#line 2866 "parser.cc"
     break;
 
-  case 30: /* udp_packet_spec: packet_prefix UDP '(' INTEGER ')'  */
-#line 581 "parser.y"
+  case 32: /* udp_packet_spec: packet_prefix UDP '(' INTEGER ')'  */
+#line 595 "parser.y"
                                     {
     char *error = NULL;
     PacketDrillPacket *outer = (yyvsp[-4].packet), *inner = NULL;
@@ -2862,11 +2883,11 @@ yyreduce:
 
     (yyval.packet) = inner;
 }
-#line 2866 "parser.cc"
+#line 2887 "parser.cc"
     break;
 
-  case 31: /* sctp_packet_spec: packet_prefix MYSCTP ':' sctp_chunk_list  */
-#line 600 "parser.y"
+  case 33: /* sctp_packet_spec: packet_prefix MYSCTP ':' sctp_chunk_list  */
+#line 614 "parser.y"
                                            {
     PacketDrillPacket *inner = NULL;
     enum direction_t direction = (yyvsp[-3].packet)->getDirection();
@@ -2884,396 +2905,396 @@ yyreduce:
     }
     (yyval.packet) = inner;
 }
-#line 2888 "parser.cc"
+#line 2909 "parser.cc"
     break;
 
-  case 32: /* sctp_chunk_list: sctp_chunk  */
-#line 620 "parser.y"
+  case 34: /* sctp_chunk_list: sctp_chunk  */
+#line 634 "parser.y"
                                  { (yyval.sctp_chunk_list) = new cQueue("sctpChunkList");
                                    (yyval.sctp_chunk_list)->insert((cObject*)(yyvsp[0].sctp_chunk)); }
-#line 2895 "parser.cc"
+#line 2916 "parser.cc"
     break;
 
-  case 33: /* sctp_chunk_list: sctp_chunk_list ';' sctp_chunk  */
-#line 622 "parser.y"
+  case 35: /* sctp_chunk_list: sctp_chunk_list ';' sctp_chunk  */
+#line 636 "parser.y"
                                  { (yyval.sctp_chunk_list) = (yyvsp[-2].sctp_chunk_list);
                                    (yyval.sctp_chunk_list)->insert((yyvsp[0].sctp_chunk)); }
-#line 2902 "parser.cc"
+#line 2923 "parser.cc"
     break;
 
-  case 34: /* sctp_chunk: sctp_data_chunk_spec  */
-#line 628 "parser.y"
+  case 36: /* sctp_chunk: sctp_data_chunk_spec  */
+#line 642 "parser.y"
                                     { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
-#line 2908 "parser.cc"
+#line 2929 "parser.cc"
     break;
 
-  case 35: /* sctp_chunk: sctp_init_chunk_spec  */
-#line 629 "parser.y"
+  case 37: /* sctp_chunk: sctp_init_chunk_spec  */
+#line 643 "parser.y"
                                     { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
-#line 2914 "parser.cc"
+#line 2935 "parser.cc"
     break;
 
-  case 36: /* sctp_chunk: sctp_init_ack_chunk_spec  */
-#line 630 "parser.y"
+  case 38: /* sctp_chunk: sctp_init_ack_chunk_spec  */
+#line 644 "parser.y"
                                     { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
-#line 2920 "parser.cc"
+#line 2941 "parser.cc"
     break;
 
-  case 37: /* sctp_chunk: sctp_sack_chunk_spec  */
-#line 631 "parser.y"
+  case 39: /* sctp_chunk: sctp_sack_chunk_spec  */
+#line 645 "parser.y"
                                     { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
-#line 2926 "parser.cc"
+#line 2947 "parser.cc"
     break;
 
-  case 38: /* sctp_chunk: sctp_heartbeat_chunk_spec  */
-#line 632 "parser.y"
-                                    { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
-#line 2932 "parser.cc"
-    break;
-
-  case 39: /* sctp_chunk: sctp_heartbeat_ack_chunk_spec  */
-#line 633 "parser.y"
-                                    { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
-#line 2938 "parser.cc"
-    break;
-
-  case 40: /* sctp_chunk: sctp_abort_chunk_spec  */
-#line 634 "parser.y"
-                                    { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
-#line 2944 "parser.cc"
-    break;
-
-  case 41: /* sctp_chunk: sctp_shutdown_chunk_spec  */
-#line 635 "parser.y"
-                                    { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
-#line 2950 "parser.cc"
-    break;
-
-  case 42: /* sctp_chunk: sctp_shutdown_ack_chunk_spec  */
-#line 636 "parser.y"
-                                    { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
-#line 2956 "parser.cc"
-    break;
-
-  case 43: /* sctp_chunk: sctp_cookie_echo_chunk_spec  */
-#line 637 "parser.y"
-                                    { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
-#line 2962 "parser.cc"
-    break;
-
-  case 44: /* sctp_chunk: sctp_cookie_ack_chunk_spec  */
-#line 638 "parser.y"
-                                    { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
-#line 2968 "parser.cc"
-    break;
-
-  case 45: /* sctp_chunk: sctp_shutdown_complete_chunk_spec  */
-#line 639 "parser.y"
-                                    { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
-#line 2974 "parser.cc"
-    break;
-
-  case 46: /* sctp_chunk: sctp_reconfig_chunk_spec  */
-#line 640 "parser.y"
-                                    { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
-#line 2980 "parser.cc"
-    break;
-
-  case 47: /* sctp_chunk: sctp_error_chunk_spec  */
-#line 641 "parser.y"
-                                    { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
-#line 2986 "parser.cc"
-    break;
-
-  case 48: /* opt_flags: FLAGS '=' ELLIPSIS  */
+  case 40: /* sctp_chunk: sctp_heartbeat_chunk_spec  */
 #line 646 "parser.y"
-                        { (yyval.integer) = -1; }
-#line 2992 "parser.cc"
+                                    { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
+#line 2953 "parser.cc"
     break;
 
-  case 49: /* opt_flags: FLAGS '=' HEX_INTEGER  */
+  case 41: /* sctp_chunk: sctp_heartbeat_ack_chunk_spec  */
 #line 647 "parser.y"
-                        {
-    if (!is_valid_u8((yyvsp[0].integer))) {
-        semantic_error("flags value out of range");
-    }
-    (yyval.integer) = (yyvsp[0].integer);
-}
-#line 3003 "parser.cc"
+                                    { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
+#line 2959 "parser.cc"
     break;
 
-  case 50: /* opt_flags: FLAGS '=' INTEGER  */
+  case 42: /* sctp_chunk: sctp_abort_chunk_spec  */
+#line 648 "parser.y"
+                                    { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
+#line 2965 "parser.cc"
+    break;
+
+  case 43: /* sctp_chunk: sctp_shutdown_chunk_spec  */
+#line 649 "parser.y"
+                                    { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
+#line 2971 "parser.cc"
+    break;
+
+  case 44: /* sctp_chunk: sctp_shutdown_ack_chunk_spec  */
+#line 650 "parser.y"
+                                    { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
+#line 2977 "parser.cc"
+    break;
+
+  case 45: /* sctp_chunk: sctp_cookie_echo_chunk_spec  */
+#line 651 "parser.y"
+                                    { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
+#line 2983 "parser.cc"
+    break;
+
+  case 46: /* sctp_chunk: sctp_cookie_ack_chunk_spec  */
+#line 652 "parser.y"
+                                    { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
+#line 2989 "parser.cc"
+    break;
+
+  case 47: /* sctp_chunk: sctp_shutdown_complete_chunk_spec  */
 #line 653 "parser.y"
+                                    { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
+#line 2995 "parser.cc"
+    break;
+
+  case 48: /* sctp_chunk: sctp_reconfig_chunk_spec  */
+#line 654 "parser.y"
+                                    { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
+#line 3001 "parser.cc"
+    break;
+
+  case 49: /* sctp_chunk: sctp_error_chunk_spec  */
+#line 655 "parser.y"
+                                    { (yyval.sctp_chunk) = (yyvsp[0].sctp_chunk); }
+#line 3007 "parser.cc"
+    break;
+
+  case 50: /* opt_flags: FLAGS '=' ELLIPSIS  */
+#line 660 "parser.y"
+                        { (yyval.integer) = -1; }
+#line 3013 "parser.cc"
+    break;
+
+  case 51: /* opt_flags: FLAGS '=' HEX_INTEGER  */
+#line 661 "parser.y"
                         {
     if (!is_valid_u8((yyvsp[0].integer))) {
         semantic_error("flags value out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3014 "parser.cc"
+#line 3024 "parser.cc"
     break;
 
-  case 51: /* opt_len: LEN '=' ELLIPSIS  */
-#line 662 "parser.y"
+  case 52: /* opt_flags: FLAGS '=' INTEGER  */
+#line 667 "parser.y"
+                        {
+    if (!is_valid_u8((yyvsp[0].integer))) {
+        semantic_error("flags value out of range");
+    }
+    (yyval.integer) = (yyvsp[0].integer);
+}
+#line 3035 "parser.cc"
+    break;
+
+  case 53: /* opt_len: LEN '=' ELLIPSIS  */
+#line 676 "parser.y"
                    { (yyval.integer) = -1; }
-#line 3020 "parser.cc"
+#line 3041 "parser.cc"
     break;
 
-  case 52: /* opt_len: LEN '=' INTEGER  */
-#line 663 "parser.y"
+  case 54: /* opt_len: LEN '=' INTEGER  */
+#line 677 "parser.y"
                    {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("length value out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3031 "parser.cc"
+#line 3052 "parser.cc"
     break;
 
-  case 53: /* opt_val: VAL '=' ELLIPSIS  */
-#line 672 "parser.y"
+  case 55: /* opt_val: VAL '=' ELLIPSIS  */
+#line 686 "parser.y"
                             { (yyval.byte_list) = NULL; }
-#line 3037 "parser.cc"
+#line 3058 "parser.cc"
     break;
 
-  case 54: /* opt_val: VAL '=' '[' ELLIPSIS ']'  */
-#line 673 "parser.y"
+  case 56: /* opt_val: VAL '=' '[' ELLIPSIS ']'  */
+#line 687 "parser.y"
                             { (yyval.byte_list) = NULL; }
-#line 3043 "parser.cc"
+#line 3064 "parser.cc"
     break;
 
-  case 55: /* opt_val: VAL '=' '[' byte_list ']'  */
-#line 674 "parser.y"
+  case 57: /* opt_val: VAL '=' '[' byte_list ']'  */
+#line 688 "parser.y"
                             { (yyval.byte_list) = (yyvsp[-1].byte_list); }
-#line 3049 "parser.cc"
+#line 3070 "parser.cc"
     break;
 
-  case 56: /* byte_list: byte  */
-#line 678 "parser.y"
+  case 58: /* byte_list: byte  */
+#line 692 "parser.y"
                      { (yyval.byte_list) = new PacketDrillBytes((yyvsp[0].byte)); }
-#line 3055 "parser.cc"
+#line 3076 "parser.cc"
     break;
 
-  case 57: /* byte_list: byte_list ',' byte  */
-#line 679 "parser.y"
+  case 59: /* byte_list: byte_list ',' byte  */
+#line 693 "parser.y"
                      { (yyval.byte_list) = (yyvsp[-2].byte_list);
                        (yyvsp[-2].byte_list)->appendByte((yyvsp[0].byte)); }
-#line 3062 "parser.cc"
+#line 3083 "parser.cc"
     break;
 
-  case 58: /* chunk_types_list: %empty  */
-#line 684 "parser.y"
+  case 60: /* chunk_types_list: %empty  */
+#line 698 "parser.y"
   { (yyval.byte_list) = new PacketDrillBytes();}
-#line 3068 "parser.cc"
+#line 3089 "parser.cc"
     break;
 
-  case 59: /* chunk_types_list: chunk_type  */
-#line 685 "parser.y"
+  case 61: /* chunk_types_list: chunk_type  */
+#line 699 "parser.y"
                      { (yyval.byte_list) = new PacketDrillBytes((yyvsp[0].integer));}
-#line 3074 "parser.cc"
+#line 3095 "parser.cc"
     break;
 
-  case 60: /* chunk_types_list: chunk_types_list ',' chunk_type  */
-#line 686 "parser.y"
+  case 62: /* chunk_types_list: chunk_types_list ',' chunk_type  */
+#line 700 "parser.y"
                                   { (yyval.byte_list) = (yyvsp[-2].byte_list);
                        (yyvsp[-2].byte_list)->appendByte((yyvsp[0].integer)); }
-#line 3081 "parser.cc"
+#line 3102 "parser.cc"
     break;
 
-  case 61: /* byte: HEX_INTEGER  */
-#line 691 "parser.y"
+  case 63: /* byte: HEX_INTEGER  */
+#line 705 "parser.y"
               {
     if (!is_valid_u8((yyvsp[0].integer))) {
         semantic_error("byte value out of range");
     }
     (yyval.byte) = (yyvsp[0].integer);
 }
-#line 3092 "parser.cc"
+#line 3113 "parser.cc"
     break;
 
-  case 62: /* byte: INTEGER  */
-#line 697 "parser.y"
+  case 64: /* byte: INTEGER  */
+#line 711 "parser.y"
           {
     if (!is_valid_u8((yyvsp[0].integer))) {
         semantic_error("byte value out of range");
     }
     (yyval.byte) = (yyvsp[0].integer);
 }
-#line 3103 "parser.cc"
+#line 3124 "parser.cc"
     break;
 
-  case 63: /* chunk_type: HEX_INTEGER  */
-#line 706 "parser.y"
+  case 65: /* chunk_type: HEX_INTEGER  */
+#line 720 "parser.y"
               {
     if (!is_valid_u8((yyvsp[0].integer))) {
         semantic_error("type value out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3114 "parser.cc"
+#line 3135 "parser.cc"
     break;
 
-  case 64: /* chunk_type: INTEGER  */
-#line 712 "parser.y"
+  case 66: /* chunk_type: INTEGER  */
+#line 726 "parser.y"
           {
     if (!is_valid_u8((yyvsp[0].integer))) {
         semantic_error("type value out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3125 "parser.cc"
+#line 3146 "parser.cc"
     break;
 
-  case 65: /* chunk_type: MYDATA  */
-#line 718 "parser.y"
+  case 67: /* chunk_type: MYDATA  */
+#line 732 "parser.y"
          {
     (yyval.integer) = SCTP_DATA_CHUNK_TYPE;
 }
-#line 3133 "parser.cc"
+#line 3154 "parser.cc"
     break;
 
-  case 66: /* chunk_type: MYINIT  */
-#line 721 "parser.y"
+  case 68: /* chunk_type: MYINIT  */
+#line 735 "parser.y"
          {
     (yyval.integer) = SCTP_INIT_CHUNK_TYPE;
 }
-#line 3141 "parser.cc"
+#line 3162 "parser.cc"
     break;
 
-  case 67: /* chunk_type: MYINIT_ACK  */
-#line 724 "parser.y"
+  case 69: /* chunk_type: MYINIT_ACK  */
+#line 738 "parser.y"
              {
     (yyval.integer) = SCTP_INIT_ACK_CHUNK_TYPE;
 }
-#line 3149 "parser.cc"
+#line 3170 "parser.cc"
     break;
 
-  case 68: /* chunk_type: MYSACK  */
-#line 727 "parser.y"
+  case 70: /* chunk_type: MYSACK  */
+#line 741 "parser.y"
          {
     (yyval.integer) = SCTP_SACK_CHUNK_TYPE;
 }
-#line 3157 "parser.cc"
+#line 3178 "parser.cc"
     break;
 
-  case 69: /* chunk_type: MYHEARTBEAT  */
-#line 730 "parser.y"
+  case 71: /* chunk_type: MYHEARTBEAT  */
+#line 744 "parser.y"
               {
     (yyval.integer) = SCTP_HEARTBEAT_CHUNK_TYPE;
 }
-#line 3165 "parser.cc"
+#line 3186 "parser.cc"
     break;
 
-  case 70: /* chunk_type: MYHEARTBEAT_ACK  */
-#line 733 "parser.y"
+  case 72: /* chunk_type: MYHEARTBEAT_ACK  */
+#line 747 "parser.y"
                   {
     (yyval.integer) = SCTP_HEARTBEAT_ACK_CHUNK_TYPE;
 }
-#line 3173 "parser.cc"
+#line 3194 "parser.cc"
     break;
 
-  case 71: /* chunk_type: MYABORT  */
-#line 736 "parser.y"
+  case 73: /* chunk_type: MYABORT  */
+#line 750 "parser.y"
           {
     (yyval.integer) = SCTP_ABORT_CHUNK_TYPE;
 }
-#line 3181 "parser.cc"
+#line 3202 "parser.cc"
     break;
 
-  case 72: /* chunk_type: MYSHUTDOWN  */
-#line 739 "parser.y"
+  case 74: /* chunk_type: MYSHUTDOWN  */
+#line 753 "parser.y"
              {
     (yyval.integer) = SCTP_SHUTDOWN_CHUNK_TYPE;
 }
-#line 3189 "parser.cc"
+#line 3210 "parser.cc"
     break;
 
-  case 73: /* chunk_type: MYSHUTDOWN_ACK  */
-#line 742 "parser.y"
+  case 75: /* chunk_type: MYSHUTDOWN_ACK  */
+#line 756 "parser.y"
                  {
     (yyval.integer) = SCTP_SHUTDOWN_ACK_CHUNK_TYPE;
 }
-#line 3197 "parser.cc"
+#line 3218 "parser.cc"
     break;
 
-  case 74: /* chunk_type: MYERROR  */
-#line 745 "parser.y"
+  case 76: /* chunk_type: MYERROR  */
+#line 759 "parser.y"
           {
     (yyval.integer) = SCTP_ERROR_CHUNK_TYPE;
 }
-#line 3205 "parser.cc"
+#line 3226 "parser.cc"
     break;
 
-  case 75: /* chunk_type: MYCOOKIE_ECHO  */
-#line 748 "parser.y"
+  case 77: /* chunk_type: MYCOOKIE_ECHO  */
+#line 762 "parser.y"
                 {
     (yyval.integer) = SCTP_COOKIE_ECHO_CHUNK_TYPE;
 }
-#line 3213 "parser.cc"
+#line 3234 "parser.cc"
     break;
 
-  case 76: /* chunk_type: MYCOOKIE_ACK  */
-#line 751 "parser.y"
+  case 78: /* chunk_type: MYCOOKIE_ACK  */
+#line 765 "parser.y"
                {
     (yyval.integer) = SCTP_COOKIE_ACK_CHUNK_TYPE;
 }
-#line 3221 "parser.cc"
+#line 3242 "parser.cc"
     break;
 
-  case 77: /* chunk_type: MYSHUTDOWN_COMPLETE  */
-#line 754 "parser.y"
+  case 79: /* chunk_type: MYSHUTDOWN_COMPLETE  */
+#line 768 "parser.y"
                      {
     (yyval.integer) = SCTP_SHUTDOWN_COMPLETE_CHUNK_TYPE;
 }
-#line 3229 "parser.cc"
+#line 3250 "parser.cc"
     break;
 
-  case 78: /* chunk_type: PAD  */
-#line 757 "parser.y"
+  case 80: /* chunk_type: PAD  */
+#line 771 "parser.y"
       {
     (yyval.integer) = SCTP_PAD_CHUNK_TYPE;
 }
-#line 3237 "parser.cc"
+#line 3258 "parser.cc"
     break;
 
-  case 79: /* chunk_type: RECONFIG  */
-#line 760 "parser.y"
+  case 81: /* chunk_type: RECONFIG  */
+#line 774 "parser.y"
            {
     (yyval.integer) = SCTP_RECONFIG_CHUNK_TYPE;
 }
-#line 3245 "parser.cc"
+#line 3266 "parser.cc"
     break;
 
-  case 80: /* opt_data_flags: FLAGS '=' ELLIPSIS  */
-#line 766 "parser.y"
+  case 82: /* opt_data_flags: FLAGS '=' ELLIPSIS  */
+#line 780 "parser.y"
                         { (yyval.integer) = -1; }
-#line 3251 "parser.cc"
+#line 3272 "parser.cc"
     break;
 
-  case 81: /* opt_data_flags: FLAGS '=' HEX_INTEGER  */
-#line 767 "parser.y"
+  case 83: /* opt_data_flags: FLAGS '=' HEX_INTEGER  */
+#line 781 "parser.y"
                         {
     if (!is_valid_u8((yyvsp[0].integer))) {
         semantic_error("flags value out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3262 "parser.cc"
+#line 3283 "parser.cc"
     break;
 
-  case 82: /* opt_data_flags: FLAGS '=' INTEGER  */
-#line 773 "parser.y"
+  case 84: /* opt_data_flags: FLAGS '=' INTEGER  */
+#line 787 "parser.y"
                         {
     if (!is_valid_u8((yyvsp[0].integer))) {
         semantic_error("flags value out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3273 "parser.cc"
+#line 3294 "parser.cc"
     break;
 
-  case 83: /* opt_data_flags: FLAGS '=' MYWORD  */
-#line 779 "parser.y"
+  case 85: /* opt_data_flags: FLAGS '=' MYWORD  */
+#line 793 "parser.y"
                           {
     uint64_t flags;
     char *c;
@@ -3315,39 +3336,39 @@ yyreduce:
     }
     (yyval.integer) = flags;
 }
-#line 3319 "parser.cc"
+#line 3340 "parser.cc"
     break;
 
-  case 84: /* opt_abort_flags: FLAGS '=' ELLIPSIS  */
-#line 823 "parser.y"
+  case 86: /* opt_abort_flags: FLAGS '=' ELLIPSIS  */
+#line 837 "parser.y"
                         { (yyval.integer) = -1; }
-#line 3325 "parser.cc"
+#line 3346 "parser.cc"
     break;
 
-  case 85: /* opt_abort_flags: FLAGS '=' HEX_INTEGER  */
-#line 824 "parser.y"
+  case 87: /* opt_abort_flags: FLAGS '=' HEX_INTEGER  */
+#line 838 "parser.y"
                         {
     if (!is_valid_u8((yyvsp[0].integer))) {
         semantic_error("flags value out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3336 "parser.cc"
+#line 3357 "parser.cc"
     break;
 
-  case 86: /* opt_abort_flags: FLAGS '=' INTEGER  */
-#line 830 "parser.y"
+  case 88: /* opt_abort_flags: FLAGS '=' INTEGER  */
+#line 844 "parser.y"
                         {
     if (!is_valid_u8((yyvsp[0].integer))) {
         semantic_error("flags value out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3347 "parser.cc"
+#line 3368 "parser.cc"
     break;
 
-  case 87: /* opt_abort_flags: FLAGS '=' MYWORD  */
-#line 836 "parser.y"
+  case 89: /* opt_abort_flags: FLAGS '=' MYWORD  */
+#line 850 "parser.y"
                           {
     uint64_t flags;
     char *c;
@@ -3368,39 +3389,39 @@ yyreduce:
     }
     (yyval.integer) = flags;
 }
-#line 3372 "parser.cc"
+#line 3393 "parser.cc"
     break;
 
-  case 88: /* opt_shutdown_complete_flags: FLAGS '=' ELLIPSIS  */
-#line 859 "parser.y"
+  case 90: /* opt_shutdown_complete_flags: FLAGS '=' ELLIPSIS  */
+#line 873 "parser.y"
                         { (yyval.integer) = -1; }
-#line 3378 "parser.cc"
+#line 3399 "parser.cc"
     break;
 
-  case 89: /* opt_shutdown_complete_flags: FLAGS '=' HEX_INTEGER  */
-#line 860 "parser.y"
+  case 91: /* opt_shutdown_complete_flags: FLAGS '=' HEX_INTEGER  */
+#line 874 "parser.y"
                         {
     if (!is_valid_u8((yyvsp[0].integer))) {
         semantic_error("flags value out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3389 "parser.cc"
+#line 3410 "parser.cc"
     break;
 
-  case 90: /* opt_shutdown_complete_flags: FLAGS '=' INTEGER  */
-#line 866 "parser.y"
+  case 92: /* opt_shutdown_complete_flags: FLAGS '=' INTEGER  */
+#line 880 "parser.y"
                         {
     if (!is_valid_u8((yyvsp[0].integer))) {
         semantic_error("flags value out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3400 "parser.cc"
+#line 3421 "parser.cc"
     break;
 
-  case 91: /* opt_shutdown_complete_flags: FLAGS '=' MYWORD  */
-#line 872 "parser.y"
+  case 93: /* opt_shutdown_complete_flags: FLAGS '=' MYWORD  */
+#line 886 "parser.y"
                           {
     uint64_t flags;
     char *c;
@@ -3421,211 +3442,211 @@ yyreduce:
     }
     (yyval.integer) = flags;
 }
-#line 3425 "parser.cc"
+#line 3446 "parser.cc"
     break;
 
-  case 92: /* opt_tag: TAG '=' ELLIPSIS  */
-#line 895 "parser.y"
+  case 94: /* opt_tag: TAG '=' ELLIPSIS  */
+#line 909 "parser.y"
                    { (yyval.integer) = -1; }
-#line 3431 "parser.cc"
+#line 3452 "parser.cc"
     break;
 
-  case 93: /* opt_tag: TAG '=' INTEGER  */
-#line 896 "parser.y"
+  case 95: /* opt_tag: TAG '=' INTEGER  */
+#line 910 "parser.y"
                    {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("tag value out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3442 "parser.cc"
+#line 3463 "parser.cc"
     break;
 
-  case 94: /* opt_a_rwnd: A_RWND '=' ELLIPSIS  */
-#line 905 "parser.y"
+  case 96: /* opt_a_rwnd: A_RWND '=' ELLIPSIS  */
+#line 919 "parser.y"
                         { (yyval.integer) = -1; }
-#line 3448 "parser.cc"
+#line 3469 "parser.cc"
     break;
 
-  case 95: /* opt_a_rwnd: A_RWND '=' INTEGER  */
-#line 906 "parser.y"
+  case 97: /* opt_a_rwnd: A_RWND '=' INTEGER  */
+#line 920 "parser.y"
                         {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("a_rwnd value out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3459 "parser.cc"
+#line 3480 "parser.cc"
     break;
 
-  case 96: /* opt_os: OS '=' ELLIPSIS  */
-#line 915 "parser.y"
+  case 98: /* opt_os: OS '=' ELLIPSIS  */
+#line 929 "parser.y"
                   { (yyval.integer) = -1; }
-#line 3465 "parser.cc"
+#line 3486 "parser.cc"
     break;
 
-  case 97: /* opt_os: OS '=' INTEGER  */
-#line 916 "parser.y"
+  case 99: /* opt_os: OS '=' INTEGER  */
+#line 930 "parser.y"
                   {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("os value out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3476 "parser.cc"
+#line 3497 "parser.cc"
     break;
 
-  case 98: /* opt_is: IS '=' ELLIPSIS  */
-#line 925 "parser.y"
+  case 100: /* opt_is: IS '=' ELLIPSIS  */
+#line 939 "parser.y"
                   { (yyval.integer) = -1; }
-#line 3482 "parser.cc"
+#line 3503 "parser.cc"
     break;
 
-  case 99: /* opt_is: IS '=' INTEGER  */
-#line 926 "parser.y"
+  case 101: /* opt_is: IS '=' INTEGER  */
+#line 940 "parser.y"
                   {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("is value out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3493 "parser.cc"
+#line 3514 "parser.cc"
     break;
 
-  case 100: /* opt_tsn: TSN '=' ELLIPSIS  */
-#line 935 "parser.y"
+  case 102: /* opt_tsn: TSN '=' ELLIPSIS  */
+#line 949 "parser.y"
                    { (yyval.integer) = -1; }
-#line 3499 "parser.cc"
+#line 3520 "parser.cc"
     break;
 
-  case 101: /* opt_tsn: TSN '=' INTEGER  */
-#line 936 "parser.y"
+  case 103: /* opt_tsn: TSN '=' INTEGER  */
+#line 950 "parser.y"
                    {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("tsn value out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3510 "parser.cc"
+#line 3531 "parser.cc"
     break;
 
-  case 102: /* opt_sid: MYSID '=' ELLIPSIS  */
-#line 945 "parser.y"
+  case 104: /* opt_sid: MYSID '=' ELLIPSIS  */
+#line 959 "parser.y"
                      { (yyval.integer) = -1; }
-#line 3516 "parser.cc"
+#line 3537 "parser.cc"
     break;
 
-  case 103: /* opt_sid: MYSID '=' INTEGER  */
-#line 946 "parser.y"
+  case 105: /* opt_sid: MYSID '=' INTEGER  */
+#line 960 "parser.y"
                      {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("sid value out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3527 "parser.cc"
+#line 3548 "parser.cc"
     break;
 
-  case 104: /* opt_ssn: SSN '=' ELLIPSIS  */
-#line 955 "parser.y"
+  case 106: /* opt_ssn: SSN '=' ELLIPSIS  */
+#line 969 "parser.y"
                    { (yyval.integer) = -1; }
-#line 3533 "parser.cc"
+#line 3554 "parser.cc"
     break;
 
-  case 105: /* opt_ssn: SSN '=' INTEGER  */
-#line 956 "parser.y"
+  case 107: /* opt_ssn: SSN '=' INTEGER  */
+#line 970 "parser.y"
                    {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("ssn value out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3544 "parser.cc"
+#line 3565 "parser.cc"
     break;
 
-  case 106: /* opt_ppid: PPID '=' ELLIPSIS  */
-#line 966 "parser.y"
+  case 108: /* opt_ppid: PPID '=' ELLIPSIS  */
+#line 980 "parser.y"
                     { (yyval.integer) = -1; }
-#line 3550 "parser.cc"
+#line 3571 "parser.cc"
     break;
 
-  case 107: /* opt_ppid: PPID '=' INTEGER  */
-#line 967 "parser.y"
+  case 109: /* opt_ppid: PPID '=' INTEGER  */
+#line 981 "parser.y"
                     {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("ppid value out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3561 "parser.cc"
+#line 3582 "parser.cc"
     break;
 
-  case 108: /* opt_ppid: PPID '=' HEX_INTEGER  */
-#line 973 "parser.y"
+  case 110: /* opt_ppid: PPID '=' HEX_INTEGER  */
+#line 987 "parser.y"
                         {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("ppid value out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3572 "parser.cc"
+#line 3593 "parser.cc"
     break;
 
-  case 109: /* opt_cum_tsn: CUM_TSN '=' ELLIPSIS  */
-#line 982 "parser.y"
+  case 111: /* opt_cum_tsn: CUM_TSN '=' ELLIPSIS  */
+#line 996 "parser.y"
                        { (yyval.integer) = -1; }
-#line 3578 "parser.cc"
+#line 3599 "parser.cc"
     break;
 
-  case 110: /* opt_cum_tsn: CUM_TSN '=' INTEGER  */
-#line 983 "parser.y"
+  case 112: /* opt_cum_tsn: CUM_TSN '=' INTEGER  */
+#line 997 "parser.y"
                        {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("cum_tsn value out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3589 "parser.cc"
+#line 3610 "parser.cc"
     break;
 
-  case 111: /* opt_gaps: GAPS '=' ELLIPSIS  */
-#line 992 "parser.y"
-                            { (yyval.sack_block_list) = NULL; }
-#line 3595 "parser.cc"
-    break;
-
-  case 112: /* opt_gaps: GAPS '=' '[' ELLIPSIS ']'  */
-#line 993 "parser.y"
-                            { (yyval.sack_block_list) = NULL; }
-#line 3601 "parser.cc"
-    break;
-
-  case 113: /* opt_gaps: GAPS '=' '[' gap_list ']'  */
-#line 994 "parser.y"
-                            { (yyval.sack_block_list) = (yyvsp[-1].sack_block_list); }
-#line 3607 "parser.cc"
-    break;
-
-  case 114: /* opt_dups: DUPS '=' ELLIPSIS  */
-#line 999 "parser.y"
-                            { (yyval.sack_block_list) = NULL; }
-#line 3613 "parser.cc"
-    break;
-
-  case 115: /* opt_dups: DUPS '=' '[' ELLIPSIS ']'  */
-#line 1000 "parser.y"
-                            { (yyval.sack_block_list) = NULL; }
-#line 3619 "parser.cc"
-    break;
-
-  case 116: /* opt_dups: DUPS '=' '[' dup_list ']'  */
-#line 1001 "parser.y"
-                            { (yyval.sack_block_list) = (yyvsp[-1].sack_block_list); }
-#line 3625 "parser.cc"
-    break;
-
-  case 117: /* sctp_data_chunk_spec: MYDATA '[' opt_data_flags ',' opt_len ',' opt_tsn ',' opt_sid ',' opt_ssn ',' opt_ppid ']'  */
+  case 113: /* opt_gaps: GAPS '=' ELLIPSIS  */
 #line 1006 "parser.y"
+                            { (yyval.sack_block_list) = NULL; }
+#line 3616 "parser.cc"
+    break;
+
+  case 114: /* opt_gaps: GAPS '=' '[' ELLIPSIS ']'  */
+#line 1007 "parser.y"
+                            { (yyval.sack_block_list) = NULL; }
+#line 3622 "parser.cc"
+    break;
+
+  case 115: /* opt_gaps: GAPS '=' '[' gap_list ']'  */
+#line 1008 "parser.y"
+                            { (yyval.sack_block_list) = (yyvsp[-1].sack_block_list); }
+#line 3628 "parser.cc"
+    break;
+
+  case 116: /* opt_dups: DUPS '=' ELLIPSIS  */
+#line 1013 "parser.y"
+                            { (yyval.sack_block_list) = NULL; }
+#line 3634 "parser.cc"
+    break;
+
+  case 117: /* opt_dups: DUPS '=' '[' ELLIPSIS ']'  */
+#line 1014 "parser.y"
+                            { (yyval.sack_block_list) = NULL; }
+#line 3640 "parser.cc"
+    break;
+
+  case 118: /* opt_dups: DUPS '=' '[' dup_list ']'  */
+#line 1015 "parser.y"
+                            { (yyval.sack_block_list) = (yyvsp[-1].sack_block_list); }
+#line 3646 "parser.cc"
+    break;
+
+  case 119: /* sctp_data_chunk_spec: MYDATA '[' opt_data_flags ',' opt_len ',' opt_tsn ',' opt_sid ',' opt_ssn ',' opt_ppid ']'  */
+#line 1020 "parser.y"
                                                                                              {
     if (((yyvsp[-9].integer) != -1) &&
         (!is_valid_u16((yyvsp[-9].integer)) || ((yyvsp[-9].integer) < SCTP_DATA_CHUNK_LENGTH))) {
@@ -3633,75 +3654,75 @@ yyreduce:
     }
     (yyval.sctp_chunk) = PacketDrill::buildDataChunk((yyvsp[-11].integer), (yyvsp[-9].integer), (yyvsp[-7].integer), (yyvsp[-5].integer), (yyvsp[-3].integer), (yyvsp[-1].integer));
 }
-#line 3637 "parser.cc"
+#line 3658 "parser.cc"
     break;
 
-  case 118: /* sctp_init_chunk_spec: MYINIT '[' opt_flags ',' opt_tag ',' opt_a_rwnd ',' opt_os ',' opt_is ',' opt_tsn opt_parameter_list ']'  */
-#line 1015 "parser.y"
+  case 120: /* sctp_init_chunk_spec: MYINIT '[' opt_flags ',' opt_tag ',' opt_a_rwnd ',' opt_os ',' opt_is ',' opt_tsn opt_parameter_list ']'  */
+#line 1029 "parser.y"
                                                                                                            {
     (yyval.sctp_chunk) = PacketDrill::buildInitChunk((yyvsp[-12].integer), (yyvsp[-10].integer), (yyvsp[-8].integer), (yyvsp[-6].integer), (yyvsp[-4].integer), (yyvsp[-2].integer), (yyvsp[-1].expression_list));
 }
-#line 3645 "parser.cc"
+#line 3666 "parser.cc"
     break;
 
-  case 119: /* sctp_init_ack_chunk_spec: MYINIT_ACK '[' opt_flags ',' opt_tag ',' opt_a_rwnd ',' opt_os ',' opt_is ',' opt_tsn opt_parameter_list ']'  */
-#line 1020 "parser.y"
+  case 121: /* sctp_init_ack_chunk_spec: MYINIT_ACK '[' opt_flags ',' opt_tag ',' opt_a_rwnd ',' opt_os ',' opt_is ',' opt_tsn opt_parameter_list ']'  */
+#line 1034 "parser.y"
                                                                                                                {
     (yyval.sctp_chunk) = PacketDrill::buildInitAckChunk((yyvsp[-12].integer), (yyvsp[-10].integer), (yyvsp[-8].integer), (yyvsp[-6].integer), (yyvsp[-4].integer), (yyvsp[-2].integer), (yyvsp[-1].expression_list));
 }
-#line 3653 "parser.cc"
+#line 3674 "parser.cc"
     break;
 
-  case 120: /* sctp_sack_chunk_spec: MYSACK '[' opt_flags ',' opt_cum_tsn ',' opt_a_rwnd ',' opt_gaps ',' opt_dups ']'  */
-#line 1025 "parser.y"
+  case 122: /* sctp_sack_chunk_spec: MYSACK '[' opt_flags ',' opt_cum_tsn ',' opt_a_rwnd ',' opt_gaps ',' opt_dups ']'  */
+#line 1039 "parser.y"
                                                                                    {
     (yyval.sctp_chunk) = PacketDrill::buildSackChunk((yyvsp[-9].integer), (yyvsp[-7].integer), (yyvsp[-5].integer), (yyvsp[-3].sack_block_list), (yyvsp[-1].sack_block_list));
 }
-#line 3661 "parser.cc"
+#line 3682 "parser.cc"
     break;
 
-  case 121: /* sctp_heartbeat_chunk_spec: MYHEARTBEAT '[' opt_flags ',' sctp_heartbeat_information_parameter ']'  */
-#line 1030 "parser.y"
+  case 123: /* sctp_heartbeat_chunk_spec: MYHEARTBEAT '[' opt_flags ',' sctp_heartbeat_information_parameter ']'  */
+#line 1044 "parser.y"
                                                                          {
     (yyval.sctp_chunk) = PacketDrill::buildHeartbeatChunk((yyvsp[-3].integer), (yyvsp[-1].sctp_parameter));
 }
-#line 3669 "parser.cc"
+#line 3690 "parser.cc"
     break;
 
-  case 122: /* sctp_heartbeat_ack_chunk_spec: MYHEARTBEAT_ACK '[' opt_flags ',' sctp_heartbeat_information_parameter ']'  */
-#line 1036 "parser.y"
+  case 124: /* sctp_heartbeat_ack_chunk_spec: MYHEARTBEAT_ACK '[' opt_flags ',' sctp_heartbeat_information_parameter ']'  */
+#line 1050 "parser.y"
                                                                              {
     (yyval.sctp_chunk) = PacketDrill::buildHeartbeatAckChunk((yyvsp[-3].integer), (yyvsp[-1].sctp_parameter));
 }
-#line 3677 "parser.cc"
+#line 3698 "parser.cc"
     break;
 
-  case 123: /* sctp_abort_chunk_spec: MYABORT '[' opt_abort_flags ']'  */
-#line 1042 "parser.y"
+  case 125: /* sctp_abort_chunk_spec: MYABORT '[' opt_abort_flags ']'  */
+#line 1056 "parser.y"
                                   {
     (yyval.sctp_chunk) = PacketDrill::buildAbortChunk((yyvsp[-1].integer));
 }
-#line 3685 "parser.cc"
+#line 3706 "parser.cc"
     break;
 
-  case 124: /* sctp_shutdown_chunk_spec: MYSHUTDOWN '[' opt_flags ',' opt_cum_tsn ']'  */
-#line 1047 "parser.y"
+  case 126: /* sctp_shutdown_chunk_spec: MYSHUTDOWN '[' opt_flags ',' opt_cum_tsn ']'  */
+#line 1061 "parser.y"
                                                {
     (yyval.sctp_chunk) = PacketDrill::buildShutdownChunk((yyvsp[-3].integer), (yyvsp[-1].integer));
 }
-#line 3693 "parser.cc"
+#line 3714 "parser.cc"
     break;
 
-  case 125: /* sctp_shutdown_ack_chunk_spec: MYSHUTDOWN_ACK '[' opt_flags ']'  */
-#line 1052 "parser.y"
+  case 127: /* sctp_shutdown_ack_chunk_spec: MYSHUTDOWN_ACK '[' opt_flags ']'  */
+#line 1066 "parser.y"
                                    {
     (yyval.sctp_chunk) = PacketDrill::buildShutdownAckChunk((yyvsp[-1].integer));
 }
-#line 3701 "parser.cc"
+#line 3722 "parser.cc"
     break;
 
-  case 126: /* sctp_cookie_echo_chunk_spec: MYCOOKIE_ECHO '[' opt_flags ',' opt_len ',' opt_val ']'  */
-#line 1057 "parser.y"
+  case 128: /* sctp_cookie_echo_chunk_spec: MYCOOKIE_ECHO '[' opt_flags ',' opt_len ',' opt_val ']'  */
+#line 1071 "parser.y"
                                                           {
     if (((yyvsp[-3].integer) != -1) &&
         (!is_valid_u16((yyvsp[-3].integer)) || ((yyvsp[-3].integer) < SCTP_COOKIE_ACK_LENGTH))) {
@@ -3716,453 +3737,453 @@ yyreduce:
     }
     (yyval.sctp_chunk) = PacketDrill::buildCookieEchoChunk((yyvsp[-5].integer), (yyvsp[-3].integer), (yyvsp[-1].byte_list));
 }
-#line 3720 "parser.cc"
+#line 3741 "parser.cc"
     break;
 
-  case 127: /* sctp_cookie_ack_chunk_spec: MYCOOKIE_ACK '[' opt_flags ']'  */
-#line 1073 "parser.y"
+  case 129: /* sctp_cookie_ack_chunk_spec: MYCOOKIE_ACK '[' opt_flags ']'  */
+#line 1087 "parser.y"
                                  {
     (yyval.sctp_chunk) = PacketDrill::buildCookieAckChunk((yyvsp[-1].integer));
 }
-#line 3728 "parser.cc"
+#line 3749 "parser.cc"
     break;
 
-  case 128: /* opt_cause_list: ',' ELLIPSIS  */
-#line 1078 "parser.y"
+  case 130: /* opt_cause_list: ',' ELLIPSIS  */
+#line 1092 "parser.y"
                            { (yyval.cause_list) = NULL; }
-#line 3734 "parser.cc"
+#line 3755 "parser.cc"
     break;
 
-  case 129: /* opt_cause_list: %empty  */
-#line 1079 "parser.y"
+  case 131: /* opt_cause_list: %empty  */
+#line 1093 "parser.y"
                            { (yyval.cause_list) = new cQueue("empty"); }
-#line 3740 "parser.cc"
+#line 3761 "parser.cc"
     break;
 
-  case 130: /* opt_cause_list: ',' sctp_cause_list  */
-#line 1080 "parser.y"
+  case 132: /* opt_cause_list: ',' sctp_cause_list  */
+#line 1094 "parser.y"
                       { (yyval.cause_list) = (yyvsp[0].cause_list); }
-#line 3746 "parser.cc"
+#line 3767 "parser.cc"
     break;
 
-  case 131: /* sctp_cause_list: sctp_cause_spec  */
-#line 1084 "parser.y"
+  case 133: /* sctp_cause_list: sctp_cause_spec  */
+#line 1098 "parser.y"
                                            { (yyval.cause_list) = new cQueue("cause list");
                                              (yyval.cause_list)->insert((yyvsp[0].cause_item)); }
-#line 3753 "parser.cc"
+#line 3774 "parser.cc"
     break;
 
-  case 132: /* sctp_cause_list: sctp_cause_list ',' sctp_cause_spec  */
-#line 1086 "parser.y"
+  case 134: /* sctp_cause_list: sctp_cause_list ',' sctp_cause_spec  */
+#line 1100 "parser.y"
                                            { (yyval.cause_list) = (yyvsp[-2].cause_list);
                                              (yyval.cause_list)->insert((yyvsp[0].cause_item)); }
-#line 3760 "parser.cc"
+#line 3781 "parser.cc"
     break;
 
-  case 133: /* sctp_invalid_stream_identifier_cause_spec: MYINVALID_STREAM_IDENTIFIER '[' MYSID '=' INTEGER ']'  */
-#line 1091 "parser.y"
+  case 135: /* sctp_invalid_stream_identifier_cause_spec: MYINVALID_STREAM_IDENTIFIER '[' MYSID '=' INTEGER ']'  */
+#line 1105 "parser.y"
                                                         {
     if (!is_valid_u16((yyvsp[-1].integer))) {
         semantic_error("stream identifier out of range");
     }
     (yyval.cause_item) = new PacketDrillStruct(INVALID_STREAM_IDENTIFIER, (yyvsp[-1].integer));
 }
-#line 3771 "parser.cc"
+#line 3792 "parser.cc"
     break;
 
-  case 134: /* sctp_invalid_stream_identifier_cause_spec: MYINVALID_STREAM_IDENTIFIER '[' MYSID '=' ELLIPSIS ']'  */
-#line 1097 "parser.y"
+  case 136: /* sctp_invalid_stream_identifier_cause_spec: MYINVALID_STREAM_IDENTIFIER '[' MYSID '=' ELLIPSIS ']'  */
+#line 1111 "parser.y"
                                                          {
     (yyval.cause_item) = new PacketDrillStruct(INVALID_STREAM_IDENTIFIER, -1);
 }
-#line 3779 "parser.cc"
+#line 3800 "parser.cc"
     break;
 
-  case 135: /* sctp_cause_spec: sctp_invalid_stream_identifier_cause_spec  */
-#line 1102 "parser.y"
+  case 137: /* sctp_cause_spec: sctp_invalid_stream_identifier_cause_spec  */
+#line 1116 "parser.y"
                                                  { (yyval.cause_item) = (yyvsp[0].cause_item); }
-#line 3785 "parser.cc"
+#line 3806 "parser.cc"
     break;
 
-  case 136: /* sctp_error_chunk_spec: MYERROR '[' opt_flags opt_cause_list ']'  */
-#line 1106 "parser.y"
+  case 138: /* sctp_error_chunk_spec: MYERROR '[' opt_flags opt_cause_list ']'  */
+#line 1120 "parser.y"
                                            {
     (yyval.sctp_chunk) = PacketDrill::buildErrorChunk((yyvsp[-2].integer), (yyvsp[-1].cause_list));
 }
-#line 3793 "parser.cc"
+#line 3814 "parser.cc"
     break;
 
-  case 137: /* sctp_shutdown_complete_chunk_spec: MYSHUTDOWN_COMPLETE '[' opt_shutdown_complete_flags ']'  */
-#line 1111 "parser.y"
+  case 139: /* sctp_shutdown_complete_chunk_spec: MYSHUTDOWN_COMPLETE '[' opt_shutdown_complete_flags ']'  */
+#line 1125 "parser.y"
                                                           {
     (yyval.sctp_chunk) = PacketDrill::buildShutdownCompleteChunk((yyvsp[-1].integer));
 }
-#line 3801 "parser.cc"
+#line 3822 "parser.cc"
     break;
 
-  case 138: /* opt_req_sn: REQ_SN '=' INTEGER  */
-#line 1117 "parser.y"
+  case 140: /* opt_req_sn: REQ_SN '=' INTEGER  */
+#line 1131 "parser.y"
                      {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("req_sn out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3812 "parser.cc"
+#line 3833 "parser.cc"
     break;
 
-  case 139: /* opt_req_sn: REQ_SN '=' ELLIPSIS  */
-#line 1123 "parser.y"
+  case 141: /* opt_req_sn: REQ_SN '=' ELLIPSIS  */
+#line 1137 "parser.y"
                       { (yyval.integer) = -1; }
-#line 3818 "parser.cc"
+#line 3839 "parser.cc"
     break;
 
-  case 140: /* opt_resp_sn: RESP_SN '=' INTEGER  */
-#line 1127 "parser.y"
+  case 142: /* opt_resp_sn: RESP_SN '=' INTEGER  */
+#line 1141 "parser.y"
                       {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("resp_sn out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3829 "parser.cc"
+#line 3850 "parser.cc"
     break;
 
-  case 141: /* opt_resp_sn: RESP_SN '=' ELLIPSIS  */
-#line 1133 "parser.y"
+  case 143: /* opt_resp_sn: RESP_SN '=' ELLIPSIS  */
+#line 1147 "parser.y"
                        { (yyval.integer) = -1; }
-#line 3835 "parser.cc"
+#line 3856 "parser.cc"
     break;
 
-  case 142: /* opt_last_tsn: LAST_TSN '=' INTEGER  */
-#line 1137 "parser.y"
+  case 144: /* opt_last_tsn: LAST_TSN '=' INTEGER  */
+#line 1151 "parser.y"
                        {
     if (!is_valid_u32((yyvsp[0].integer))) {
     semantic_error("last_tsn out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3846 "parser.cc"
+#line 3867 "parser.cc"
     break;
 
-  case 143: /* opt_last_tsn: LAST_TSN '=' ELLIPSIS  */
-#line 1143 "parser.y"
+  case 145: /* opt_last_tsn: LAST_TSN '=' ELLIPSIS  */
+#line 1157 "parser.y"
                         { (yyval.integer) = -1; }
-#line 3852 "parser.cc"
+#line 3873 "parser.cc"
     break;
 
-  case 144: /* opt_result: RESULT '=' INTEGER  */
-#line 1147 "parser.y"
+  case 146: /* opt_result: RESULT '=' INTEGER  */
+#line 1161 "parser.y"
                      {
     if (!is_valid_u32((yyvsp[0].integer))) {
     semantic_error("result out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3863 "parser.cc"
+#line 3884 "parser.cc"
     break;
 
-  case 145: /* opt_result: RESULT '=' ELLIPSIS  */
-#line 1153 "parser.y"
+  case 147: /* opt_result: RESULT '=' ELLIPSIS  */
+#line 1167 "parser.y"
                       { (yyval.integer) = -1; }
-#line 3869 "parser.cc"
+#line 3890 "parser.cc"
     break;
 
-  case 146: /* opt_sender_next_tsn: SENDER_NEXT_TSN '=' INTEGER  */
-#line 1157 "parser.y"
+  case 148: /* opt_sender_next_tsn: SENDER_NEXT_TSN '=' INTEGER  */
+#line 1171 "parser.y"
                               {
     if (!is_valid_u32((yyvsp[0].integer))) {
     semantic_error("sender_next_tsn out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3880 "parser.cc"
+#line 3901 "parser.cc"
     break;
 
-  case 147: /* opt_sender_next_tsn: SENDER_NEXT_TSN '=' HEX_INTEGER  */
-#line 1163 "parser.y"
+  case 149: /* opt_sender_next_tsn: SENDER_NEXT_TSN '=' HEX_INTEGER  */
+#line 1177 "parser.y"
                                   {
     if (!is_valid_u32((yyvsp[0].integer))) {
     semantic_error("sender_next_tsn out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3891 "parser.cc"
+#line 3912 "parser.cc"
     break;
 
-  case 148: /* opt_sender_next_tsn: SENDER_NEXT_TSN '=' ELLIPSIS  */
-#line 1169 "parser.y"
+  case 150: /* opt_sender_next_tsn: SENDER_NEXT_TSN '=' ELLIPSIS  */
+#line 1183 "parser.y"
                                { (yyval.integer) = -1; }
-#line 3897 "parser.cc"
+#line 3918 "parser.cc"
     break;
 
-  case 149: /* opt_receiver_next_tsn: RECEIVER_NEXT_TSN '=' INTEGER  */
-#line 1173 "parser.y"
+  case 151: /* opt_receiver_next_tsn: RECEIVER_NEXT_TSN '=' INTEGER  */
+#line 1187 "parser.y"
                                 {
     if (!is_valid_u32((yyvsp[0].integer))) {
     semantic_error("receiver_next_tsn out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3908 "parser.cc"
+#line 3929 "parser.cc"
     break;
 
-  case 150: /* opt_receiver_next_tsn: RECEIVER_NEXT_TSN '=' HEX_INTEGER  */
-#line 1179 "parser.y"
+  case 152: /* opt_receiver_next_tsn: RECEIVER_NEXT_TSN '=' HEX_INTEGER  */
+#line 1193 "parser.y"
                                     {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("receiver_next_tsn out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3919 "parser.cc"
+#line 3940 "parser.cc"
     break;
 
-  case 151: /* opt_receiver_next_tsn: RECEIVER_NEXT_TSN '=' ELLIPSIS  */
-#line 1185 "parser.y"
+  case 153: /* opt_receiver_next_tsn: RECEIVER_NEXT_TSN '=' ELLIPSIS  */
+#line 1199 "parser.y"
                                  { (yyval.integer) = -1; }
-#line 3925 "parser.cc"
+#line 3946 "parser.cc"
     break;
 
-  case 152: /* opt_number_of_new_streams: NUMBER_OF_NEW_STREAMS '=' INTEGER  */
-#line 1189 "parser.y"
+  case 154: /* opt_number_of_new_streams: NUMBER_OF_NEW_STREAMS '=' INTEGER  */
+#line 1203 "parser.y"
                                     {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("number_of_new_streams out of range");
     }
     (yyval.integer) = (yyvsp[0].integer);
 }
-#line 3936 "parser.cc"
+#line 3957 "parser.cc"
     break;
 
-  case 153: /* opt_number_of_new_streams: NUMBER_OF_NEW_STREAMS '=' ELLIPSIS  */
-#line 1195 "parser.y"
+  case 155: /* opt_number_of_new_streams: NUMBER_OF_NEW_STREAMS '=' ELLIPSIS  */
+#line 1209 "parser.y"
                                      { (yyval.integer) = -1; }
-#line 3942 "parser.cc"
+#line 3963 "parser.cc"
     break;
 
-  case 154: /* stream_list: stream  */
-#line 1199 "parser.y"
+  case 156: /* stream_list: stream  */
+#line 1213 "parser.y"
          {
     (yyval.stream_list) = new cQueue("stream_list");
     (yyval.stream_list)->insert((yyvsp[0].expression));
 }
-#line 3951 "parser.cc"
+#line 3972 "parser.cc"
     break;
 
-  case 155: /* stream_list: stream_list ',' stream  */
-#line 1203 "parser.y"
+  case 157: /* stream_list: stream_list ',' stream  */
+#line 1217 "parser.y"
                          {
     (yyval.stream_list) = (yyvsp[-2].stream_list); (yyval.stream_list)->insert((yyvsp[0].expression));
 }
-#line 3959 "parser.cc"
+#line 3980 "parser.cc"
     break;
 
-  case 156: /* stream: %empty  */
-#line 1209 "parser.y"
+  case 158: /* stream: %empty  */
+#line 1223 "parser.y"
   {
     (yyval.expression) = new_integer_expression(-1, "%d");
 }
-#line 3967 "parser.cc"
+#line 3988 "parser.cc"
     break;
 
-  case 157: /* stream: INTEGER  */
-#line 1212 "parser.y"
+  case 159: /* stream: INTEGER  */
+#line 1226 "parser.y"
           {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("Stream number value out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
 }
-#line 3978 "parser.cc"
+#line 3999 "parser.cc"
     break;
 
-  case 158: /* outgoing_ssn_reset_request: OUTGOING_SSN_RESET '[' opt_req_sn ',' opt_resp_sn ',' opt_last_tsn ']'  */
-#line 1222 "parser.y"
+  case 160: /* outgoing_ssn_reset_request: OUTGOING_SSN_RESET '[' opt_req_sn ',' opt_resp_sn ',' opt_last_tsn ']'  */
+#line 1236 "parser.y"
                                                                          {
     (yyval.sctp_parameter) = new PacketDrillSctpParameter(OUTGOING_RESET_REQUEST_PARAMETER, 16, new PacketDrillStruct((yyvsp[-5].integer), (yyvsp[-3].integer), (yyvsp[-1].integer), -2, NULL));
 }
-#line 3986 "parser.cc"
+#line 4007 "parser.cc"
     break;
 
-  case 159: /* outgoing_ssn_reset_request: OUTGOING_SSN_RESET '[' opt_req_sn ',' opt_resp_sn ',' opt_last_tsn ',' SIDS '=' '[' stream_list ']' ']'  */
-#line 1225 "parser.y"
+  case 161: /* outgoing_ssn_reset_request: OUTGOING_SSN_RESET '[' opt_req_sn ',' opt_resp_sn ',' opt_last_tsn ',' SIDS '=' '[' stream_list ']' ']'  */
+#line 1239 "parser.y"
                                                                                                           {
     (yyval.sctp_parameter) = new PacketDrillSctpParameter(OUTGOING_RESET_REQUEST_PARAMETER, 16, new PacketDrillStruct((yyvsp[-11].integer), (yyvsp[-9].integer), (yyvsp[-7].integer), -2, (yyvsp[-2].stream_list)));
 }
-#line 3994 "parser.cc"
+#line 4015 "parser.cc"
     break;
 
-  case 160: /* incoming_ssn_reset_request: INCOMING_SSN_RESET '[' opt_req_sn ']'  */
-#line 1231 "parser.y"
+  case 162: /* incoming_ssn_reset_request: INCOMING_SSN_RESET '[' opt_req_sn ']'  */
+#line 1245 "parser.y"
                                         {
     (yyval.sctp_parameter) = new PacketDrillSctpParameter(INCOMING_RESET_REQUEST_PARAMETER, 8, new PacketDrillStruct((yyvsp[-1].integer), -2, -2, -2, NULL));
 }
-#line 4002 "parser.cc"
+#line 4023 "parser.cc"
     break;
 
-  case 161: /* incoming_ssn_reset_request: INCOMING_SSN_RESET '[' opt_req_sn ',' SIDS '=' '[' stream_list ']' ']'  */
-#line 1234 "parser.y"
+  case 163: /* incoming_ssn_reset_request: INCOMING_SSN_RESET '[' opt_req_sn ',' SIDS '=' '[' stream_list ']' ']'  */
+#line 1248 "parser.y"
                                                                          {
     (yyval.sctp_parameter) = new PacketDrillSctpParameter(INCOMING_RESET_REQUEST_PARAMETER, 8, new PacketDrillStruct((yyvsp[-7].integer), -2, -2, -2, (yyvsp[-2].stream_list)));
 }
-#line 4010 "parser.cc"
+#line 4031 "parser.cc"
     break;
 
-  case 162: /* ssn_tsn_reset_request: SSN_TSN_RESET '[' opt_req_sn ']'  */
-#line 1240 "parser.y"
+  case 164: /* ssn_tsn_reset_request: SSN_TSN_RESET '[' opt_req_sn ']'  */
+#line 1254 "parser.y"
                                    {
     (yyval.sctp_parameter) = new PacketDrillSctpParameter(SSN_TSN_RESET_REQUEST_PARAMETER, 8, new PacketDrillStruct((yyvsp[-1].integer), -2, -2, -2, NULL));
 }
-#line 4018 "parser.cc"
+#line 4039 "parser.cc"
     break;
 
-  case 163: /* reconfig_response: RECONFIG_RESPONSE '[' opt_resp_sn ',' opt_result ']'  */
-#line 1246 "parser.y"
+  case 165: /* reconfig_response: RECONFIG_RESPONSE '[' opt_resp_sn ',' opt_result ']'  */
+#line 1260 "parser.y"
                                                        {
     (yyval.sctp_parameter) = new PacketDrillSctpParameter(STREAM_RESET_RESPONSE_PARAMETER, 8, new PacketDrillStruct((yyvsp[-3].integer), (yyvsp[-1].integer), -2, -2, NULL));
 }
-#line 4026 "parser.cc"
+#line 4047 "parser.cc"
     break;
 
-  case 164: /* reconfig_response: RECONFIG_RESPONSE '[' opt_resp_sn ',' opt_result ',' opt_sender_next_tsn ',' opt_receiver_next_tsn ']'  */
-#line 1249 "parser.y"
+  case 166: /* reconfig_response: RECONFIG_RESPONSE '[' opt_resp_sn ',' opt_result ',' opt_sender_next_tsn ',' opt_receiver_next_tsn ']'  */
+#line 1263 "parser.y"
                                                                                                         {
     (yyval.sctp_parameter) = new PacketDrillSctpParameter(STREAM_RESET_RESPONSE_PARAMETER, 12, new PacketDrillStruct((yyvsp[-7].integer), (yyvsp[-5].integer), (yyvsp[-3].integer), (yyvsp[-1].integer), NULL));
 }
-#line 4034 "parser.cc"
+#line 4055 "parser.cc"
     break;
 
-  case 165: /* add_outgoing_streams_request: ADD_OUTGOING_STREAMS '[' opt_req_sn ',' opt_number_of_new_streams ']'  */
-#line 1255 "parser.y"
+  case 167: /* add_outgoing_streams_request: ADD_OUTGOING_STREAMS '[' opt_req_sn ',' opt_number_of_new_streams ']'  */
+#line 1269 "parser.y"
                                                                         {
     (yyval.sctp_parameter) = new PacketDrillSctpParameter(ADD_OUTGOING_STREAMS_REQUEST_PARAMETER, 12, new PacketDrillStruct((yyvsp[-3].integer), (yyvsp[-1].integer), -2, -2, NULL));
 }
-#line 4042 "parser.cc"
+#line 4063 "parser.cc"
     break;
 
-  case 166: /* add_incoming_streams_request: ADD_INCOMING_STREAMS '[' opt_req_sn ',' opt_number_of_new_streams ']'  */
-#line 1261 "parser.y"
+  case 168: /* add_incoming_streams_request: ADD_INCOMING_STREAMS '[' opt_req_sn ',' opt_number_of_new_streams ']'  */
+#line 1275 "parser.y"
                                                                         {
     (yyval.sctp_parameter) = new PacketDrillSctpParameter(ADD_INCOMING_STREAMS_REQUEST_PARAMETER, 12, new PacketDrillStruct((yyvsp[-3].integer), (yyvsp[-1].integer), -2, -2, NULL));
 }
-#line 4050 "parser.cc"
+#line 4071 "parser.cc"
     break;
 
-  case 167: /* sctp_reconfig_chunk_spec: RECONFIG '[' opt_flags opt_parameter_list ']'  */
-#line 1273 "parser.y"
+  case 169: /* sctp_reconfig_chunk_spec: RECONFIG '[' opt_flags opt_parameter_list ']'  */
+#line 1287 "parser.y"
                                                  {
     (yyval.sctp_chunk) = PacketDrill::buildReconfigChunk((yyvsp[-2].integer), (yyvsp[-1].expression_list));
 }
-#line 4058 "parser.cc"
+#line 4079 "parser.cc"
     break;
 
-  case 168: /* opt_parameter_list: ',' ELLIPSIS  */
-#line 1279 "parser.y"
+  case 170: /* opt_parameter_list: ',' ELLIPSIS  */
+#line 1293 "parser.y"
                                { (yyval.expression_list) = NULL; }
-#line 4064 "parser.cc"
+#line 4085 "parser.cc"
     break;
 
-  case 169: /* opt_parameter_list: %empty  */
-#line 1280 "parser.y"
+  case 171: /* opt_parameter_list: %empty  */
+#line 1294 "parser.y"
                                { (yyval.expression_list) = new cQueue("empty"); }
-#line 4070 "parser.cc"
+#line 4091 "parser.cc"
     break;
 
-  case 170: /* opt_parameter_list: ',' sctp_parameter_list  */
-#line 1281 "parser.y"
+  case 172: /* opt_parameter_list: ',' sctp_parameter_list  */
+#line 1295 "parser.y"
                           { (yyval.expression_list) = (yyvsp[0].expression_list); }
-#line 4076 "parser.cc"
+#line 4097 "parser.cc"
     break;
 
-  case 171: /* sctp_parameter_list: sctp_parameter  */
-#line 1285 "parser.y"
+  case 173: /* sctp_parameter_list: sctp_parameter  */
+#line 1299 "parser.y"
                  {
     (yyval.expression_list) = new cQueue("sctp_parameter_list");
     (yyval.expression_list)->insert((yyvsp[0].sctp_parameter));
 }
-#line 4085 "parser.cc"
+#line 4106 "parser.cc"
     break;
 
-  case 172: /* sctp_parameter_list: sctp_parameter_list ',' sctp_parameter  */
-#line 1289 "parser.y"
+  case 174: /* sctp_parameter_list: sctp_parameter_list ',' sctp_parameter  */
+#line 1303 "parser.y"
                                          {
     (yyval.expression_list) = (yyvsp[-2].expression_list);
     (yyval.expression_list)->insert((yyvsp[0].sctp_parameter));
 }
-#line 4094 "parser.cc"
+#line 4115 "parser.cc"
     break;
 
-  case 173: /* sctp_parameter: sctp_heartbeat_information_parameter  */
-#line 1297 "parser.y"
-                                         { (yyval.sctp_parameter) = (yyvsp[0].sctp_parameter); }
-#line 4100 "parser.cc"
-    break;
-
-  case 174: /* sctp_parameter: sctp_state_cookie_parameter  */
-#line 1298 "parser.y"
-                                         { (yyval.sctp_parameter) = (yyvsp[0].sctp_parameter); }
-#line 4106 "parser.cc"
-    break;
-
-  case 175: /* sctp_parameter: sctp_supported_extensions_parameter  */
-#line 1299 "parser.y"
-                                         { (yyval.sctp_parameter) = (yyvsp[0].sctp_parameter); }
-#line 4112 "parser.cc"
-    break;
-
-  case 176: /* sctp_parameter: sctp_supported_address_types_parameter  */
-#line 1300 "parser.y"
-                                         { (yyval.sctp_parameter) = (yyvsp[0].sctp_parameter); }
-#line 4118 "parser.cc"
-    break;
-
-  case 177: /* sctp_parameter: outgoing_ssn_reset_request  */
-#line 1301 "parser.y"
-                                         { (yyval.sctp_parameter) = (yyvsp[0].sctp_parameter); }
-#line 4124 "parser.cc"
-    break;
-
-  case 178: /* sctp_parameter: incoming_ssn_reset_request  */
-#line 1302 "parser.y"
-                                         { (yyval.sctp_parameter) = (yyvsp[0].sctp_parameter); }
-#line 4130 "parser.cc"
-    break;
-
-  case 179: /* sctp_parameter: ssn_tsn_reset_request  */
-#line 1303 "parser.y"
-                                         { (yyval.sctp_parameter) = (yyvsp[0].sctp_parameter); }
-#line 4136 "parser.cc"
-    break;
-
-  case 180: /* sctp_parameter: reconfig_response  */
-#line 1304 "parser.y"
-                                         { (yyval.sctp_parameter) = (yyvsp[0].sctp_parameter); }
-#line 4142 "parser.cc"
-    break;
-
-  case 181: /* sctp_parameter: add_outgoing_streams_request  */
-#line 1305 "parser.y"
-                                              { (yyval.sctp_parameter) = (yyvsp[0].sctp_parameter); }
-#line 4148 "parser.cc"
-    break;
-
-  case 182: /* sctp_parameter: add_incoming_streams_request  */
-#line 1306 "parser.y"
-                                              { (yyval.sctp_parameter) = (yyvsp[0].sctp_parameter); }
-#line 4154 "parser.cc"
-    break;
-
-  case 183: /* sctp_heartbeat_information_parameter: HEARTBEAT_INFORMATION '[' ELLIPSIS ']'  */
+  case 175: /* sctp_parameter: sctp_heartbeat_information_parameter  */
 #line 1311 "parser.y"
+                                         { (yyval.sctp_parameter) = (yyvsp[0].sctp_parameter); }
+#line 4121 "parser.cc"
+    break;
+
+  case 176: /* sctp_parameter: sctp_state_cookie_parameter  */
+#line 1312 "parser.y"
+                                         { (yyval.sctp_parameter) = (yyvsp[0].sctp_parameter); }
+#line 4127 "parser.cc"
+    break;
+
+  case 177: /* sctp_parameter: sctp_supported_extensions_parameter  */
+#line 1313 "parser.y"
+                                         { (yyval.sctp_parameter) = (yyvsp[0].sctp_parameter); }
+#line 4133 "parser.cc"
+    break;
+
+  case 178: /* sctp_parameter: sctp_supported_address_types_parameter  */
+#line 1314 "parser.y"
+                                         { (yyval.sctp_parameter) = (yyvsp[0].sctp_parameter); }
+#line 4139 "parser.cc"
+    break;
+
+  case 179: /* sctp_parameter: outgoing_ssn_reset_request  */
+#line 1315 "parser.y"
+                                         { (yyval.sctp_parameter) = (yyvsp[0].sctp_parameter); }
+#line 4145 "parser.cc"
+    break;
+
+  case 180: /* sctp_parameter: incoming_ssn_reset_request  */
+#line 1316 "parser.y"
+                                         { (yyval.sctp_parameter) = (yyvsp[0].sctp_parameter); }
+#line 4151 "parser.cc"
+    break;
+
+  case 181: /* sctp_parameter: ssn_tsn_reset_request  */
+#line 1317 "parser.y"
+                                         { (yyval.sctp_parameter) = (yyvsp[0].sctp_parameter); }
+#line 4157 "parser.cc"
+    break;
+
+  case 182: /* sctp_parameter: reconfig_response  */
+#line 1318 "parser.y"
+                                         { (yyval.sctp_parameter) = (yyvsp[0].sctp_parameter); }
+#line 4163 "parser.cc"
+    break;
+
+  case 183: /* sctp_parameter: add_outgoing_streams_request  */
+#line 1319 "parser.y"
+                                              { (yyval.sctp_parameter) = (yyvsp[0].sctp_parameter); }
+#line 4169 "parser.cc"
+    break;
+
+  case 184: /* sctp_parameter: add_incoming_streams_request  */
+#line 1320 "parser.y"
+                                              { (yyval.sctp_parameter) = (yyvsp[0].sctp_parameter); }
+#line 4175 "parser.cc"
+    break;
+
+  case 185: /* sctp_heartbeat_information_parameter: HEARTBEAT_INFORMATION '[' ELLIPSIS ']'  */
+#line 1325 "parser.y"
                                          {
     (yyval.sctp_parameter) = new PacketDrillSctpParameter(HEARTBEAT_INFORMATION, -1, NULL);
 }
-#line 4162 "parser.cc"
+#line 4183 "parser.cc"
     break;
 
-  case 184: /* sctp_heartbeat_information_parameter: HEARTBEAT_INFORMATION '[' opt_len ',' opt_val ']'  */
-#line 1314 "parser.y"
+  case 186: /* sctp_heartbeat_information_parameter: HEARTBEAT_INFORMATION '[' opt_len ',' opt_val ']'  */
+#line 1328 "parser.y"
                                                     {
     if (((yyvsp[-3].integer) != -1) &&
         (!is_valid_u16((yyvsp[-3].integer)) || ((yyvsp[-3].integer) < 4))) {
@@ -4177,158 +4198,158 @@ yyreduce:
     }
     (yyval.sctp_parameter) = new PacketDrillSctpParameter(HEARTBEAT_INFORMATION, (yyvsp[-3].integer), (yyvsp[-1].byte_list));
 }
-#line 4181 "parser.cc"
+#line 4202 "parser.cc"
     break;
 
-  case 185: /* sctp_supported_extensions_parameter: MYSUPPORTED_EXTENSIONS '[' TYPES '=' ELLIPSIS ']'  */
-#line 1330 "parser.y"
+  case 187: /* sctp_supported_extensions_parameter: MYSUPPORTED_EXTENSIONS '[' TYPES '=' ELLIPSIS ']'  */
+#line 1344 "parser.y"
                                                     {
     (yyval.sctp_parameter) = new PacketDrillSctpParameter(SUPPORTED_EXTENSIONS, -1, NULL);
 }
-#line 4189 "parser.cc"
+#line 4210 "parser.cc"
     break;
 
-  case 186: /* sctp_supported_extensions_parameter: MYSUPPORTED_EXTENSIONS '[' TYPES '=' '[' chunk_types_list ']' ']'  */
-#line 1333 "parser.y"
+  case 188: /* sctp_supported_extensions_parameter: MYSUPPORTED_EXTENSIONS '[' TYPES '=' '[' chunk_types_list ']' ']'  */
+#line 1347 "parser.y"
                                                                     {
     (yyval.sctp_parameter) = new PacketDrillSctpParameter(SUPPORTED_EXTENSIONS, (yyvsp[-2].byte_list)->getListLength(), (yyvsp[-2].byte_list));
 }
-#line 4197 "parser.cc"
+#line 4218 "parser.cc"
     break;
 
-  case 187: /* address_types_list: %empty  */
-#line 1338 "parser.y"
+  case 189: /* address_types_list: %empty  */
+#line 1352 "parser.y"
                                       { (yyval.stream_list) = new cQueue("empty_address_types_list");
 }
-#line 4204 "parser.cc"
+#line 4225 "parser.cc"
     break;
 
-  case 188: /* address_types_list: address_type  */
-#line 1340 "parser.y"
+  case 190: /* address_types_list: address_type  */
+#line 1354 "parser.y"
                                       { (yyval.stream_list) = new cQueue("address_types_list");
                                         (yyval.stream_list)->insert((yyvsp[0].expression));
 }
-#line 4212 "parser.cc"
+#line 4233 "parser.cc"
     break;
 
-  case 189: /* address_types_list: address_types_list ',' address_type  */
-#line 1343 "parser.y"
+  case 191: /* address_types_list: address_types_list ',' address_type  */
+#line 1357 "parser.y"
                                       { (yyval.stream_list) = (yyvsp[-2].stream_list);
                                         (yyval.stream_list)->insert((yyvsp[0].expression));
 }
-#line 4220 "parser.cc"
+#line 4241 "parser.cc"
     break;
 
-  case 190: /* address_type: INTEGER  */
-#line 1349 "parser.y"
+  case 192: /* address_type: INTEGER  */
+#line 1363 "parser.y"
                 { if (!is_valid_u16((yyvsp[0].integer))) {
                   semantic_error("address type value out of range");
                   }
                   (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u"); }
-#line 4229 "parser.cc"
+#line 4250 "parser.cc"
     break;
 
-  case 191: /* address_type: IPV4_TYPE  */
-#line 1353 "parser.y"
+  case 193: /* address_type: IPV4_TYPE  */
+#line 1367 "parser.y"
                 { (yyval.expression) = new_integer_expression(SCTP_IPV4_ADDRESS_PARAMETER_TYPE, "%u"); }
-#line 4235 "parser.cc"
+#line 4256 "parser.cc"
     break;
 
-  case 192: /* address_type: IPV6_TYPE  */
-#line 1354 "parser.y"
+  case 194: /* address_type: IPV6_TYPE  */
+#line 1368 "parser.y"
                 { (yyval.expression) = new_integer_expression(SCTP_IPV6_ADDRESS_PARAMETER_TYPE, "%u"); }
-#line 4241 "parser.cc"
+#line 4262 "parser.cc"
     break;
 
-  case 193: /* sctp_supported_address_types_parameter: MYSUPPORTED_ADDRESS_TYPES '[' TYPES '=' ELLIPSIS ']'  */
-#line 1358 "parser.y"
+  case 195: /* sctp_supported_address_types_parameter: MYSUPPORTED_ADDRESS_TYPES '[' TYPES '=' ELLIPSIS ']'  */
+#line 1372 "parser.y"
                                                        {
     (yyval.sctp_parameter) = new PacketDrillSctpParameter(SUPPORTED_ADDRESS_TYPES, -1, NULL);
 }
-#line 4249 "parser.cc"
+#line 4270 "parser.cc"
     break;
 
-  case 194: /* sctp_supported_address_types_parameter: MYSUPPORTED_ADDRESS_TYPES '[' TYPES '=' '[' address_types_list ']' ']'  */
-#line 1361 "parser.y"
+  case 196: /* sctp_supported_address_types_parameter: MYSUPPORTED_ADDRESS_TYPES '[' TYPES '=' '[' address_types_list ']' ']'  */
+#line 1375 "parser.y"
                                                                          {
 (yyvsp[-2].stream_list)->setName("SupportedAddressTypes");
     (yyval.sctp_parameter) = new PacketDrillSctpParameter(SUPPORTED_ADDRESS_TYPES, (yyvsp[-2].stream_list)->getLength(), (yyvsp[-2].stream_list));
 }
-#line 4258 "parser.cc"
+#line 4279 "parser.cc"
     break;
 
-  case 195: /* sctp_state_cookie_parameter: STATE_COOKIE '[' ELLIPSIS ']'  */
-#line 1367 "parser.y"
+  case 197: /* sctp_state_cookie_parameter: STATE_COOKIE '[' ELLIPSIS ']'  */
+#line 1381 "parser.y"
                                 {
     (yyval.sctp_parameter) = new PacketDrillSctpParameter(STATE_COOKIE, -1, NULL);
 }
-#line 4266 "parser.cc"
+#line 4287 "parser.cc"
     break;
 
-  case 196: /* sctp_state_cookie_parameter: STATE_COOKIE '[' LEN '=' ELLIPSIS ',' VAL '=' ELLIPSIS ']'  */
-#line 1370 "parser.y"
+  case 198: /* sctp_state_cookie_parameter: STATE_COOKIE '[' LEN '=' ELLIPSIS ',' VAL '=' ELLIPSIS ']'  */
+#line 1384 "parser.y"
                                                              {
     (yyval.sctp_parameter) = new PacketDrillSctpParameter(STATE_COOKIE, -1, NULL);
 }
-#line 4274 "parser.cc"
+#line 4295 "parser.cc"
     break;
 
-  case 197: /* sctp_state_cookie_parameter: STATE_COOKIE '[' LEN '=' INTEGER ',' VAL '=' ELLIPSIS ']'  */
-#line 1373 "parser.y"
+  case 199: /* sctp_state_cookie_parameter: STATE_COOKIE '[' LEN '=' INTEGER ',' VAL '=' ELLIPSIS ']'  */
+#line 1387 "parser.y"
                                                             {
     if (((yyvsp[-5].integer) < 4) || !is_valid_u32((yyvsp[-5].integer))) {
         semantic_error("len value out of range");
     }
     (yyval.sctp_parameter) = new PacketDrillSctpParameter(STATE_COOKIE, (yyvsp[-5].integer), NULL);
 }
-#line 4285 "parser.cc"
+#line 4306 "parser.cc"
     break;
 
-  case 198: /* packet_prefix: direction  */
-#line 1383 "parser.y"
+  case 200: /* packet_prefix: direction  */
+#line 1397 "parser.y"
             {
     (yyval.packet) = new PacketDrillPacket();
     (yyval.packet)->setDirection((yyvsp[0].direction));
 }
-#line 4294 "parser.cc"
+#line 4315 "parser.cc"
     break;
 
-  case 199: /* direction: '<'  */
-#line 1391 "parser.y"
+  case 201: /* direction: '<'  */
+#line 1405 "parser.y"
       {
     (yyval.direction) = DIRECTION_INBOUND;
     current_script_line = yylineno;
 }
-#line 4303 "parser.cc"
+#line 4324 "parser.cc"
     break;
 
-  case 200: /* direction: '>'  */
-#line 1395 "parser.y"
+  case 202: /* direction: '>'  */
+#line 1409 "parser.y"
       {
     (yyval.direction) = DIRECTION_OUTBOUND;
     current_script_line = yylineno;
 }
-#line 4312 "parser.cc"
+#line 4333 "parser.cc"
     break;
 
-  case 201: /* opt_ip_info: %empty  */
-#line 1406 "parser.y"
+  case 203: /* opt_ip_info: %empty  */
+#line 1420 "parser.y"
   {
     (yyval.window) = -1; /* no ECN codepoint specified -- do not override the IP header's ECN bits */
 }
-#line 4320 "parser.cc"
+#line 4341 "parser.cc"
     break;
 
-  case 202: /* opt_ip_info: '[' ip_ecn ']'  */
-#line 1409 "parser.y"
+  case 204: /* opt_ip_info: '[' ip_ecn ']'  */
+#line 1423 "parser.y"
                  {
     (yyval.window) = (yyvsp[-1].window);
 }
-#line 4328 "parser.cc"
+#line 4349 "parser.cc"
     break;
 
-  case 203: /* ip_ecn: MYWORD  */
-#line 1415 "parser.y"
+  case 205: /* ip_ecn: MYWORD  */
+#line 1429 "parser.y"
          {
     if (!strcmp((yyvsp[0].string), "noecn")) {
         (yyval.window) = IP_ECN_NOT_ECT;
@@ -4343,44 +4364,44 @@ yyreduce:
     }
     free((yyvsp[0].string));
 }
-#line 4347 "parser.cc"
+#line 4368 "parser.cc"
     break;
 
-  case 204: /* flags: MYWORD  */
-#line 1432 "parser.y"
+  case 206: /* flags: MYWORD  */
+#line 1446 "parser.y"
          {
     (yyval.string) = (yyvsp[0].string);
 }
-#line 4355 "parser.cc"
+#line 4376 "parser.cc"
     break;
 
-  case 205: /* flags: '.'  */
-#line 1435 "parser.y"
+  case 207: /* flags: '.'  */
+#line 1449 "parser.y"
       {
     (yyval.string) = strdup(".");
 }
-#line 4363 "parser.cc"
+#line 4384 "parser.cc"
     break;
 
-  case 206: /* flags: MYWORD '.'  */
-#line 1438 "parser.y"
+  case 208: /* flags: MYWORD '.'  */
+#line 1452 "parser.y"
              {
     asprintf(&((yyval.string)), "%s.", (yyvsp[-1].string));
     free((yyvsp[-1].string));
 }
-#line 4372 "parser.cc"
+#line 4393 "parser.cc"
     break;
 
-  case 207: /* flags: '-'  */
-#line 1442 "parser.y"
+  case 209: /* flags: '-'  */
+#line 1456 "parser.y"
       {
     (yyval.string) = strdup("");
 }
-#line 4380 "parser.cc"
+#line 4401 "parser.cc"
     break;
 
-  case 208: /* seq: INTEGER ':' INTEGER '(' INTEGER ')'  */
-#line 1448 "parser.y"
+  case 210: /* seq: INTEGER ':' INTEGER '(' INTEGER ')'  */
+#line 1462 "parser.y"
                                       {
     if (!is_valid_u32((yyvsp[-5].integer))) {
         semantic_error("TCP start sequence number out of range");
@@ -4398,126 +4419,126 @@ yyreduce:
     (yyval.tcp_sequence_info).payload_bytes = (yyvsp[-1].integer);
     (yyval.tcp_sequence_info).protocol = IPPROTO_TCP;
 }
-#line 4402 "parser.cc"
+#line 4423 "parser.cc"
     break;
 
-  case 209: /* opt_ack: %empty  */
-#line 1468 "parser.y"
+  case 211: /* opt_ack: %empty  */
+#line 1482 "parser.y"
   {
     (yyval.sequence_number) = 0;
 }
-#line 4410 "parser.cc"
+#line 4431 "parser.cc"
     break;
 
-  case 210: /* opt_ack: ACK INTEGER  */
-#line 1471 "parser.y"
+  case 212: /* opt_ack: ACK INTEGER  */
+#line 1485 "parser.y"
               {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("TCP ack sequence number out of range");
     }
     (yyval.sequence_number) = (yyvsp[0].integer);
 }
-#line 4421 "parser.cc"
+#line 4442 "parser.cc"
     break;
 
-  case 211: /* opt_window: %empty  */
-#line 1480 "parser.y"
+  case 213: /* opt_window: %empty  */
+#line 1494 "parser.y"
   {
     (yyval.window) = -1;
 }
-#line 4429 "parser.cc"
+#line 4450 "parser.cc"
     break;
 
-  case 212: /* opt_window: WIN INTEGER  */
-#line 1483 "parser.y"
+  case 214: /* opt_window: WIN INTEGER  */
+#line 1497 "parser.y"
               {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("TCP window value out of range");
     }
     (yyval.window) = (yyvsp[0].integer);
 }
-#line 4440 "parser.cc"
+#line 4461 "parser.cc"
     break;
 
-  case 213: /* opt_urg_ptr: %empty  */
-#line 1492 "parser.y"
+  case 215: /* opt_urg_ptr: %empty  */
+#line 1506 "parser.y"
   {
     (yyval.port) = 0;
 }
-#line 4448 "parser.cc"
+#line 4469 "parser.cc"
     break;
 
-  case 214: /* opt_urg_ptr: URG INTEGER  */
-#line 1495 "parser.y"
+  case 216: /* opt_urg_ptr: URG INTEGER  */
+#line 1509 "parser.y"
               {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("urg_ptr value out of range");
     }
     (yyval.port) = (yyvsp[0].integer);
 }
-#line 4459 "parser.cc"
+#line 4480 "parser.cc"
     break;
 
-  case 215: /* opt_tcp_options: %empty  */
-#line 1504 "parser.y"
+  case 217: /* opt_tcp_options: %empty  */
+#line 1518 "parser.y"
   {
     (yyval.tcp_options) = new cQueue("opt_tcp_options");
 }
-#line 4467 "parser.cc"
+#line 4488 "parser.cc"
     break;
 
-  case 216: /* opt_tcp_options: '<' tcp_option_list '>'  */
-#line 1507 "parser.y"
+  case 218: /* opt_tcp_options: '<' tcp_option_list '>'  */
+#line 1521 "parser.y"
                           {
     (yyval.tcp_options) = (yyvsp[-1].tcp_options);
 }
-#line 4475 "parser.cc"
+#line 4496 "parser.cc"
     break;
 
-  case 217: /* opt_tcp_options: '<' ELLIPSIS '>'  */
-#line 1510 "parser.y"
+  case 219: /* opt_tcp_options: '<' ELLIPSIS '>'  */
+#line 1524 "parser.y"
                    {
     (yyval.tcp_options) = NULL; /* FLAG_OPTIONS_NOCHECK */
 }
-#line 4483 "parser.cc"
+#line 4504 "parser.cc"
     break;
 
-  case 218: /* tcp_option_list: tcp_option  */
-#line 1517 "parser.y"
+  case 220: /* tcp_option_list: tcp_option  */
+#line 1531 "parser.y"
              {
     (yyval.tcp_options) = new cQueue("tcp_option");
     (yyval.tcp_options)->insert((yyvsp[0].tcp_option));
 }
-#line 4492 "parser.cc"
+#line 4513 "parser.cc"
     break;
 
-  case 219: /* tcp_option_list: tcp_option_list ',' tcp_option  */
-#line 1521 "parser.y"
+  case 221: /* tcp_option_list: tcp_option_list ',' tcp_option  */
+#line 1535 "parser.y"
                                  {
     (yyval.tcp_options) = (yyvsp[-2].tcp_options);
     (yyval.tcp_options)->insert((yyvsp[0].tcp_option));
 }
-#line 4501 "parser.cc"
+#line 4522 "parser.cc"
     break;
 
-  case 220: /* tcp_option: NOP  */
-#line 1529 "parser.y"
+  case 222: /* tcp_option: NOP  */
+#line 1543 "parser.y"
       {
     (yyval.tcp_option) = new PacketDrillTcpOption(TCPOPT_NOP, 1);
 }
-#line 4509 "parser.cc"
+#line 4530 "parser.cc"
     break;
 
-  case 221: /* tcp_option: EOL  */
-#line 1532 "parser.y"
+  case 223: /* tcp_option: EOL  */
+#line 1546 "parser.y"
       {
     (yyval.tcp_option) = new PacketDrillTcpOption(TCPOPT_EOL, 1);
 }
-#line 4517 "parser.cc"
+#line 4538 "parser.cc"
     break;
 
-  case 222: /* tcp_option: MSS INTEGER  */
-#line 1535 "parser.y"
+  case 224: /* tcp_option: MSS INTEGER  */
+#line 1549 "parser.y"
               {
     (yyval.tcp_option) = new PacketDrillTcpOption(TCPOPT_MAXSEG, TCPOLEN_MAXSEG);
     if (!is_valid_u16((yyvsp[0].integer))) {
@@ -4525,11 +4546,11 @@ yyreduce:
     }
     (yyval.tcp_option)->setMss((yyvsp[0].integer));
 }
-#line 4529 "parser.cc"
+#line 4550 "parser.cc"
     break;
 
-  case 223: /* tcp_option: WSCALE INTEGER  */
-#line 1542 "parser.y"
+  case 225: /* tcp_option: WSCALE INTEGER  */
+#line 1556 "parser.y"
                  {
     (yyval.tcp_option) = new PacketDrillTcpOption(TCPOPT_WINDOW, TCPOLEN_WINDOW);
     if (!is_valid_u8((yyvsp[0].integer))) {
@@ -4537,28 +4558,28 @@ yyreduce:
     }
     (yyval.tcp_option)->setWindowScale((yyvsp[0].integer));
 }
-#line 4541 "parser.cc"
+#line 4562 "parser.cc"
     break;
 
-  case 224: /* tcp_option: SACKOK  */
-#line 1549 "parser.y"
+  case 226: /* tcp_option: SACKOK  */
+#line 1563 "parser.y"
          {
     (yyval.tcp_option) = new PacketDrillTcpOption(TCPOPT_SACK_PERMITTED, TCPOLEN_SACK_PERMITTED);
 }
-#line 4549 "parser.cc"
+#line 4570 "parser.cc"
     break;
 
-  case 225: /* tcp_option: TCPSACK sack_block_list  */
-#line 1552 "parser.y"
+  case 227: /* tcp_option: TCPSACK sack_block_list  */
+#line 1566 "parser.y"
                           {
     (yyval.tcp_option) = new PacketDrillTcpOption(TCPOPT_SACK, 2+8*(yyvsp[0].sack_block_list)->getLength());
     (yyval.tcp_option)->setBlockList((yyvsp[0].sack_block_list));
 }
-#line 4558 "parser.cc"
+#line 4579 "parser.cc"
     break;
 
-  case 226: /* tcp_option: TIMESTAMP VAL INTEGER ECR INTEGER  */
-#line 1556 "parser.y"
+  case 228: /* tcp_option: TIMESTAMP VAL INTEGER ECR INTEGER  */
+#line 1570 "parser.y"
                                     {
     uint32_t val, ecr;
     (yyval.tcp_option) = new PacketDrillTcpOption(TCPOPT_TIMESTAMP, TCPOLEN_TIMESTAMP);
@@ -4573,11 +4594,11 @@ yyreduce:
     (yyval.tcp_option)->setVal(val);
     (yyval.tcp_option)->setEcr(ecr);
 }
-#line 4577 "parser.cc"
+#line 4598 "parser.cc"
     break;
 
-  case 227: /* tcp_option: MD5 MYWORD  */
-#line 1570 "parser.y"
+  case 229: /* tcp_option: MD5 MYWORD  */
+#line 1584 "parser.y"
              {
     ByteVector digest = hex_string_to_bytes((yyvsp[0].string));
     free((yyvsp[0].string));
@@ -4587,11 +4608,11 @@ yyreduce:
     (yyval.tcp_option) = new PacketDrillTcpOption(TCPOPT_MD5SIG, TCPOLEN_MD5_BASE + digest.size());
     (yyval.tcp_option)->setMd5Digest(digest);
 }
-#line 4591 "parser.cc"
+#line 4612 "parser.cc"
     break;
 
-  case 228: /* tcp_option: FO opt_fastopen_cookie  */
-#line 1579 "parser.y"
+  case 230: /* tcp_option: FO opt_fastopen_cookie  */
+#line 1593 "parser.y"
                          {
     ByteVector cookie = hex_string_to_bytes((yyvsp[0].string));
     free((yyvsp[0].string));
@@ -4602,11 +4623,11 @@ yyreduce:
     (yyval.tcp_option)->setFastOpenCookie(cookie);
     (yyval.tcp_option)->setFastOpenExperimental(false);
 }
-#line 4606 "parser.cc"
+#line 4627 "parser.cc"
     break;
 
-  case 229: /* tcp_option: FOEXP opt_fastopen_cookie  */
-#line 1589 "parser.y"
+  case 231: /* tcp_option: FOEXP opt_fastopen_cookie  */
+#line 1603 "parser.y"
                             {
     ByteVector cookie = hex_string_to_bytes((yyvsp[0].string));
     free((yyvsp[0].string));
@@ -4617,140 +4638,140 @@ yyreduce:
     (yyval.tcp_option)->setFastOpenCookie(cookie);
     (yyval.tcp_option)->setFastOpenExperimental(true);
 }
-#line 4621 "parser.cc"
+#line 4642 "parser.cc"
     break;
 
-  case 230: /* tcp_option: accecn_option  */
-#line 1599 "parser.y"
+  case 232: /* tcp_option: accecn_option  */
+#line 1613 "parser.y"
                 {
     (yyval.tcp_option) = (yyvsp[0].tcp_option);
 }
-#line 4629 "parser.cc"
+#line 4650 "parser.cc"
     break;
 
-  case 231: /* opt_fastopen_cookie: %empty  */
-#line 1605 "parser.y"
+  case 233: /* opt_fastopen_cookie: %empty  */
+#line 1619 "parser.y"
   {
     (yyval.string) = strdup("");
 }
-#line 4637 "parser.cc"
+#line 4658 "parser.cc"
     break;
 
-  case 232: /* opt_fastopen_cookie: MYWORD  */
-#line 1608 "parser.y"
+  case 234: /* opt_fastopen_cookie: MYWORD  */
+#line 1622 "parser.y"
          {
     (yyval.string) = (yyvsp[0].string);
 }
-#line 4645 "parser.cc"
+#line 4666 "parser.cc"
     break;
 
-  case 233: /* accecn_val: INTEGER  */
-#line 1621 "parser.y"
+  case 235: /* accecn_val: INTEGER  */
+#line 1635 "parser.y"
           {
     if (!is_valid_u24((yyvsp[0].integer))) {
         semantic_error("AccECN field value out of range (must fit in 24 bits)");
     }
     (yyval.sequence_number) = (yyvsp[0].integer);
 }
-#line 4656 "parser.cc"
+#line 4677 "parser.cc"
     break;
 
-  case 234: /* accecn_option: ACCECN ACCECN_E0B accecn_val  */
-#line 1630 "parser.y"
+  case 236: /* accecn_option: ACCECN ACCECN_E0B accecn_val  */
+#line 1644 "parser.y"
                                {
     (yyval.tcp_option) = new PacketDrillTcpOption(TCPOPT_ACCECN0, TCPOLEN_ACCECN_BASE + 3);
     (yyval.tcp_option)->setAccEcnFields(ACCECN_PRESENT_E0B, (yyvsp[0].sequence_number), 0, 0);
 }
-#line 4665 "parser.cc"
+#line 4686 "parser.cc"
     break;
 
-  case 235: /* accecn_option: ACCECN ACCECN_E0B accecn_val ACCECN_CEB accecn_val  */
-#line 1634 "parser.y"
+  case 237: /* accecn_option: ACCECN ACCECN_E0B accecn_val ACCECN_CEB accecn_val  */
+#line 1648 "parser.y"
                                                      {
     (yyval.tcp_option) = new PacketDrillTcpOption(TCPOPT_ACCECN0, TCPOLEN_ACCECN_BASE + 6);
     (yyval.tcp_option)->setAccEcnFields(ACCECN_PRESENT_E0B | ACCECN_PRESENT_CEB, (yyvsp[-2].sequence_number), 0, (yyvsp[0].sequence_number));
 }
-#line 4674 "parser.cc"
+#line 4695 "parser.cc"
     break;
 
-  case 236: /* accecn_option: ACCECN ACCECN_E0B accecn_val ACCECN_CEB accecn_val ACCECN_E1B accecn_val  */
-#line 1638 "parser.y"
+  case 238: /* accecn_option: ACCECN ACCECN_E0B accecn_val ACCECN_CEB accecn_val ACCECN_E1B accecn_val  */
+#line 1652 "parser.y"
                                                                            {
     (yyval.tcp_option) = new PacketDrillTcpOption(TCPOPT_ACCECN0, TCPOLEN_ACCECN_BASE + 9);
     (yyval.tcp_option)->setAccEcnFields(ACCECN_PRESENT_E0B | ACCECN_PRESENT_CEB | ACCECN_PRESENT_E1B, (yyvsp[-4].sequence_number), (yyvsp[0].sequence_number), (yyvsp[-2].sequence_number));
 }
-#line 4683 "parser.cc"
+#line 4704 "parser.cc"
     break;
 
-  case 237: /* accecn_option: ACCECN ACCECN_E1B accecn_val  */
-#line 1642 "parser.y"
+  case 239: /* accecn_option: ACCECN ACCECN_E1B accecn_val  */
+#line 1656 "parser.y"
                                {
     (yyval.tcp_option) = new PacketDrillTcpOption(TCPOPT_ACCECN1, TCPOLEN_ACCECN_BASE + 3);
     (yyval.tcp_option)->setAccEcnFields(ACCECN_PRESENT_E1B, 0, (yyvsp[0].sequence_number), 0);
 }
-#line 4692 "parser.cc"
+#line 4713 "parser.cc"
     break;
 
-  case 238: /* accecn_option: ACCECN ACCECN_E1B accecn_val ACCECN_CEB accecn_val  */
-#line 1646 "parser.y"
+  case 240: /* accecn_option: ACCECN ACCECN_E1B accecn_val ACCECN_CEB accecn_val  */
+#line 1660 "parser.y"
                                                      {
     (yyval.tcp_option) = new PacketDrillTcpOption(TCPOPT_ACCECN1, TCPOLEN_ACCECN_BASE + 6);
     (yyval.tcp_option)->setAccEcnFields(ACCECN_PRESENT_E1B | ACCECN_PRESENT_CEB, 0, (yyvsp[-2].sequence_number), (yyvsp[0].sequence_number));
 }
-#line 4701 "parser.cc"
+#line 4722 "parser.cc"
     break;
 
-  case 239: /* accecn_option: ACCECN ACCECN_E1B accecn_val ACCECN_CEB accecn_val ACCECN_E0B accecn_val  */
-#line 1650 "parser.y"
+  case 241: /* accecn_option: ACCECN ACCECN_E1B accecn_val ACCECN_CEB accecn_val ACCECN_E0B accecn_val  */
+#line 1664 "parser.y"
                                                                            {
     (yyval.tcp_option) = new PacketDrillTcpOption(TCPOPT_ACCECN1, TCPOLEN_ACCECN_BASE + 9);
     (yyval.tcp_option)->setAccEcnFields(ACCECN_PRESENT_E1B | ACCECN_PRESENT_CEB | ACCECN_PRESENT_E0B, (yyvsp[0].sequence_number), (yyvsp[-4].sequence_number), (yyvsp[-2].sequence_number));
 }
-#line 4710 "parser.cc"
+#line 4731 "parser.cc"
     break;
 
-  case 240: /* sack_block_list: sack_block  */
-#line 1657 "parser.y"
+  case 242: /* sack_block_list: sack_block  */
+#line 1671 "parser.y"
              {
     (yyval.sack_block_list) = new cQueue("sack_block_list");
     (yyval.sack_block_list)->insert((yyvsp[0].sack_block));
 }
-#line 4719 "parser.cc"
+#line 4740 "parser.cc"
     break;
 
-  case 241: /* sack_block_list: sack_block_list sack_block  */
-#line 1661 "parser.y"
+  case 243: /* sack_block_list: sack_block_list sack_block  */
+#line 1675 "parser.y"
                              {
     (yyval.sack_block_list) = (yyvsp[-1].sack_block_list); (yyval.sack_block_list)->insert((yyvsp[0].sack_block));
 }
-#line 4727 "parser.cc"
+#line 4748 "parser.cc"
     break;
 
-  case 242: /* gap_list: %empty  */
-#line 1667 "parser.y"
+  case 244: /* gap_list: %empty  */
+#line 1681 "parser.y"
              { (yyval.sack_block_list) = new cQueue("gap_list");}
-#line 4733 "parser.cc"
+#line 4754 "parser.cc"
     break;
 
-  case 243: /* gap_list: gap  */
-#line 1668 "parser.y"
+  case 245: /* gap_list: gap  */
+#line 1682 "parser.y"
        {
     (yyval.sack_block_list) = new cQueue("gap_list");
     (yyval.sack_block_list)->insert((yyvsp[0].sack_block));
 }
-#line 4742 "parser.cc"
+#line 4763 "parser.cc"
     break;
 
-  case 244: /* gap_list: gap_list ',' gap  */
-#line 1672 "parser.y"
+  case 246: /* gap_list: gap_list ',' gap  */
+#line 1686 "parser.y"
                    {
     (yyval.sack_block_list) = (yyvsp[-2].sack_block_list); (yyval.sack_block_list)->insert((yyvsp[0].sack_block));
 }
-#line 4750 "parser.cc"
+#line 4771 "parser.cc"
     break;
 
-  case 245: /* gap: INTEGER ':' INTEGER  */
-#line 1678 "parser.y"
+  case 247: /* gap: INTEGER ':' INTEGER  */
+#line 1692 "parser.y"
                       {
     if (!is_valid_u16((yyvsp[-2].integer))) {
         semantic_error("start value out of range");
@@ -4760,34 +4781,34 @@ yyreduce:
     }
     (yyval.sack_block) = new PacketDrillStruct((yyvsp[-2].integer), (yyvsp[0].integer));
 }
-#line 4764 "parser.cc"
+#line 4785 "parser.cc"
     break;
 
-  case 246: /* dup_list: %empty  */
-#line 1690 "parser.y"
+  case 248: /* dup_list: %empty  */
+#line 1704 "parser.y"
              { (yyval.sack_block_list) = new cQueue("dup_list");}
-#line 4770 "parser.cc"
+#line 4791 "parser.cc"
     break;
 
-  case 247: /* dup_list: dup  */
-#line 1691 "parser.y"
+  case 249: /* dup_list: dup  */
+#line 1705 "parser.y"
        {
     (yyval.sack_block_list) = new cQueue("dup_list");
     (yyval.sack_block_list)->insert((yyvsp[0].sack_block));
 }
-#line 4779 "parser.cc"
+#line 4800 "parser.cc"
     break;
 
-  case 248: /* dup_list: dup_list ',' dup  */
-#line 1695 "parser.y"
+  case 250: /* dup_list: dup_list ',' dup  */
+#line 1709 "parser.y"
                    {
     (yyval.sack_block_list) = (yyvsp[-2].sack_block_list); (yyval.sack_block_list)->insert((yyvsp[0].sack_block));
 }
-#line 4787 "parser.cc"
+#line 4808 "parser.cc"
     break;
 
-  case 249: /* dup: INTEGER ':' INTEGER  */
-#line 1701 "parser.y"
+  case 251: /* dup: INTEGER ':' INTEGER  */
+#line 1715 "parser.y"
                       {
     if (!is_valid_u16((yyvsp[-2].integer))) {
         semantic_error("start value out of range");
@@ -4797,11 +4818,11 @@ yyreduce:
     }
     (yyval.sack_block) = new PacketDrillStruct((yyvsp[-2].integer), (yyvsp[0].integer));
 }
-#line 4801 "parser.cc"
+#line 4822 "parser.cc"
     break;
 
-  case 250: /* sack_block: INTEGER ':' INTEGER  */
-#line 1713 "parser.y"
+  case 252: /* sack_block: INTEGER ':' INTEGER  */
+#line 1727 "parser.y"
                       {
     if (!is_valid_u32((yyvsp[-2].integer))) {
         semantic_error("TCP SACK left sequence number out of range\n");
@@ -4812,11 +4833,11 @@ yyreduce:
     PacketDrillStruct *block = new PacketDrillStruct((yyvsp[-2].integer), (yyvsp[0].integer));
     (yyval.sack_block) = block;
 }
-#line 4816 "parser.cc"
+#line 4837 "parser.cc"
     break;
 
-  case 251: /* syscall_spec: opt_end_time function_name function_arguments '=' expression opt_errno opt_note  */
-#line 1726 "parser.y"
+  case 253: /* syscall_spec: opt_end_time function_name function_arguments '=' expression opt_errno opt_note  */
+#line 1740 "parser.y"
                                                                                   {
     (yyval.syscall) = (struct syscall_spec *)calloc(1, sizeof(struct syscall_spec));
     (yyval.syscall)->end_usecs = (yyvsp[-6].time_usecs);
@@ -4826,315 +4847,315 @@ yyreduce:
     (yyval.syscall)->error = (yyvsp[-1].errno_info);
     (yyval.syscall)->note = (yyvsp[0].string);
 }
-#line 4830 "parser.cc"
+#line 4851 "parser.cc"
     break;
 
-  case 252: /* opt_end_time: %empty  */
-#line 1738 "parser.y"
+  case 254: /* opt_end_time: %empty  */
+#line 1752 "parser.y"
   {
     (yyval.time_usecs) = -1;
 }
-#line 4838 "parser.cc"
+#line 4859 "parser.cc"
     break;
 
-  case 253: /* opt_end_time: ELLIPSIS time  */
-#line 1741 "parser.y"
+  case 255: /* opt_end_time: ELLIPSIS time  */
+#line 1755 "parser.y"
                 {
     (yyval.time_usecs) = (yyvsp[0].time_usecs);
 }
-#line 4846 "parser.cc"
+#line 4867 "parser.cc"
     break;
 
-  case 254: /* function_name: MYWORD  */
-#line 1747 "parser.y"
+  case 256: /* function_name: MYWORD  */
+#line 1761 "parser.y"
          {
     (yyval.string) = (yyvsp[0].string);
     current_script_line = yylineno;
 }
-#line 4855 "parser.cc"
+#line 4876 "parser.cc"
     break;
 
-  case 255: /* function_arguments: '(' ')'  */
-#line 1754 "parser.y"
+  case 257: /* function_arguments: '(' ')'  */
+#line 1768 "parser.y"
           {
     (yyval.expression_list) = NULL;
 }
-#line 4863 "parser.cc"
+#line 4884 "parser.cc"
     break;
 
-  case 256: /* function_arguments: '(' expression_list ')'  */
-#line 1757 "parser.y"
+  case 258: /* function_arguments: '(' expression_list ')'  */
+#line 1771 "parser.y"
                           {
     (yyval.expression_list) = (yyvsp[-1].expression_list);
 }
-#line 4871 "parser.cc"
+#line 4892 "parser.cc"
     break;
 
-  case 257: /* expression_list: expression  */
-#line 1763 "parser.y"
+  case 259: /* expression_list: expression  */
+#line 1777 "parser.y"
              {
     (yyval.expression_list) = new cQueue("new_expressionList");
     (yyval.expression_list)->insert((cObject*)(yyvsp[0].expression));
 }
-#line 4880 "parser.cc"
+#line 4901 "parser.cc"
     break;
 
-  case 258: /* expression_list: expression_list ',' expression  */
-#line 1767 "parser.y"
+  case 260: /* expression_list: expression_list ',' expression  */
+#line 1781 "parser.y"
                                  {
     (yyval.expression_list) = (yyvsp[-2].expression_list);
     (yyval.expression_list)->insert((yyvsp[0].expression));
 }
-#line 4889 "parser.cc"
+#line 4910 "parser.cc"
     break;
 
-  case 259: /* expression: ELLIPSIS  */
-#line 1774 "parser.y"
+  case 261: /* expression: ELLIPSIS  */
+#line 1788 "parser.y"
            {
     (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS);
 }
-#line 4897 "parser.cc"
+#line 4918 "parser.cc"
     break;
 
-  case 260: /* expression: decimal_integer  */
-#line 1777 "parser.y"
+  case 262: /* expression: decimal_integer  */
+#line 1791 "parser.y"
                   {
     (yyval.expression) = (yyvsp[0].expression); }
-#line 4904 "parser.cc"
+#line 4925 "parser.cc"
     break;
 
-  case 261: /* expression: hex_integer  */
-#line 1779 "parser.y"
+  case 263: /* expression: hex_integer  */
+#line 1793 "parser.y"
               {
     (yyval.expression) = (yyvsp[0].expression);
 }
-#line 4912 "parser.cc"
+#line 4933 "parser.cc"
     break;
 
-  case 262: /* expression: _HTONL_ '(' INTEGER ')'  */
-#line 1782 "parser.y"
+  case 264: /* expression: _HTONL_ '(' INTEGER ')'  */
+#line 1796 "parser.y"
                           {
     if (!is_valid_u32((yyvsp[-1].integer))) {
         semantic_error("number out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[-1].integer), "%lu");
 }
-#line 4923 "parser.cc"
+#line 4944 "parser.cc"
     break;
 
-  case 263: /* expression: _HTONL_ '(' HEX_INTEGER ')'  */
-#line 1788 "parser.y"
+  case 265: /* expression: _HTONL_ '(' HEX_INTEGER ')'  */
+#line 1802 "parser.y"
                               {
     if (!is_valid_u32((yyvsp[-1].integer))) {
         semantic_error("number out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[-1].integer), "%lu");
 }
-#line 4934 "parser.cc"
+#line 4955 "parser.cc"
     break;
 
-  case 264: /* expression: _HTONS_ '(' INTEGER ')'  */
-#line 1794 "parser.y"
+  case 266: /* expression: _HTONS_ '(' INTEGER ')'  */
+#line 1808 "parser.y"
                           {
     if (!is_valid_u16((yyvsp[-1].integer))) {
         semantic_error("number out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[-1].integer), "%lu");
 }
-#line 4945 "parser.cc"
+#line 4966 "parser.cc"
     break;
 
-  case 265: /* expression: MYWORD  */
-#line 1800 "parser.y"
+  case 267: /* expression: MYWORD  */
+#line 1814 "parser.y"
          {
     (yyval.expression) = new PacketDrillExpression(EXPR_WORD);
     (yyval.expression)->setString((yyvsp[0].string));
 }
-#line 4954 "parser.cc"
+#line 4975 "parser.cc"
     break;
 
-  case 266: /* expression: MYSTRING  */
-#line 1804 "parser.y"
+  case 268: /* expression: MYSTRING  */
+#line 1818 "parser.y"
            {
     (yyval.expression) = new PacketDrillExpression(EXPR_STRING);
     (yyval.expression)->setString((yyvsp[0].string));
     (yyval.expression)->setFormat("\"%s\"");
 }
-#line 4964 "parser.cc"
+#line 4985 "parser.cc"
     break;
 
-  case 267: /* expression: MYSTRING ELLIPSIS  */
-#line 1809 "parser.y"
+  case 269: /* expression: MYSTRING ELLIPSIS  */
+#line 1823 "parser.y"
                     {
     (yyval.expression) = new PacketDrillExpression(EXPR_STRING);
     (yyval.expression)->setString((yyvsp[-1].string));
     (yyval.expression)->setFormat("\"%s\"...");
 }
-#line 4974 "parser.cc"
+#line 4995 "parser.cc"
     break;
 
-  case 268: /* expression: binary_expression  */
-#line 1814 "parser.y"
+  case 270: /* expression: binary_expression  */
+#line 1828 "parser.y"
                     {
     (yyval.expression) = (yyvsp[0].expression);
 }
-#line 4982 "parser.cc"
+#line 5003 "parser.cc"
     break;
 
-  case 269: /* expression: sockaddr  */
-#line 1817 "parser.y"
+  case 271: /* expression: sockaddr  */
+#line 1831 "parser.y"
                     {
     (yyval.expression) = (yyvsp[0].expression);
 }
-#line 4990 "parser.cc"
+#line 5011 "parser.cc"
     break;
 
-  case 270: /* expression: array  */
-#line 1820 "parser.y"
+  case 272: /* expression: array  */
+#line 1834 "parser.y"
         {
     (yyval.expression) = (yyvsp[0].expression);
 }
-#line 4998 "parser.cc"
+#line 5019 "parser.cc"
     break;
 
-  case 271: /* expression: sctp_initmsg  */
-#line 1823 "parser.y"
+  case 273: /* expression: sctp_initmsg  */
+#line 1837 "parser.y"
                     {
     (yyval.expression) = (yyvsp[0].expression);
 }
-#line 5006 "parser.cc"
+#line 5027 "parser.cc"
     break;
 
-  case 272: /* expression: sctp_assoc_value  */
-#line 1826 "parser.y"
+  case 274: /* expression: sctp_assoc_value  */
+#line 1840 "parser.y"
                     {
     (yyval.expression) = (yyvsp[0].expression);
 }
-#line 5014 "parser.cc"
+#line 5035 "parser.cc"
     break;
 
-  case 273: /* expression: sctp_rtoinfo  */
-#line 1829 "parser.y"
+  case 275: /* expression: sctp_rtoinfo  */
+#line 1843 "parser.y"
                     {
     (yyval.expression) = (yyvsp[0].expression);
 }
-#line 5022 "parser.cc"
+#line 5043 "parser.cc"
     break;
 
-  case 274: /* expression: sctp_sackinfo  */
-#line 1832 "parser.y"
+  case 276: /* expression: sctp_sackinfo  */
+#line 1846 "parser.y"
                     {
     (yyval.expression) = (yyvsp[0].expression);
 }
-#line 5030 "parser.cc"
+#line 5051 "parser.cc"
     break;
 
-  case 275: /* expression: sctp_status  */
-#line 1835 "parser.y"
+  case 277: /* expression: sctp_status  */
+#line 1849 "parser.y"
                     {
     (yyval.expression) = (yyvsp[0].expression);
 }
-#line 5038 "parser.cc"
+#line 5059 "parser.cc"
     break;
 
-  case 276: /* expression: sctp_paddrparams  */
-#line 1838 "parser.y"
+  case 278: /* expression: sctp_paddrparams  */
+#line 1852 "parser.y"
                     {
     (yyval.expression) = (yyvsp[0].expression);
 }
-#line 5046 "parser.cc"
+#line 5067 "parser.cc"
     break;
 
-  case 277: /* expression: sctp_assocparams  */
-#line 1841 "parser.y"
+  case 279: /* expression: sctp_assocparams  */
+#line 1855 "parser.y"
                     {
     (yyval.expression) = (yyvsp[0].expression);
 }
-#line 5054 "parser.cc"
+#line 5075 "parser.cc"
     break;
 
-  case 278: /* expression: sctp_sndrcvinfo  */
-#line 1844 "parser.y"
+  case 280: /* expression: sctp_sndrcvinfo  */
+#line 1858 "parser.y"
                     {
     (yyval.expression) = (yyvsp[0].expression);
 }
-#line 5062 "parser.cc"
+#line 5083 "parser.cc"
     break;
 
-  case 279: /* expression: sctp_reset_streams  */
-#line 1847 "parser.y"
+  case 281: /* expression: sctp_reset_streams  */
+#line 1861 "parser.y"
                     {
     (yyval.expression) = (yyvsp[0].expression);
 }
-#line 5070 "parser.cc"
+#line 5091 "parser.cc"
     break;
 
-  case 280: /* expression: sctp_add_streams  */
-#line 1850 "parser.y"
+  case 282: /* expression: sctp_add_streams  */
+#line 1864 "parser.y"
                     {
     (yyval.expression) = (yyvsp[0].expression);
 }
-#line 5078 "parser.cc"
+#line 5099 "parser.cc"
     break;
 
-  case 281: /* expression: msghdr  */
-#line 1853 "parser.y"
+  case 283: /* expression: msghdr  */
+#line 1867 "parser.y"
                     {
     (yyval.expression) = (yyvsp[0].expression);
 }
-#line 5086 "parser.cc"
+#line 5107 "parser.cc"
     break;
 
-  case 282: /* expression: epollev  */
-#line 1856 "parser.y"
+  case 284: /* expression: epollev  */
+#line 1870 "parser.y"
                     {
     (yyval.expression) = (yyvsp[0].expression);
 }
-#line 5094 "parser.cc"
+#line 5115 "parser.cc"
     break;
 
-  case 283: /* expression: cmsg_expr  */
-#line 1859 "parser.y"
-                    {
-    (yyval.expression) = (yyvsp[0].expression);
-}
-#line 5102 "parser.cc"
-    break;
-
-  case 284: /* expression: iovec  */
-#line 1862 "parser.y"
-                    {
-    (yyval.expression) = (yyvsp[0].expression);
-}
-#line 5110 "parser.cc"
-    break;
-
-  case 285: /* expression: sock_extended_err  */
-#line 1865 "parser.y"
-                    {
-    (yyval.expression) = (yyvsp[0].expression);
-}
-#line 5118 "parser.cc"
-    break;
-
-  case 286: /* decimal_integer: INTEGER  */
+  case 285: /* expression: cmsg_expr  */
 #line 1873 "parser.y"
+                    {
+    (yyval.expression) = (yyvsp[0].expression);
+}
+#line 5123 "parser.cc"
+    break;
+
+  case 286: /* expression: iovec  */
+#line 1876 "parser.y"
+                    {
+    (yyval.expression) = (yyvsp[0].expression);
+}
+#line 5131 "parser.cc"
+    break;
+
+  case 287: /* expression: sock_extended_err  */
+#line 1879 "parser.y"
+                    {
+    (yyval.expression) = (yyvsp[0].expression);
+}
+#line 5139 "parser.cc"
+    break;
+
+  case 288: /* decimal_integer: INTEGER  */
+#line 1887 "parser.y"
           {
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%ld");
 }
-#line 5126 "parser.cc"
+#line 5147 "parser.cc"
     break;
 
-  case 287: /* hex_integer: HEX_INTEGER  */
-#line 1879 "parser.y"
+  case 289: /* hex_integer: HEX_INTEGER  */
+#line 1893 "parser.y"
               {
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%#lx");
 }
-#line 5134 "parser.cc"
+#line 5155 "parser.cc"
     break;
 
-  case 288: /* binary_expression: expression '|' expression  */
-#line 1885 "parser.y"
+  case 290: /* binary_expression: expression '|' expression  */
+#line 1899 "parser.y"
                             {    /* bitwise OR */
     (yyval.expression) = new PacketDrillExpression(EXPR_BINARY);
     struct binary_expression *binary = (struct binary_expression *) malloc(sizeof(struct binary_expression));
@@ -5143,29 +5164,29 @@ yyreduce:
     binary->rhs = (yyvsp[0].expression);
     (yyval.expression)->setBinary(binary);
 }
-#line 5147 "parser.cc"
+#line 5168 "parser.cc"
     break;
 
-  case 289: /* array: '[' ']'  */
-#line 1896 "parser.y"
+  case 291: /* array: '[' ']'  */
+#line 1910 "parser.y"
           {
     (yyval.expression) = new PacketDrillExpression(EXPR_LIST);
     (yyval.expression)->setList(NULL);
 }
-#line 5156 "parser.cc"
+#line 5177 "parser.cc"
     break;
 
-  case 290: /* array: '[' expression_list ']'  */
-#line 1900 "parser.y"
+  case 292: /* array: '[' expression_list ']'  */
+#line 1914 "parser.y"
                           {
     (yyval.expression) = new PacketDrillExpression(EXPR_LIST);
     (yyval.expression)->setList((yyvsp[-1].expression_list));
 }
-#line 5165 "parser.cc"
+#line 5186 "parser.cc"
     break;
 
-  case 291: /* msghdr: '{' MSG_NAME '(' ELLIPSIS ')' '=' ELLIPSIS ',' MSG_IOV '(' decimal_integer ')' '=' array ',' MSG_FLAGS '=' expression opt_cmsg '}'  */
-#line 1910 "parser.y"
+  case 293: /* msghdr: '{' MSG_NAME '(' ELLIPSIS ')' '=' ELLIPSIS ',' MSG_IOV '(' decimal_integer ')' '=' array ',' MSG_FLAGS '=' expression opt_cmsg '}'  */
+#line 1924 "parser.y"
                    {
     (yyval.expression) = new PacketDrillExpression(EXPR_MSGHDR);
     struct msghdr_expr *msg_expr = (struct msghdr_expr *) malloc(sizeof(struct msghdr_expr));
@@ -5175,23 +5196,23 @@ yyreduce:
     msg_expr->msg_control = (yyvsp[-1].expression);
     (yyval.expression)->setMsghdr(msg_expr);
 }
-#line 5179 "parser.cc"
+#line 5200 "parser.cc"
     break;
 
-  case 292: /* opt_cmsg: %empty  */
-#line 1922 "parser.y"
+  case 294: /* opt_cmsg: %empty  */
+#line 1936 "parser.y"
                                 { (yyval.expression) = new PacketDrillExpression(EXPR_LIST); (yyval.expression)->setList(NULL); }
-#line 5185 "parser.cc"
+#line 5206 "parser.cc"
     break;
 
-  case 293: /* opt_cmsg: ',' MSG_CONTROL '=' array  */
-#line 1923 "parser.y"
+  case 295: /* opt_cmsg: ',' MSG_CONTROL '=' array  */
+#line 1937 "parser.y"
                                 { (yyval.expression) = (yyvsp[0].expression); }
-#line 5191 "parser.cc"
+#line 5212 "parser.cc"
     break;
 
-  case 294: /* cmsg_expr: '{' CMSG_LEVEL '=' expression ',' CMSG_TYPE '=' expression ',' CMSG_DATA '=' expression '}'  */
-#line 1929 "parser.y"
+  case 296: /* cmsg_expr: '{' CMSG_LEVEL '=' expression ',' CMSG_TYPE '=' expression ',' CMSG_DATA '=' expression '}'  */
+#line 1943 "parser.y"
                                    {
     (yyval.expression) = new PacketDrillExpression(EXPR_CMSG);
     struct cmsg_expr *cmsg = (struct cmsg_expr *) malloc(sizeof(struct cmsg_expr));
@@ -5200,11 +5221,11 @@ yyreduce:
     cmsg->cmsg_data = (yyvsp[-1].expression);
     (yyval.expression)->setCmsg(cmsg);
 }
-#line 5204 "parser.cc"
+#line 5225 "parser.cc"
     break;
 
-  case 295: /* sock_extended_err: '{' EE_ERRNO '=' expression ',' EE_ORIGIN '=' expression ',' EE_TYPE '=' expression ',' EE_CODE '=' expression ',' EE_INFO '=' expression ',' EE_DATA '=' expression '}'  */
-#line 1945 "parser.y"
+  case 297: /* sock_extended_err: '{' EE_ERRNO '=' expression ',' EE_ORIGIN '=' expression ',' EE_TYPE '=' expression ',' EE_CODE '=' expression ',' EE_INFO '=' expression ',' EE_DATA '=' expression '}'  */
+#line 1959 "parser.y"
                                  {
     (yyval.expression) = new PacketDrillExpression(EXPR_SOCK_EXTENDED_ERR);
     struct sock_extended_err_expr *ee = (struct sock_extended_err_expr *) malloc(sizeof(struct sock_extended_err_expr));
@@ -5216,136 +5237,136 @@ yyreduce:
     ee->ee_data = (yyvsp[-1].expression);
     (yyval.expression)->setSockExtendedErr(ee);
 }
-#line 5220 "parser.cc"
+#line 5241 "parser.cc"
     break;
 
-  case 296: /* iovec: '{' ELLIPSIS ',' decimal_integer '}'  */
-#line 1959 "parser.y"
+  case 298: /* iovec: '{' ELLIPSIS ',' decimal_integer '}'  */
+#line 1973 "parser.y"
                                        {
     (yyval.expression) = new PacketDrillExpression(EXPR_IOVEC);
     struct iovec_expr *iov = (struct iovec_expr *) malloc(sizeof(struct iovec_expr));
     iov->iov_len = (yyvsp[-1].expression);
     (yyval.expression)->setIovec(iov);
 }
-#line 5231 "parser.cc"
+#line 5252 "parser.cc"
     break;
 
-  case 297: /* epollev: '{' EVENTS '=' expression ',' FD '=' expression '}'  */
-#line 1968 "parser.y"
+  case 299: /* epollev: '{' EVENTS '=' expression ',' FD '=' expression '}'  */
+#line 1982 "parser.y"
                                                       {
     (yyval.expression) = new PacketDrillExpression(EXPR_EPOLLEV);
     struct epollev_expr *ev = (struct epollev_expr *) malloc(sizeof(struct epollev_expr));
     ev->events = (yyvsp[-5].expression); ev->fd = (yyvsp[-1].expression); ev->ptr = NULL; ev->u32 = NULL; ev->u64 = NULL;
     (yyval.expression)->setEpollev(ev);
 }
-#line 5242 "parser.cc"
+#line 5263 "parser.cc"
     break;
 
-  case 298: /* epollev: '{' EVENTS '=' expression ',' PTR '=' expression '}'  */
-#line 1974 "parser.y"
+  case 300: /* epollev: '{' EVENTS '=' expression ',' PTR '=' expression '}'  */
+#line 1988 "parser.y"
                                                        {
     (yyval.expression) = new PacketDrillExpression(EXPR_EPOLLEV);
     struct epollev_expr *ev = (struct epollev_expr *) malloc(sizeof(struct epollev_expr));
     ev->events = (yyvsp[-5].expression); ev->fd = NULL; ev->ptr = (yyvsp[-1].expression); ev->u32 = NULL; ev->u64 = NULL;
     (yyval.expression)->setEpollev(ev);
 }
-#line 5253 "parser.cc"
+#line 5274 "parser.cc"
     break;
 
-  case 299: /* epollev: '{' EVENTS '=' expression ',' U32 '=' expression '}'  */
-#line 1980 "parser.y"
+  case 301: /* epollev: '{' EVENTS '=' expression ',' U32 '=' expression '}'  */
+#line 1994 "parser.y"
                                                        {
     (yyval.expression) = new PacketDrillExpression(EXPR_EPOLLEV);
     struct epollev_expr *ev = (struct epollev_expr *) malloc(sizeof(struct epollev_expr));
     ev->events = (yyvsp[-5].expression); ev->fd = NULL; ev->ptr = NULL; ev->u32 = (yyvsp[-1].expression); ev->u64 = NULL;
     (yyval.expression)->setEpollev(ev);
 }
-#line 5264 "parser.cc"
+#line 5285 "parser.cc"
     break;
 
-  case 300: /* epollev: '{' EVENTS '=' expression ',' U64 '=' expression '}'  */
-#line 1986 "parser.y"
+  case 302: /* epollev: '{' EVENTS '=' expression ',' U64 '=' expression '}'  */
+#line 2000 "parser.y"
                                                        {
     (yyval.expression) = new PacketDrillExpression(EXPR_EPOLLEV);
     struct epollev_expr *ev = (struct epollev_expr *) malloc(sizeof(struct epollev_expr));
     ev->events = (yyvsp[-5].expression); ev->fd = NULL; ev->ptr = NULL; ev->u32 = NULL; ev->u64 = (yyvsp[-1].expression);
     (yyval.expression)->setEpollev(ev);
 }
-#line 5275 "parser.cc"
+#line 5296 "parser.cc"
     break;
 
-  case 301: /* srto_initial: SRTO_INITIAL '=' INTEGER  */
-#line 1995 "parser.y"
+  case 303: /* srto_initial: SRTO_INITIAL '=' INTEGER  */
+#line 2009 "parser.y"
                            {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("srto_initial out of range\n");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
 }
-#line 5286 "parser.cc"
+#line 5307 "parser.cc"
     break;
 
-  case 302: /* srto_initial: SRTO_INITIAL '=' ELLIPSIS  */
-#line 2001 "parser.y"
+  case 304: /* srto_initial: SRTO_INITIAL '=' ELLIPSIS  */
+#line 2015 "parser.y"
                             {
     (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS);
 }
-#line 5294 "parser.cc"
+#line 5315 "parser.cc"
     break;
 
-  case 303: /* srto_max: SRTO_MAX '=' INTEGER  */
-#line 2007 "parser.y"
-                       {
-    (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
-}
-#line 5302 "parser.cc"
-    break;
-
-  case 304: /* srto_max: SRTO_MAX '=' ELLIPSIS  */
-#line 2010 "parser.y"
-                        { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5308 "parser.cc"
-    break;
-
-  case 305: /* srto_min: SRTO_MIN '=' INTEGER  */
-#line 2014 "parser.y"
-                       {
-    (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
-}
-#line 5316 "parser.cc"
-    break;
-
-  case 306: /* srto_min: SRTO_MIN '=' ELLIPSIS  */
-#line 2017 "parser.y"
-                        { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5322 "parser.cc"
-    break;
-
-  case 307: /* sctp_assoc_id: INTEGER  */
+  case 305: /* srto_max: SRTO_MAX '=' INTEGER  */
 #line 2021 "parser.y"
+                       {
+    (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
+}
+#line 5323 "parser.cc"
+    break;
+
+  case 306: /* srto_max: SRTO_MAX '=' ELLIPSIS  */
+#line 2024 "parser.y"
+                        { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
+#line 5329 "parser.cc"
+    break;
+
+  case 307: /* srto_min: SRTO_MIN '=' INTEGER  */
+#line 2028 "parser.y"
+                       {
+    (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
+}
+#line 5337 "parser.cc"
+    break;
+
+  case 308: /* srto_min: SRTO_MIN '=' ELLIPSIS  */
+#line 2031 "parser.y"
+                        { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
+#line 5343 "parser.cc"
+    break;
+
+  case 309: /* sctp_assoc_id: INTEGER  */
+#line 2035 "parser.y"
           {
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
 }
-#line 5330 "parser.cc"
+#line 5351 "parser.cc"
     break;
 
-  case 308: /* sctp_assoc_id: MYWORD  */
-#line 2024 "parser.y"
+  case 310: /* sctp_assoc_id: MYWORD  */
+#line 2038 "parser.y"
          {
     (yyval.expression) = new PacketDrillExpression(EXPR_WORD);
     (yyval.expression)->setString((yyvsp[0].string));
 }
-#line 5339 "parser.cc"
+#line 5360 "parser.cc"
     break;
 
-  case 309: /* sctp_assoc_id: ELLIPSIS  */
-#line 2028 "parser.y"
+  case 311: /* sctp_assoc_id: ELLIPSIS  */
+#line 2042 "parser.y"
            { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5345 "parser.cc"
+#line 5366 "parser.cc"
     break;
 
-  case 310: /* sctp_rtoinfo: '{' SRTO_ASSOC_ID '=' sctp_assoc_id ',' srto_initial ',' srto_max ',' srto_min '}'  */
-#line 2032 "parser.y"
+  case 312: /* sctp_rtoinfo: '{' SRTO_ASSOC_ID '=' sctp_assoc_id ',' srto_initial ',' srto_max ',' srto_min '}'  */
+#line 2046 "parser.y"
                                                                                      {
     (yyval.expression) = new PacketDrillExpression(EXPR_SCTP_RTOINFO);
     struct sctp_rtoinfo_expr *rtoinfo = (struct sctp_rtoinfo_expr *) malloc(sizeof(struct sctp_rtoinfo_expr));
@@ -5355,11 +5376,11 @@ yyreduce:
     rtoinfo->srto_min = (yyvsp[-1].expression);
     (yyval.expression)->setRtoinfo(rtoinfo);
 }
-#line 5359 "parser.cc"
+#line 5380 "parser.cc"
     break;
 
-  case 311: /* sctp_rtoinfo: '{' srto_initial ',' srto_max ',' srto_min '}'  */
-#line 2041 "parser.y"
+  case 313: /* sctp_rtoinfo: '{' srto_initial ',' srto_max ',' srto_min '}'  */
+#line 2055 "parser.y"
                                                  {
     (yyval.expression) = new PacketDrillExpression(EXPR_SCTP_RTOINFO);
     struct sctp_rtoinfo_expr *rtoinfo = (struct sctp_rtoinfo_expr *) malloc(sizeof(struct sctp_rtoinfo_expr));
@@ -5369,96 +5390,96 @@ yyreduce:
     rtoinfo->srto_min = (yyvsp[-1].expression);
     (yyval.expression)->setRtoinfo(rtoinfo);
 }
-#line 5373 "parser.cc"
+#line 5394 "parser.cc"
     break;
 
-  case 312: /* sasoc_asocmaxrxt: SASOC_ASOCMAXRXT '=' INTEGER  */
-#line 2053 "parser.y"
+  case 314: /* sasoc_asocmaxrxt: SASOC_ASOCMAXRXT '=' INTEGER  */
+#line 2067 "parser.y"
                                {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("sasoc_asocmaxrxt out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%hu");
 }
-#line 5384 "parser.cc"
+#line 5405 "parser.cc"
     break;
 
-  case 313: /* sasoc_asocmaxrxt: SASOC_ASOCMAXRXT '=' ELLIPSIS  */
-#line 2059 "parser.y"
+  case 315: /* sasoc_asocmaxrxt: SASOC_ASOCMAXRXT '=' ELLIPSIS  */
+#line 2073 "parser.y"
                                 { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5390 "parser.cc"
+#line 5411 "parser.cc"
     break;
 
-  case 314: /* sasoc_number_peer_destinations: SASOC_NUMBER_PEER_DESTINATIONS '=' INTEGER  */
-#line 2063 "parser.y"
+  case 316: /* sasoc_number_peer_destinations: SASOC_NUMBER_PEER_DESTINATIONS '=' INTEGER  */
+#line 2077 "parser.y"
                                              {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("sasoc_number_peer_destinations out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%hu");
 }
-#line 5401 "parser.cc"
+#line 5422 "parser.cc"
     break;
 
-  case 315: /* sasoc_number_peer_destinations: SASOC_NUMBER_PEER_DESTINATIONS '=' ELLIPSIS  */
-#line 2069 "parser.y"
+  case 317: /* sasoc_number_peer_destinations: SASOC_NUMBER_PEER_DESTINATIONS '=' ELLIPSIS  */
+#line 2083 "parser.y"
                                               { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5407 "parser.cc"
+#line 5428 "parser.cc"
     break;
 
-  case 316: /* sasoc_peer_rwnd: SASOC_PEER_RWND '=' INTEGER  */
-#line 2073 "parser.y"
+  case 318: /* sasoc_peer_rwnd: SASOC_PEER_RWND '=' INTEGER  */
+#line 2087 "parser.y"
                               {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("sasoc_peer_rwnd out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
 }
-#line 5418 "parser.cc"
+#line 5439 "parser.cc"
     break;
 
-  case 317: /* sasoc_peer_rwnd: SASOC_PEER_RWND '=' ELLIPSIS  */
-#line 2079 "parser.y"
+  case 319: /* sasoc_peer_rwnd: SASOC_PEER_RWND '=' ELLIPSIS  */
+#line 2093 "parser.y"
                                { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5424 "parser.cc"
+#line 5445 "parser.cc"
     break;
 
-  case 318: /* sasoc_local_rwnd: SASOC_LOCAL_RWND '=' INTEGER  */
-#line 2083 "parser.y"
+  case 320: /* sasoc_local_rwnd: SASOC_LOCAL_RWND '=' INTEGER  */
+#line 2097 "parser.y"
                                {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("sasoc_local_rwnd out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
 }
-#line 5435 "parser.cc"
+#line 5456 "parser.cc"
     break;
 
-  case 319: /* sasoc_local_rwnd: SASOC_LOCAL_RWND '=' ELLIPSIS  */
-#line 2089 "parser.y"
+  case 321: /* sasoc_local_rwnd: SASOC_LOCAL_RWND '=' ELLIPSIS  */
+#line 2103 "parser.y"
                                 { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5441 "parser.cc"
+#line 5462 "parser.cc"
     break;
 
-  case 320: /* sasoc_cookie_life: SASOC_COOKIE_LIFE '=' INTEGER  */
-#line 2093 "parser.y"
+  case 322: /* sasoc_cookie_life: SASOC_COOKIE_LIFE '=' INTEGER  */
+#line 2107 "parser.y"
                                 {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("sasoc_cookie_life out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
 }
-#line 5452 "parser.cc"
+#line 5473 "parser.cc"
     break;
 
-  case 321: /* sasoc_cookie_life: SASOC_COOKIE_LIFE '=' ELLIPSIS  */
-#line 2099 "parser.y"
+  case 323: /* sasoc_cookie_life: SASOC_COOKIE_LIFE '=' ELLIPSIS  */
+#line 2113 "parser.y"
                                  { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5458 "parser.cc"
+#line 5479 "parser.cc"
     break;
 
-  case 322: /* sctp_assocparams: '{' SASOC_ASSOC_ID '=' sctp_assoc_id ',' sasoc_asocmaxrxt ',' sasoc_number_peer_destinations ',' sasoc_peer_rwnd ',' sasoc_local_rwnd ',' sasoc_cookie_life '}'  */
-#line 2104 "parser.y"
+  case 324: /* sctp_assocparams: '{' SASOC_ASSOC_ID '=' sctp_assoc_id ',' sasoc_asocmaxrxt ',' sasoc_number_peer_destinations ',' sasoc_peer_rwnd ',' sasoc_local_rwnd ',' sasoc_cookie_life '}'  */
+#line 2118 "parser.y"
                                                                      {
     (yyval.expression) = new PacketDrillExpression(EXPR_SCTP_ASSOCPARAMS);
     struct sctp_assocparams_expr *assocparams = (struct sctp_assocparams_expr *) malloc(sizeof(struct sctp_assocparams_expr));
@@ -5470,11 +5491,11 @@ yyreduce:
     assocparams->sasoc_cookie_life = (yyvsp[-1].expression);
     (yyval.expression)->setAssocParams(assocparams);
 }
-#line 5474 "parser.cc"
+#line 5495 "parser.cc"
     break;
 
-  case 323: /* sctp_assocparams: '{' sasoc_asocmaxrxt ',' sasoc_number_peer_destinations ',' sasoc_peer_rwnd ',' sasoc_local_rwnd ',' sasoc_cookie_life '}'  */
-#line 2116 "parser.y"
+  case 325: /* sctp_assocparams: '{' sasoc_asocmaxrxt ',' sasoc_number_peer_destinations ',' sasoc_peer_rwnd ',' sasoc_local_rwnd ',' sasoc_cookie_life '}'  */
+#line 2130 "parser.y"
                                                                      {
     (yyval.expression) = new PacketDrillExpression(EXPR_SCTP_ASSOCPARAMS);
     struct sctp_assocparams_expr *assocparams = (struct sctp_assocparams_expr *) malloc(sizeof(struct sctp_assocparams_expr));
@@ -5486,79 +5507,79 @@ yyreduce:
     assocparams->sasoc_cookie_life = (yyvsp[-1].expression);
     (yyval.expression)->setAssocParams(assocparams);
 }
-#line 5490 "parser.cc"
+#line 5511 "parser.cc"
     break;
 
-  case 324: /* sinit_num_ostreams: SINIT_NUM_OSTREAMS '=' INTEGER  */
-#line 2131 "parser.y"
+  case 326: /* sinit_num_ostreams: SINIT_NUM_OSTREAMS '=' INTEGER  */
+#line 2145 "parser.y"
                                  {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("sinit_num_ostreams out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%hu");
 }
-#line 5501 "parser.cc"
+#line 5522 "parser.cc"
     break;
 
-  case 325: /* sinit_num_ostreams: SINIT_NUM_OSTREAMS '=' ELLIPSIS  */
-#line 2137 "parser.y"
+  case 327: /* sinit_num_ostreams: SINIT_NUM_OSTREAMS '=' ELLIPSIS  */
+#line 2151 "parser.y"
                                   { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5507 "parser.cc"
+#line 5528 "parser.cc"
     break;
 
-  case 326: /* sinit_max_instreams: SINIT_MAX_INSTREAMS '=' INTEGER  */
-#line 2141 "parser.y"
+  case 328: /* sinit_max_instreams: SINIT_MAX_INSTREAMS '=' INTEGER  */
+#line 2155 "parser.y"
                                   {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("sinit_max_instreams out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%hu");
 }
-#line 5518 "parser.cc"
+#line 5539 "parser.cc"
     break;
 
-  case 327: /* sinit_max_instreams: SINIT_MAX_INSTREAMS '=' ELLIPSIS  */
-#line 2147 "parser.y"
+  case 329: /* sinit_max_instreams: SINIT_MAX_INSTREAMS '=' ELLIPSIS  */
+#line 2161 "parser.y"
                                    { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5524 "parser.cc"
+#line 5545 "parser.cc"
     break;
 
-  case 328: /* sinit_max_attempts: SINIT_MAX_ATTEMPTS '=' INTEGER  */
-#line 2151 "parser.y"
+  case 330: /* sinit_max_attempts: SINIT_MAX_ATTEMPTS '=' INTEGER  */
+#line 2165 "parser.y"
                                  {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("sinit_max_attempts out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%hu");
 }
-#line 5535 "parser.cc"
+#line 5556 "parser.cc"
     break;
 
-  case 329: /* sinit_max_attempts: SINIT_MAX_ATTEMPTS '=' ELLIPSIS  */
-#line 2157 "parser.y"
+  case 331: /* sinit_max_attempts: SINIT_MAX_ATTEMPTS '=' ELLIPSIS  */
+#line 2171 "parser.y"
                                   { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5541 "parser.cc"
+#line 5562 "parser.cc"
     break;
 
-  case 330: /* sinit_max_init_timeo: SINIT_MAX_INIT_TIMEO '=' INTEGER  */
-#line 2161 "parser.y"
+  case 332: /* sinit_max_init_timeo: SINIT_MAX_INIT_TIMEO '=' INTEGER  */
+#line 2175 "parser.y"
                                    {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("sinit_max_init_timeo out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%hu");
 }
-#line 5552 "parser.cc"
+#line 5573 "parser.cc"
     break;
 
-  case 331: /* sinit_max_init_timeo: SINIT_MAX_INIT_TIMEO '=' ELLIPSIS  */
-#line 2167 "parser.y"
+  case 333: /* sinit_max_init_timeo: SINIT_MAX_INIT_TIMEO '=' ELLIPSIS  */
+#line 2181 "parser.y"
                                     { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5558 "parser.cc"
+#line 5579 "parser.cc"
     break;
 
-  case 332: /* sctp_initmsg: '{' sinit_num_ostreams ',' sinit_max_instreams ',' sinit_max_attempts ',' sinit_max_init_timeo '}'  */
-#line 2172 "parser.y"
+  case 334: /* sctp_initmsg: '{' sinit_num_ostreams ',' sinit_max_instreams ',' sinit_max_attempts ',' sinit_max_init_timeo '}'  */
+#line 2186 "parser.y"
 {
     (yyval.expression) = new PacketDrillExpression(EXPR_SCTP_INITMSG);
     struct sctp_initmsg_expr *initmsg = (struct sctp_initmsg_expr *) malloc(sizeof(struct sctp_initmsg_expr));
@@ -5568,11 +5589,11 @@ yyreduce:
     initmsg->sinit_max_init_timeo = (yyvsp[-1].expression);
     (yyval.expression)->setInitmsg(initmsg);
 }
-#line 5572 "parser.cc"
+#line 5593 "parser.cc"
     break;
 
-  case 333: /* sockaddr: '{' SA_FAMILY '=' MYWORD ',' SIN_PORT '=' _HTONS_ '(' INTEGER ')' ',' SIN_ADDR '=' INET_ADDR '(' MYSTRING ')' '}'  */
-#line 2186 "parser.y"
+  case 335: /* sockaddr: '{' SA_FAMILY '=' MYWORD ',' SIN_PORT '=' _HTONS_ '(' INTEGER ')' ',' SIN_ADDR '=' INET_ADDR '(' MYSTRING ')' '}'  */
+#line 2200 "parser.y"
                                                 {
     if (strcmp((yyvsp[-15].string), "AF_INET") == 0) {
         (yyval.expression) = new PacketDrillExpression(EXPR_SOCKET_ADDRESS_IPV4);
@@ -5582,114 +5603,114 @@ yyreduce:
         (yyval.expression)->setIp(new L3Address(Ipv6Address()));
     }
 }
-#line 5586 "parser.cc"
+#line 5607 "parser.cc"
     break;
 
-  case 334: /* spp_address: SPP_ADDRESS '=' ELLIPSIS  */
-#line 2198 "parser.y"
+  case 336: /* spp_address: SPP_ADDRESS '=' ELLIPSIS  */
+#line 2212 "parser.y"
                            { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5592 "parser.cc"
+#line 5613 "parser.cc"
     break;
 
-  case 335: /* spp_address: SPP_ADDRESS '=' sockaddr  */
-#line 2199 "parser.y"
+  case 337: /* spp_address: SPP_ADDRESS '=' sockaddr  */
+#line 2213 "parser.y"
                            { (yyval.expression) = (yyvsp[0].expression); }
-#line 5598 "parser.cc"
+#line 5619 "parser.cc"
     break;
 
-  case 336: /* spp_hbinterval: SPP_HBINTERVAL '=' INTEGER  */
-#line 2203 "parser.y"
+  case 338: /* spp_hbinterval: SPP_HBINTERVAL '=' INTEGER  */
+#line 2217 "parser.y"
                              {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("spp_hbinterval out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
 }
-#line 5609 "parser.cc"
+#line 5630 "parser.cc"
     break;
 
-  case 337: /* spp_hbinterval: SPP_HBINTERVAL '=' ELLIPSIS  */
-#line 2209 "parser.y"
+  case 339: /* spp_hbinterval: SPP_HBINTERVAL '=' ELLIPSIS  */
+#line 2223 "parser.y"
                               { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5615 "parser.cc"
+#line 5636 "parser.cc"
     break;
 
-  case 338: /* spp_pathmtu: SPP_PATHMTU '=' INTEGER  */
-#line 2213 "parser.y"
+  case 340: /* spp_pathmtu: SPP_PATHMTU '=' INTEGER  */
+#line 2227 "parser.y"
                           {
     if (!is_valid_u32((yyvsp[0].integer))) {
          semantic_error("spp_pathmtu out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
 }
-#line 5626 "parser.cc"
+#line 5647 "parser.cc"
     break;
 
-  case 339: /* spp_pathmtu: SPP_PATHMTU '=' ELLIPSIS  */
-#line 2219 "parser.y"
+  case 341: /* spp_pathmtu: SPP_PATHMTU '=' ELLIPSIS  */
+#line 2233 "parser.y"
                            { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5632 "parser.cc"
+#line 5653 "parser.cc"
     break;
 
-  case 340: /* spp_pathmaxrxt: SPP_PATHMAXRXT '=' INTEGER  */
-#line 2223 "parser.y"
+  case 342: /* spp_pathmaxrxt: SPP_PATHMAXRXT '=' INTEGER  */
+#line 2237 "parser.y"
                              {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("spp_pathmaxrxt out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%hu");
 }
-#line 5643 "parser.cc"
+#line 5664 "parser.cc"
     break;
 
-  case 341: /* spp_pathmaxrxt: SPP_PATHMAXRXT '=' ELLIPSIS  */
-#line 2229 "parser.y"
+  case 343: /* spp_pathmaxrxt: SPP_PATHMAXRXT '=' ELLIPSIS  */
+#line 2243 "parser.y"
                               { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5649 "parser.cc"
+#line 5670 "parser.cc"
     break;
 
-  case 342: /* spp_flags: SPP_FLAGS '=' expression  */
-#line 2233 "parser.y"
+  case 344: /* spp_flags: SPP_FLAGS '=' expression  */
+#line 2247 "parser.y"
                            { (yyval.expression) = (yyvsp[0].expression); }
-#line 5655 "parser.cc"
+#line 5676 "parser.cc"
     break;
 
-  case 343: /* spp_ipv6_flowlabel: SPP_IPV6_FLOWLABEL_ '=' INTEGER  */
-#line 2237 "parser.y"
+  case 345: /* spp_ipv6_flowlabel: SPP_IPV6_FLOWLABEL_ '=' INTEGER  */
+#line 2251 "parser.y"
                                   {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("spp_ipv6_flowlabel out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
 }
-#line 5666 "parser.cc"
+#line 5687 "parser.cc"
     break;
 
-  case 344: /* spp_ipv6_flowlabel: SPP_IPV6_FLOWLABEL_ '=' ELLIPSIS  */
-#line 2243 "parser.y"
+  case 346: /* spp_ipv6_flowlabel: SPP_IPV6_FLOWLABEL_ '=' ELLIPSIS  */
+#line 2257 "parser.y"
                                    { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5672 "parser.cc"
+#line 5693 "parser.cc"
     break;
 
-  case 345: /* spp_dscp: SPP_DSCP_ '=' INTEGER  */
-#line 2247 "parser.y"
+  case 347: /* spp_dscp: SPP_DSCP_ '=' INTEGER  */
+#line 2261 "parser.y"
                         {
     if (!is_valid_u8((yyvsp[0].integer))) {
         semantic_error("spp_dscp out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%hhu");
 }
-#line 5683 "parser.cc"
+#line 5704 "parser.cc"
     break;
 
-  case 346: /* spp_dscp: SPP_DSCP_ '=' ELLIPSIS  */
-#line 2253 "parser.y"
+  case 348: /* spp_dscp: SPP_DSCP_ '=' ELLIPSIS  */
+#line 2267 "parser.y"
                          { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5689 "parser.cc"
+#line 5710 "parser.cc"
     break;
 
-  case 347: /* sctp_paddrparams: '{' SPP_ASSOC_ID '=' sctp_assoc_id ',' spp_address ',' spp_hbinterval ',' spp_pathmaxrxt ',' spp_pathmtu ',' spp_flags ',' spp_ipv6_flowlabel ',' spp_dscp '}'  */
-#line 2258 "parser.y"
+  case 349: /* sctp_paddrparams: '{' SPP_ASSOC_ID '=' sctp_assoc_id ',' spp_address ',' spp_hbinterval ',' spp_pathmaxrxt ',' spp_pathmtu ',' spp_flags ',' spp_ipv6_flowlabel ',' spp_dscp '}'  */
+#line 2272 "parser.y"
                                          {
     (yyval.expression) = new PacketDrillExpression(EXPR_SCTP_PEER_ADDR_PARAMS);
     struct sctp_paddrparams_expr *params = (struct sctp_paddrparams_expr *) malloc(sizeof(struct sctp_paddrparams_expr));
@@ -5703,11 +5724,11 @@ yyreduce:
     params->spp_dscp = (yyvsp[-1].expression);
     (yyval.expression)->setPaddrParams(params);
 }
-#line 5707 "parser.cc"
+#line 5728 "parser.cc"
     break;
 
-  case 348: /* sctp_paddrparams: '{' spp_address ',' spp_hbinterval ',' spp_pathmaxrxt ',' spp_pathmtu ',' spp_flags ',' spp_ipv6_flowlabel ',' spp_dscp '}'  */
-#line 2272 "parser.y"
+  case 350: /* sctp_paddrparams: '{' spp_address ',' spp_hbinterval ',' spp_pathmaxrxt ',' spp_pathmtu ',' spp_flags ',' spp_ipv6_flowlabel ',' spp_dscp '}'  */
+#line 2286 "parser.y"
                                          {
     (yyval.expression) = new PacketDrillExpression(EXPR_SCTP_PEER_ADDR_PARAMS);
     struct sctp_paddrparams_expr *params = (struct sctp_paddrparams_expr *) malloc(sizeof(struct sctp_paddrparams_expr));
@@ -5721,125 +5742,125 @@ yyreduce:
     params->spp_dscp = (yyvsp[-1].expression);
     (yyval.expression)->setPaddrParams(params);
 }
-#line 5725 "parser.cc"
+#line 5746 "parser.cc"
     break;
 
-  case 349: /* sstat_state: SSTAT_STATE '=' expression  */
-#line 2288 "parser.y"
+  case 351: /* sstat_state: SSTAT_STATE '=' expression  */
+#line 2302 "parser.y"
                              { (yyval.expression) = (yyvsp[0].expression); }
-#line 5731 "parser.cc"
+#line 5752 "parser.cc"
     break;
 
-  case 350: /* sstat_rwnd: SSTAT_RWND '=' INTEGER  */
-#line 2292 "parser.y"
+  case 352: /* sstat_rwnd: SSTAT_RWND '=' INTEGER  */
+#line 2306 "parser.y"
                          {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("sstat_rwnd out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
 }
-#line 5742 "parser.cc"
+#line 5763 "parser.cc"
     break;
 
-  case 351: /* sstat_rwnd: SSTAT_RWND '=' ELLIPSIS  */
-#line 2298 "parser.y"
+  case 353: /* sstat_rwnd: SSTAT_RWND '=' ELLIPSIS  */
+#line 2312 "parser.y"
                           { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5748 "parser.cc"
+#line 5769 "parser.cc"
     break;
 
-  case 352: /* sstat_unackdata: SSTAT_UNACKDATA '=' INTEGER  */
-#line 2302 "parser.y"
+  case 354: /* sstat_unackdata: SSTAT_UNACKDATA '=' INTEGER  */
+#line 2316 "parser.y"
                               {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("sstat_unackdata out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%hu");
 }
-#line 5759 "parser.cc"
+#line 5780 "parser.cc"
     break;
 
-  case 353: /* sstat_unackdata: SSTAT_UNACKDATA '=' ELLIPSIS  */
-#line 2308 "parser.y"
+  case 355: /* sstat_unackdata: SSTAT_UNACKDATA '=' ELLIPSIS  */
+#line 2322 "parser.y"
                                { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5765 "parser.cc"
+#line 5786 "parser.cc"
     break;
 
-  case 354: /* sstat_penddata: SSTAT_PENDDATA '=' INTEGER  */
-#line 2312 "parser.y"
+  case 356: /* sstat_penddata: SSTAT_PENDDATA '=' INTEGER  */
+#line 2326 "parser.y"
                              {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("sstat_penddata out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%hu");
 }
-#line 5776 "parser.cc"
+#line 5797 "parser.cc"
     break;
 
-  case 355: /* sstat_penddata: SSTAT_PENDDATA '=' ELLIPSIS  */
-#line 2318 "parser.y"
+  case 357: /* sstat_penddata: SSTAT_PENDDATA '=' ELLIPSIS  */
+#line 2332 "parser.y"
                               { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5782 "parser.cc"
+#line 5803 "parser.cc"
     break;
 
-  case 356: /* sstat_instrms: SSTAT_INSTRMS '=' INTEGER  */
-#line 2322 "parser.y"
+  case 358: /* sstat_instrms: SSTAT_INSTRMS '=' INTEGER  */
+#line 2336 "parser.y"
                             {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("sstat_instrms out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%hu");
 }
-#line 5793 "parser.cc"
+#line 5814 "parser.cc"
     break;
 
-  case 357: /* sstat_instrms: SSTAT_INSTRMS '=' ELLIPSIS  */
-#line 2328 "parser.y"
+  case 359: /* sstat_instrms: SSTAT_INSTRMS '=' ELLIPSIS  */
+#line 2342 "parser.y"
                              { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5799 "parser.cc"
+#line 5820 "parser.cc"
     break;
 
-  case 358: /* sstat_outstrms: SSTAT_OUTSTRMS '=' INTEGER  */
-#line 2332 "parser.y"
+  case 360: /* sstat_outstrms: SSTAT_OUTSTRMS '=' INTEGER  */
+#line 2346 "parser.y"
                              {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("sstat_outstrms out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%hu");
 }
-#line 5810 "parser.cc"
+#line 5831 "parser.cc"
     break;
 
-  case 359: /* sstat_outstrms: SSTAT_OUTSTRMS '=' ELLIPSIS  */
-#line 2338 "parser.y"
+  case 361: /* sstat_outstrms: SSTAT_OUTSTRMS '=' ELLIPSIS  */
+#line 2352 "parser.y"
                               { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5816 "parser.cc"
+#line 5837 "parser.cc"
     break;
 
-  case 360: /* sstat_fragmentation_point: SSTAT_FRAGMENTATION_POINT '=' INTEGER  */
-#line 2342 "parser.y"
+  case 362: /* sstat_fragmentation_point: SSTAT_FRAGMENTATION_POINT '=' INTEGER  */
+#line 2356 "parser.y"
                                         {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("sstat_fragmentation_point out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
 }
-#line 5827 "parser.cc"
+#line 5848 "parser.cc"
     break;
 
-  case 361: /* sstat_fragmentation_point: SSTAT_FRAGMENTATION_POINT '=' ELLIPSIS  */
-#line 2348 "parser.y"
+  case 363: /* sstat_fragmentation_point: SSTAT_FRAGMENTATION_POINT '=' ELLIPSIS  */
+#line 2362 "parser.y"
                                          { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5833 "parser.cc"
+#line 5854 "parser.cc"
     break;
 
-  case 362: /* sstat_primary: SSTAT_PRIMARY '=' ELLIPSIS  */
-#line 2352 "parser.y"
+  case 364: /* sstat_primary: SSTAT_PRIMARY '=' ELLIPSIS  */
+#line 2366 "parser.y"
                              { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5839 "parser.cc"
+#line 5860 "parser.cc"
     break;
 
-  case 363: /* sctp_status: '{' SSTAT_ASSOC_ID '=' sctp_assoc_id ',' sstat_state ',' sstat_rwnd ',' sstat_unackdata ',' sstat_penddata ',' sstat_instrms ',' sstat_outstrms ',' sstat_fragmentation_point ',' sstat_primary '}'  */
-#line 2358 "parser.y"
+  case 365: /* sctp_status: '{' SSTAT_ASSOC_ID '=' sctp_assoc_id ',' sstat_state ',' sstat_rwnd ',' sstat_unackdata ',' sstat_penddata ',' sstat_instrms ',' sstat_outstrms ',' sstat_fragmentation_point ',' sstat_primary '}'  */
+#line 2372 "parser.y"
                                                     {
     (yyval.expression) = new PacketDrillExpression(EXPR_SCTP_STATUS);
     struct sctp_status_expr *stat = (struct sctp_status_expr *) calloc(1, sizeof(struct sctp_status_expr));
@@ -5854,11 +5875,11 @@ yyreduce:
     stat->sstat_primary = (yyvsp[-1].expression);
     (yyval.expression)->setStatus(stat);
 }
-#line 5858 "parser.cc"
+#line 5879 "parser.cc"
     break;
 
-  case 364: /* sctp_status: '{' sstat_state ',' sstat_rwnd ',' sstat_unackdata ',' sstat_penddata ',' sstat_instrms ',' sstat_outstrms ',' sstat_fragmentation_point ',' sstat_primary '}'  */
-#line 2373 "parser.y"
+  case 366: /* sctp_status: '{' sstat_state ',' sstat_rwnd ',' sstat_unackdata ',' sstat_penddata ',' sstat_instrms ',' sstat_outstrms ',' sstat_fragmentation_point ',' sstat_primary '}'  */
+#line 2387 "parser.y"
                                                     {
     (yyval.expression) = new PacketDrillExpression(EXPR_SCTP_STATUS);
     struct sctp_status_expr *stat = (struct sctp_status_expr *) calloc(1, sizeof(struct sctp_status_expr));
@@ -5873,136 +5894,136 @@ yyreduce:
     stat->sstat_primary = (yyvsp[-1].expression);
     (yyval.expression)->setStatus(stat);
 }
-#line 5877 "parser.cc"
+#line 5898 "parser.cc"
     break;
 
-  case 365: /* sinfo_stream: SINFO_STREAM '=' INTEGER  */
-#line 2390 "parser.y"
+  case 367: /* sinfo_stream: SINFO_STREAM '=' INTEGER  */
+#line 2404 "parser.y"
                            {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("sinfo_stream out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
 }
-#line 5888 "parser.cc"
+#line 5909 "parser.cc"
     break;
 
-  case 366: /* sinfo_stream: SINFO_STREAM '=' ELLIPSIS  */
-#line 2396 "parser.y"
+  case 368: /* sinfo_stream: SINFO_STREAM '=' ELLIPSIS  */
+#line 2410 "parser.y"
                             { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5894 "parser.cc"
+#line 5915 "parser.cc"
     break;
 
-  case 367: /* sinfo_ssn: SINFO_SSN '=' INTEGER  */
-#line 2400 "parser.y"
+  case 369: /* sinfo_ssn: SINFO_SSN '=' INTEGER  */
+#line 2414 "parser.y"
                         {
     if (!is_valid_u16((yyvsp[0].integer))) {
         semantic_error("sinfo_ssn out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
 }
-#line 5905 "parser.cc"
+#line 5926 "parser.cc"
     break;
 
-  case 368: /* sinfo_ssn: SINFO_SSN '=' ELLIPSIS  */
-#line 2406 "parser.y"
+  case 370: /* sinfo_ssn: SINFO_SSN '=' ELLIPSIS  */
+#line 2420 "parser.y"
                          { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5911 "parser.cc"
+#line 5932 "parser.cc"
     break;
 
-  case 369: /* sinfo_flags: SINFO_FLAGS '=' expression  */
-#line 2410 "parser.y"
+  case 371: /* sinfo_flags: SINFO_FLAGS '=' expression  */
+#line 2424 "parser.y"
                              { (yyval.expression) = (yyvsp[0].expression); }
-#line 5917 "parser.cc"
+#line 5938 "parser.cc"
     break;
 
-  case 370: /* sinfo_ppid: SINFO_PPID '=' _HTONL_ '(' INTEGER ')'  */
-#line 2414 "parser.y"
+  case 372: /* sinfo_ppid: SINFO_PPID '=' _HTONL_ '(' INTEGER ')'  */
+#line 2428 "parser.y"
                                          {
     if (!is_valid_u32((yyvsp[-1].integer))) {
         semantic_error("sinfo_ppid out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[-1].integer), "%u");
 }
-#line 5928 "parser.cc"
+#line 5949 "parser.cc"
     break;
 
-  case 371: /* sinfo_ppid: SINFO_PPID '=' ELLIPSIS  */
-#line 2420 "parser.y"
+  case 373: /* sinfo_ppid: SINFO_PPID '=' ELLIPSIS  */
+#line 2434 "parser.y"
                           { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5934 "parser.cc"
+#line 5955 "parser.cc"
     break;
 
-  case 372: /* sinfo_context: SINFO_CONTEXT '=' INTEGER  */
-#line 2424 "parser.y"
+  case 374: /* sinfo_context: SINFO_CONTEXT '=' INTEGER  */
+#line 2438 "parser.y"
                             {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("sinfo_context out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
 }
-#line 5945 "parser.cc"
+#line 5966 "parser.cc"
     break;
 
-  case 373: /* sinfo_context: SINFO_CONTEXT '=' ELLIPSIS  */
-#line 2430 "parser.y"
+  case 375: /* sinfo_context: SINFO_CONTEXT '=' ELLIPSIS  */
+#line 2444 "parser.y"
                              { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5951 "parser.cc"
+#line 5972 "parser.cc"
     break;
 
-  case 374: /* sinfo_timetolive: SINFO_TIMETOLIVE '=' INTEGER  */
-#line 2434 "parser.y"
+  case 376: /* sinfo_timetolive: SINFO_TIMETOLIVE '=' INTEGER  */
+#line 2448 "parser.y"
                                {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("sinfo_timetolive out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
 }
-#line 5962 "parser.cc"
+#line 5983 "parser.cc"
     break;
 
-  case 375: /* sinfo_timetolive: SINFO_TIMETOLIVE '=' ELLIPSIS  */
-#line 2440 "parser.y"
+  case 377: /* sinfo_timetolive: SINFO_TIMETOLIVE '=' ELLIPSIS  */
+#line 2454 "parser.y"
                                 { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5968 "parser.cc"
+#line 5989 "parser.cc"
     break;
 
-  case 376: /* sinfo_tsn: SINFO_TSN '=' INTEGER  */
-#line 2444 "parser.y"
+  case 378: /* sinfo_tsn: SINFO_TSN '=' INTEGER  */
+#line 2458 "parser.y"
                         {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("sinfo_tsn out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
 }
-#line 5979 "parser.cc"
+#line 6000 "parser.cc"
     break;
 
-  case 377: /* sinfo_tsn: SINFO_TSN '=' ELLIPSIS  */
-#line 2450 "parser.y"
+  case 379: /* sinfo_tsn: SINFO_TSN '=' ELLIPSIS  */
+#line 2464 "parser.y"
                          { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 5985 "parser.cc"
+#line 6006 "parser.cc"
     break;
 
-  case 378: /* sinfo_cumtsn: SINFO_CUMTSN '=' INTEGER  */
-#line 2454 "parser.y"
+  case 380: /* sinfo_cumtsn: SINFO_CUMTSN '=' INTEGER  */
+#line 2468 "parser.y"
                            {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("sinfo_cumtsn out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
 }
-#line 5996 "parser.cc"
+#line 6017 "parser.cc"
     break;
 
-  case 379: /* sinfo_cumtsn: SINFO_CUMTSN '=' ELLIPSIS  */
-#line 2460 "parser.y"
+  case 381: /* sinfo_cumtsn: SINFO_CUMTSN '=' ELLIPSIS  */
+#line 2474 "parser.y"
                             { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 6002 "parser.cc"
+#line 6023 "parser.cc"
     break;
 
-  case 380: /* sctp_sndrcvinfo: '{' sinfo_stream ',' sinfo_ssn ',' sinfo_flags ',' sinfo_ppid ',' sinfo_context ',' sinfo_timetolive ',' sinfo_tsn ',' sinfo_cumtsn ',' SINFO_ASSOC_ID '=' sctp_assoc_id '}'  */
-#line 2466 "parser.y"
+  case 382: /* sctp_sndrcvinfo: '{' sinfo_stream ',' sinfo_ssn ',' sinfo_flags ',' sinfo_ppid ',' sinfo_context ',' sinfo_timetolive ',' sinfo_tsn ',' sinfo_cumtsn ',' SINFO_ASSOC_ID '=' sctp_assoc_id '}'  */
+#line 2480 "parser.y"
                                                                           {
     (yyval.expression) = new PacketDrillExpression(EXPR_SCTP_SNDRCVINFO);
     struct sctp_sndrcvinfo_expr *info = (struct sctp_sndrcvinfo_expr *) calloc(1, sizeof(struct sctp_sndrcvinfo_expr));
@@ -6017,11 +6038,11 @@ yyreduce:
     info->sinfo_assoc_id = (yyvsp[-1].expression);
     (yyval.expression)->setSndRcvInfo(info);
 }
-#line 6021 "parser.cc"
+#line 6042 "parser.cc"
     break;
 
-  case 381: /* sctp_sndrcvinfo: '{' sinfo_stream ',' sinfo_ssn ',' sinfo_flags ',' sinfo_ppid ',' sinfo_context ',' sinfo_timetolive ',' sinfo_tsn ',' sinfo_cumtsn '}'  */
-#line 2481 "parser.y"
+  case 383: /* sctp_sndrcvinfo: '{' sinfo_stream ',' sinfo_ssn ',' sinfo_flags ',' sinfo_ppid ',' sinfo_context ',' sinfo_timetolive ',' sinfo_tsn ',' sinfo_cumtsn '}'  */
+#line 2495 "parser.y"
                                      {
     (yyval.expression) = new PacketDrillExpression(EXPR_SCTP_SNDRCVINFO);
     struct sctp_sndrcvinfo_expr *info = (struct sctp_sndrcvinfo_expr *) malloc(sizeof(struct sctp_sndrcvinfo_expr));
@@ -6036,11 +6057,11 @@ yyreduce:
     info->sinfo_assoc_id = new PacketDrillExpression(EXPR_ELLIPSIS);
     (yyval.expression)->setSndRcvInfo(info);
 }
-#line 6040 "parser.cc"
+#line 6061 "parser.cc"
     break;
 
-  case 382: /* srs_flags: SRS_FLAGS '=' INTEGER  */
-#line 2497 "parser.y"
+  case 384: /* srs_flags: SRS_FLAGS '=' INTEGER  */
+#line 2511 "parser.y"
                         {
 printf("SRS_FLAGS = INTEGER\n");
     if (!is_valid_u16((yyvsp[0].integer))) {
@@ -6048,29 +6069,29 @@ printf("SRS_FLAGS = INTEGER\n");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%hu");
 }
-#line 6052 "parser.cc"
+#line 6073 "parser.cc"
     break;
 
-  case 383: /* srs_flags: SRS_FLAGS '=' MYWORD  */
-#line 2504 "parser.y"
+  case 385: /* srs_flags: SRS_FLAGS '=' MYWORD  */
+#line 2518 "parser.y"
                        {
 printf("SRS_FLAGS = MYWORD\n");
     (yyval.expression) = new PacketDrillExpression(EXPR_WORD);
     (yyval.expression)->setString((yyvsp[0].string));
 }
-#line 6062 "parser.cc"
+#line 6083 "parser.cc"
     break;
 
-  case 384: /* srs_flags: SRS_FLAGS '=' binary_expression  */
-#line 2509 "parser.y"
+  case 386: /* srs_flags: SRS_FLAGS '=' binary_expression  */
+#line 2523 "parser.y"
                                   {
     (yyval.expression) = (yyvsp[0].expression);
 }
-#line 6070 "parser.cc"
+#line 6091 "parser.cc"
     break;
 
-  case 385: /* sctp_reset_streams: '{' SRS_ASSOC_ID '=' sctp_assoc_id ',' srs_flags ',' SRS_NUMBER_STREAMS '=' INTEGER ',' SRS_STREAM_LIST '=' array '}'  */
-#line 2515 "parser.y"
+  case 387: /* sctp_reset_streams: '{' SRS_ASSOC_ID '=' sctp_assoc_id ',' srs_flags ',' SRS_NUMBER_STREAMS '=' INTEGER ',' SRS_STREAM_LIST '=' array '}'  */
+#line 2529 "parser.y"
                                                                                                                         {
     (yyval.expression) = new PacketDrillExpression(EXPR_SCTP_RESET_STREAMS);
     struct sctp_reset_streams_expr *rs = (struct sctp_reset_streams_expr *) malloc(sizeof(struct sctp_reset_streams_expr));
@@ -6083,11 +6104,11 @@ printf("SRS_FLAGS = MYWORD\n");
     rs->srs_stream_list = (yyvsp[-1].expression);
     (yyval.expression)->setResetStreams(rs);
 }
-#line 6087 "parser.cc"
+#line 6108 "parser.cc"
     break;
 
-  case 386: /* sctp_reset_streams: '{' srs_flags ',' SRS_NUMBER_STREAMS '=' INTEGER ',' SRS_STREAM_LIST '=' array '}'  */
-#line 2527 "parser.y"
+  case 388: /* sctp_reset_streams: '{' srs_flags ',' SRS_NUMBER_STREAMS '=' INTEGER ',' SRS_STREAM_LIST '=' array '}'  */
+#line 2541 "parser.y"
                                                                                      {
     (yyval.expression) = new PacketDrillExpression(EXPR_SCTP_RESET_STREAMS);
     struct sctp_reset_streams_expr *rs = (struct sctp_reset_streams_expr *) malloc(sizeof(struct sctp_reset_streams_expr));
@@ -6100,11 +6121,11 @@ printf("SRS_FLAGS = MYWORD\n");
     rs->srs_stream_list = (yyvsp[-1].expression);
     (yyval.expression)->setResetStreams(rs);
 }
-#line 6104 "parser.cc"
+#line 6125 "parser.cc"
     break;
 
-  case 387: /* sctp_add_streams: '{' SAS_ASSOC_ID '=' sctp_assoc_id ',' SAS_INSTRMS '=' INTEGER ',' SAS_OUTSTRMS '=' INTEGER '}'  */
-#line 2542 "parser.y"
+  case 389: /* sctp_add_streams: '{' SAS_ASSOC_ID '=' sctp_assoc_id ',' SAS_INSTRMS '=' INTEGER ',' SAS_OUTSTRMS '=' INTEGER '}'  */
+#line 2556 "parser.y"
                                                                                                   {
     (yyval.expression) = new PacketDrillExpression(EXPR_SCTP_ADD_STREAMS);
     struct sctp_add_streams_expr *rs = (struct sctp_add_streams_expr *) malloc(sizeof(struct sctp_add_streams_expr));
@@ -6119,11 +6140,11 @@ printf("SRS_FLAGS = MYWORD\n");
     rs->sas_outstrms = new_integer_expression((yyvsp[-1].integer), "%hu");
     (yyval.expression)->setAddStreams(rs);
 }
-#line 6123 "parser.cc"
+#line 6144 "parser.cc"
     break;
 
-  case 388: /* sctp_add_streams: '{' SAS_INSTRMS '=' INTEGER ',' SAS_OUTSTRMS '=' INTEGER '}'  */
-#line 2556 "parser.y"
+  case 390: /* sctp_add_streams: '{' SAS_INSTRMS '=' INTEGER ',' SAS_OUTSTRMS '=' INTEGER '}'  */
+#line 2570 "parser.y"
                                                                {
     (yyval.expression) = new PacketDrillExpression(EXPR_SCTP_ADD_STREAMS);
     struct sctp_add_streams_expr *rs = (struct sctp_add_streams_expr *) malloc(sizeof(struct sctp_add_streams_expr));
@@ -6138,11 +6159,11 @@ printf("SRS_FLAGS = MYWORD\n");
     rs->sas_outstrms = new_integer_expression((yyvsp[-1].integer), "%hu");
     (yyval.expression)->setAddStreams(rs);
 }
-#line 6142 "parser.cc"
+#line 6163 "parser.cc"
     break;
 
-  case 389: /* sctp_assoc_value: '{' ASSOC_ID '=' sctp_assoc_id ',' ASSOC_VALUE '=' expression '}'  */
-#line 2574 "parser.y"
+  case 391: /* sctp_assoc_value: '{' ASSOC_ID '=' sctp_assoc_id ',' ASSOC_VALUE '=' expression '}'  */
+#line 2588 "parser.y"
                                                                     {
     (yyval.expression) = new PacketDrillExpression(EXPR_SCTP_ASSOCVAL);
     struct sctp_assoc_value_expr *assocval = (struct sctp_assoc_value_expr *) malloc(sizeof(struct sctp_assoc_value_expr));
@@ -6150,11 +6171,11 @@ printf("SRS_FLAGS = MYWORD\n");
     assocval->assoc_value = (yyvsp[-1].expression);
     (yyval.expression)->setAssocval(assocval);
 }
-#line 6154 "parser.cc"
+#line 6175 "parser.cc"
     break;
 
-  case 390: /* sctp_assoc_value: '{' ASSOC_VALUE '=' expression '}'  */
-#line 2581 "parser.y"
+  case 392: /* sctp_assoc_value: '{' ASSOC_VALUE '=' expression '}'  */
+#line 2595 "parser.y"
                                      {
     (yyval.expression) = new PacketDrillExpression(EXPR_SCTP_ASSOCVAL);
     struct sctp_assoc_value_expr *assocval = (struct sctp_assoc_value_expr *) malloc(sizeof(struct sctp_assoc_value_expr));
@@ -6162,47 +6183,47 @@ printf("SRS_FLAGS = MYWORD\n");
     assocval->assoc_value = (yyvsp[-1].expression);
     (yyval.expression)->setAssocval(assocval);
 }
-#line 6166 "parser.cc"
+#line 6187 "parser.cc"
     break;
 
-  case 391: /* sack_delay: MYSACK_DELAY '=' INTEGER  */
-#line 2591 "parser.y"
+  case 393: /* sack_delay: MYSACK_DELAY '=' INTEGER  */
+#line 2605 "parser.y"
                            {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("sack_delay out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
 }
-#line 6177 "parser.cc"
+#line 6198 "parser.cc"
     break;
 
-  case 392: /* sack_delay: MYSACK_DELAY '=' ELLIPSIS  */
-#line 2597 "parser.y"
+  case 394: /* sack_delay: MYSACK_DELAY '=' ELLIPSIS  */
+#line 2611 "parser.y"
                             {
     (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS);
 }
-#line 6185 "parser.cc"
+#line 6206 "parser.cc"
     break;
 
-  case 393: /* sack_freq: SACK_FREQ '=' INTEGER  */
-#line 2602 "parser.y"
+  case 395: /* sack_freq: SACK_FREQ '=' INTEGER  */
+#line 2616 "parser.y"
                         {
     if (!is_valid_u32((yyvsp[0].integer))) {
         semantic_error("sack_freq out of range");
     }
     (yyval.expression) = new_integer_expression((yyvsp[0].integer), "%u");
 }
-#line 6196 "parser.cc"
+#line 6217 "parser.cc"
     break;
 
-  case 394: /* sack_freq: SACK_FREQ '=' ELLIPSIS  */
-#line 2608 "parser.y"
+  case 396: /* sack_freq: SACK_FREQ '=' ELLIPSIS  */
+#line 2622 "parser.y"
                          { (yyval.expression) = new PacketDrillExpression(EXPR_ELLIPSIS); }
-#line 6202 "parser.cc"
+#line 6223 "parser.cc"
     break;
 
-  case 395: /* sctp_sackinfo: '{' SACK_ASSOC_ID '=' sctp_assoc_id ',' sack_delay ',' sack_freq '}'  */
-#line 2611 "parser.y"
+  case 397: /* sctp_sackinfo: '{' SACK_ASSOC_ID '=' sctp_assoc_id ',' sack_delay ',' sack_freq '}'  */
+#line 2625 "parser.y"
                                                                        {
     (yyval.expression) = new PacketDrillExpression(EXPR_SCTP_SACKINFO);
     struct sctp_sack_info_expr *sackinfo = (struct sctp_sack_info_expr *) malloc(sizeof(struct sctp_sack_info_expr));
@@ -6211,11 +6232,11 @@ printf("SRS_FLAGS = MYWORD\n");
     sackinfo->sack_freq = (yyvsp[-1].expression);
     (yyval.expression)->setSackinfo(sackinfo);
 }
-#line 6215 "parser.cc"
+#line 6236 "parser.cc"
     break;
 
-  case 396: /* sctp_sackinfo: '{' sack_delay ',' sack_freq '}'  */
-#line 2619 "parser.y"
+  case 398: /* sctp_sackinfo: '{' sack_delay ',' sack_freq '}'  */
+#line 2633 "parser.y"
                                    {
     (yyval.expression) = new PacketDrillExpression(EXPR_SCTP_SACKINFO);
     struct sctp_sack_info_expr *sackinfo = (struct sctp_sack_info_expr *) malloc(sizeof(struct sctp_sack_info_expr));
@@ -6224,71 +6245,71 @@ printf("SRS_FLAGS = MYWORD\n");
     sackinfo->sack_freq = (yyvsp[-1].expression);
     (yyval.expression)->setSackinfo(sackinfo);
 }
-#line 6228 "parser.cc"
+#line 6249 "parser.cc"
     break;
 
-  case 397: /* opt_errno: %empty  */
-#line 2630 "parser.y"
+  case 399: /* opt_errno: %empty  */
+#line 2644 "parser.y"
   {
     (yyval.errno_info) = NULL;
 }
-#line 6236 "parser.cc"
+#line 6257 "parser.cc"
     break;
 
-  case 398: /* opt_errno: MYWORD note  */
-#line 2633 "parser.y"
+  case 400: /* opt_errno: MYWORD note  */
+#line 2647 "parser.y"
               {
     (yyval.errno_info) = (struct errno_spec*)malloc(sizeof(struct errno_spec));
     (yyval.errno_info)->errno_macro = (yyvsp[-1].string);
     (yyval.errno_info)->strerror = (yyvsp[0].string);
 }
-#line 6246 "parser.cc"
+#line 6267 "parser.cc"
     break;
 
-  case 399: /* opt_note: %empty  */
-#line 2641 "parser.y"
+  case 401: /* opt_note: %empty  */
+#line 2655 "parser.y"
   {
     (yyval.string) = NULL;
 }
-#line 6254 "parser.cc"
+#line 6275 "parser.cc"
     break;
 
-  case 400: /* opt_note: note  */
-#line 2644 "parser.y"
+  case 402: /* opt_note: note  */
+#line 2658 "parser.y"
        {
     (yyval.string) = (yyvsp[0].string);
 }
-#line 6262 "parser.cc"
+#line 6283 "parser.cc"
     break;
 
-  case 401: /* note: '(' word_list ')'  */
-#line 2650 "parser.y"
+  case 403: /* note: '(' word_list ')'  */
+#line 2664 "parser.y"
                     {
     (yyval.string) = (yyvsp[-1].string);
 }
-#line 6270 "parser.cc"
+#line 6291 "parser.cc"
     break;
 
-  case 402: /* word_list: MYWORD  */
-#line 2656 "parser.y"
+  case 404: /* word_list: MYWORD  */
+#line 2670 "parser.y"
          {
     (yyval.string) = (yyvsp[0].string);
 }
-#line 6278 "parser.cc"
+#line 6299 "parser.cc"
     break;
 
-  case 403: /* word_list: word_list MYWORD  */
-#line 2659 "parser.y"
+  case 405: /* word_list: word_list MYWORD  */
+#line 2673 "parser.y"
                    {
     asprintf(&((yyval.string)), "%s %s", (yyvsp[-1].string), (yyvsp[0].string));
     free((yyvsp[-1].string));
     free((yyvsp[0].string));
 }
-#line 6288 "parser.cc"
+#line 6309 "parser.cc"
     break;
 
 
-#line 6292 "parser.cc"
+#line 6313 "parser.cc"
 
       default: break;
     }
@@ -6486,7 +6507,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 2666 "parser.y"
+#line 2680 "parser.y"
 
 
 

@@ -240,6 +240,7 @@ enum event_t {
     PACKET_EVENT,
     SYSCALL_EVENT,
     COMMAND_EVENT,
+    CODE_EVENT,
     NUM_EVENT_TYPES,
 };
 
@@ -328,6 +329,12 @@ struct syscall_spec
 struct command_spec
 {
     const char *command_line; /* executed with /bin/sh */
+};
+
+/* A %{ ... }% inline Python-assertion code block */
+struct code_spec
+{
+    const char *text; /* raw Python source of a %{ }% block */
 };
 
 /* The public, top-level call to parse a test script. It first parses the
@@ -572,6 +579,7 @@ class INETGPL_API PacketDrillEvent : public cObject
         PacketDrillPacket *packet;
         struct syscall_spec *syscall;
         struct command_spec *command;
+        struct code_spec *code;
     } eventKind; /* pointer to the event */
 
   public:
@@ -598,6 +606,8 @@ class INETGPL_API PacketDrillEvent : public cObject
     struct syscall_spec *getSyscall() { return eventKind.syscall; };
     void setCommand(struct command_spec *command) { eventKind.command = command; }
     struct command_spec *getCommand() { return eventKind.command; };
+    void setCode(struct code_spec *code) { eventKind.code = code; }
+    struct code_spec *getCode() { return eventKind.code; };
 };
 
 class INETGPL_API PacketDrillExpression : public cObject

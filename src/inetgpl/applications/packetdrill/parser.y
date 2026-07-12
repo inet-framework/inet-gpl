@@ -248,6 +248,7 @@ static ByteVector hex_string_to_bytes(const char *hex)
     PacketDrillPacket *packet;
     struct syscall_spec *syscall;
     struct command_spec *command;
+    struct code_spec *code;
     PacketDrillStruct *sack_block;
     PacketDrillStruct *cause_item;
     PacketDrillExpression *expression;
@@ -311,6 +312,7 @@ static ByteVector hex_string_to_bytes(const char *hex)
 %token <floating> MYFLOAT
 %token <integer> INTEGER HEX_INTEGER
 %token <string> MYWORD MYSTRING
+%token <string> CODE
 %type <direction> direction
 %type <event> event events event_time action
 %type <option> option options opt_options
@@ -319,6 +321,7 @@ static ByteVector hex_string_to_bytes(const char *hex)
 %type <packet> packet_prefix
 %type <syscall> syscall_spec
 %type <command> command_spec
+%type <code> code_spec
 %type <string> option_flag option_value flags
 %type <tcp_sequence_info> seq
 %type <tcp_options> opt_tcp_options tcp_option_list
@@ -530,12 +533,23 @@ action
     $$ = new PacketDrillEvent(COMMAND_EVENT);
     $$->setCommand($1);
 }
+| code_spec {
+    $$ = new PacketDrillEvent(CODE_EVENT);
+    $$->setCode($1);
+}
 ;
 
 command_spec
 : BACK_QUOTED       {
     $$ = (struct command_spec *)calloc(1, sizeof(struct command_spec));
     $$->command_line = $1;
+}
+;
+
+code_spec
+: CODE       {
+    $$ = (struct code_spec *)calloc(1, sizeof(struct code_spec));
+    $$->text = $1;
 }
 ;
 

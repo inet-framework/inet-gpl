@@ -8,7 +8,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <climits>
+#include <cmath>
+#include <map>
+#include <sstream>
 #include <sys/epoll.h>
+#include <sys/wait.h>
 #include <netinet/tcp.h>
 
 #include "inetgpl/applications/packetdrill/PacketDrillInfo_m.h"
@@ -198,6 +204,21 @@ void PacketDrillApp::socketClosed(TcpSocket *socket)
 void PacketDrillApp::socketFailure(TcpSocket *socket, int code)
 {
     delete socketMap.removeSocket(socket);
+}
+
+void PacketDrillApp::socketStatusArrived(TcpSocket *socket, TcpStatusInfo *status)
+{
+    if (!codeEventPending)
+        return;
+    codeEventPending = false;
+    codeBlockBuffer += formatTcpInfoSnapshot(status);
+    codeBlockBuffer += pendingCodeText;
+    codeBlockBuffer += "\n";
+    pendingCodeText = nullptr;
+    if (!eventTimer->isScheduled() && eventCounter < numEvents - 1) {
+        eventCounter++;
+        scheduleEvent();
+    }
 }
 
 // SctpSocket:
@@ -601,6 +622,9 @@ void PacketDrillApp::runEvent(PacketDrillEvent *event)
         eventCounter++;
         scheduleEvent();
     }
+    else if (event->getType() == CODE_EVENT) {
+        runCodeEvent(event);
+    }
 }
 
 void PacketDrillApp::handleTimer(cMessage *msg)
@@ -627,13 +651,16 @@ void PacketDrillApp::handleTimer(cMessage *msg)
             // For TCP/UDP scripts it never fires, so gating advancement on it
             // unconditionally stalled every non-SCTP script after its first
             // event. Only require it for SCTP.
-            if (((protocol != IP_PROT_SCTP || socketOptionsArrived_) && !recvFromSet && outboundPackets->getLength() == 0) &&
+            if (((protocol != IP_PROT_SCTP || socketOptionsArrived_) && !recvFromSet && !codeEventPending &&
+                    outboundPackets->getLength() == 0) &&
                 (!eventTimer->isScheduled() && eventCounter < numEvents - 1))
             {
                 eventCounter++;
                 scheduleEvent();
             }
-            if (eventCounter >= numEvents - 1 && outboundPackets->getLength() == 0) {
+            if (eventCounter >= numEvents - 1 && !codeEventPending && outboundPackets->getLength() == 0) {
+                if (!codeBlockBuffer.empty())
+                    executeCodeBlocks();
                 closeAllSockets();
             }
             break;
@@ -790,6 +817,133 @@ void PacketDrillApp::runSystemCallEvent(PacketDrillEvent *event, struct syscall_
     return;
 }
 
+void PacketDrillApp::runCodeEvent(PacketDrillEvent *event)
+{
+    // Snapshot capture happens now, at this event's scheduled simulated time;
+    // the accumulated Python text (this block's and every other block's) only
+    // actually runs once, at the very end of the script -- see
+    // executeCodeBlocks(). requestStatus() is async; socketStatusArrived()
+    // does the rest once the TcpStatusInfo reply arrives.
+    pendingCodeText = event->getCode()->text;
+    codeEventPending = true;
+    tcpSocket.requestStatus();
+}
+
+std::string PacketDrillApp::formatTcpInfoSnapshot(TcpStatusInfo *status)
+{
+    // Linux's tcp_info connection-state values (net/tcp_states.h) are a
+    // plain kernel-ABI enum, not exposed as preprocessor macros the way
+    // TCPI_OPT_*/SOL_TCP are -- hardcoded here, they are long-stable ABI.
+    static const std::map<int, int> stateMap = {
+        { TCP_S_CLOSED, 7 },       // TCP_CLOSE
+        { TCP_S_LISTEN, 10 },      // TCP_LISTEN
+        { TCP_S_SYN_SENT, 2 },     // TCP_SYN_SENT
+        { TCP_S_SYN_RCVD, 3 },     // TCP_SYN_RECV
+        { TCP_S_ESTABLISHED, 1 },  // TCP_ESTABLISHED
+        { TCP_S_CLOSE_WAIT, 8 },   // TCP_CLOSE_WAIT
+        { TCP_S_LAST_ACK, 9 },     // TCP_LAST_ACK
+        { TCP_S_FIN_WAIT_1, 4 },   // TCP_FIN_WAIT1
+        { TCP_S_FIN_WAIT_2, 5 },   // TCP_FIN_WAIT2
+        { TCP_S_CLOSING, 11 },     // TCP_CLOSING
+        { TCP_S_TIME_WAIT, 6 },    // TCP_TIME_WAIT
+    };
+
+    std::ostringstream out;
+
+    // Symbolic constants: emitted unconditionally (cheap, harmless to
+    // repeat every block) so a script comparing against one of these
+    // doesn't spuriously NameError on the constant itself even when the
+    // paired tcpi_* variable isn't emitted (e.g. tcpi_ca_state, which this
+    // framework has no source for -- see the plan doc's field table).
+    out << "TCP_ESTABLISHED = 1\nTCP_SYN_SENT = 2\nTCP_SYN_RECV = 3\n"
+           "TCP_FIN_WAIT1 = 4\nTCP_FIN_WAIT2 = 5\nTCP_TIME_WAIT = 6\n"
+           "TCP_CLOSE = 7\nTCP_CLOSE_WAIT = 8\nTCP_LAST_ACK = 9\n"
+           "TCP_LISTEN = 10\nTCP_CLOSING = 11\n"
+           "TCP_CA_Open = 0\nTCP_CA_Disorder = 1\nTCP_CA_CWR = 2\n"
+           "TCP_CA_Recovery = 3\nTCP_CA_Loss = 4\n";
+    out << "TCPI_OPT_TIMESTAMPS = " << TCPI_OPT_TIMESTAMPS << "\n"
+        << "TCPI_OPT_SACK = " << TCPI_OPT_SACK << "\n"
+        << "TCPI_OPT_WSCALE = " << TCPI_OPT_WSCALE << "\n"
+        << "TCPI_OPT_ECN = " << TCPI_OPT_ECN << "\n"
+        << "TCPI_OPT_ECN_SEEN = " << TCPI_OPT_ECN_SEEN << "\n"
+        << "TCPI_OPT_SYN_DATA = " << TCPI_OPT_SYN_DATA << "\n";
+
+    auto stateIt = stateMap.find(status->getState());
+    if (stateIt != stateMap.end())
+        out << "tcpi_state = " << stateIt->second << "\n";
+
+    if (status->getCwnd() != UINT_MAX)
+        out << "tcpi_snd_cwnd = " << status->getCwnd() << "\n";
+    if (status->getSsthresh() != UINT_MAX)
+        out << "tcpi_snd_ssthresh = " << status->getSsthresh() << "\n";
+    out << "tcpi_reordering = " << status->getReordering() << "\n";
+    if (status->getSnd_mss() > 0)
+        out << "tcpi_snd_mss = " << status->getSnd_mss() << "\n";
+    out << "tcpi_snd_wscale = " << status->getSndWndScale() << "\n";
+
+    if (status->getSrtt() >= 0)
+        out << "tcpi_rtt = " << (int64_t)llround(status->getSrtt() * 1e6) << "\n";
+    out << "tcpi_min_rtt = " << (int64_t)llround(status->getMinRtt() * 1e6) << "\n";
+    out << "tcpi_last_data_recv = "
+        << (int64_t)llround((simTime() - status->getLastDataRecvTime()).dbl() * 1e6) << "\n";
+
+    // Segment-count approximation from INET's byte counts -- Linux's
+    // tcpi_unacked/sacked/delivered are segment counts, INET only tracks
+    // bytes. Lossy when segments are unequal size; documented in the plan.
+    if (status->getSnd_mss() > 0) {
+        double mss = status->getSnd_mss();
+        out << "tcpi_unacked = " << (uint32_t)llround(status->getFlightSize() / mss) << "\n";
+        out << "tcpi_sacked = " << (uint32_t)llround(status->getSackedBytes() / mss) << "\n";
+        out << "tcpi_delivered = " << (uint32_t)llround(status->getDeliveredBytes() / mss) << "\n";
+    }
+
+    uint32_t options = 0;
+    if (status->getTsEnabled())
+        options |= TCPI_OPT_TIMESTAMPS;
+    if (status->getSackEnabled())
+        options |= TCPI_OPT_SACK;
+    if (status->getWsEnabled())
+        options |= TCPI_OPT_WSCALE;
+    if (status->getEctEnabled())
+        options |= TCPI_OPT_ECN;
+    out << "tcpi_options = " << options << "\n";
+
+    return out.str();
+}
+
+void PacketDrillApp::executeCodeBlocks()
+{
+    char path[] = "/tmp/inetgpl_packetdrill_code_XXXXXX";
+    int fd = mkstemp(path);
+    if (fd < 0)
+        throw cTerminationException("Packetdrill error: could not create temp file for %{ }% code execution");
+    FILE *file = fdopen(fd, "w");
+    fwrite(codeBlockBuffer.data(), 1, codeBlockBuffer.size(), file);
+    fclose(file);
+
+    // Real python3, matching upstream packetdrill's own dependency -- not an
+    // embedded interpreter. See the plan doc for why (no CPython C-API usage
+    // in the real upstream implementation either, and the corpus's %{ }%
+    // blocks use only assert/simple variable assignment/print, nothing that
+    // would justify a constrained in-process evaluator).
+    std::string command = std::string("python3 ") + path + " 2>&1";
+    FILE *proc = popen(command.c_str(), "r");
+    std::string output;
+    if (proc) {
+        char buf[512];
+        size_t n;
+        while ((n = fread(buf, 1, sizeof(buf), proc)) > 0)
+            output.append(buf, n);
+    }
+    int status = proc ? pclose(proc) : -1;
+    unlink(path);
+
+    if (!proc || !WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+        std::string message = "Packetdrill error: %{ }% assertion failed: " + output;
+        throw cTerminationException("%s", message.c_str());
+    }
+}
+
 int PacketDrillApp::syscallSocket(struct syscall_spec *syscall, cQueue *args, char **error)
 {
     int type;
@@ -819,6 +973,14 @@ int PacketDrillApp::syscallSocket(struct syscall_spec *syscall, cQueue *args, ch
 
         case IP_PROT_TCP:
             tcpSocket.setOutputGate(gate("socketOut"));
+            // Without this, TcpSocket::processMessage()'s `if (cb) cb->...`
+            // guard is always false and every TcpSocket::ICallback override
+            // on this class (socketDataArrived, socketEstablished,
+            // socketStatusArrived, etc.) is silently never invoked for the
+            // app's own primary connection -- accepted (forked) sockets get
+            // setCallback() via `newSocket->setCallback(this)` elsewhere in
+            // this file, but the primary tcpSocket member never did.
+            tcpSocket.setCallback(this);
             tcpSocket.bind(localPort);
             break;
         case IP_PROT_SCTP:

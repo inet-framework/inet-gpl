@@ -70,6 +70,21 @@ static char *quoted(const char *s) {
     return str;
 }
 
+/* Strip the leading "%{" and trailing "}%" delimiters from a %{ ... }%
+ * code block, then trim any leading/trailing spaces/tabs (but not
+ * newlines, which are meaningful in the enclosed Python source). */
+static char *extract_code_text(const char *raw) {
+    const int delim_len = 2;
+    size_t len = strlen(raw);
+    const char *start = raw + delim_len;
+    const char *end = raw + len - delim_len;  /* one past the last content char */
+    while (start < end && (*start == ' ' || *start == '\t'))
+        start++;
+    while (end > start && (*(end - 1) == ' ' || *(end - 1) == '\t'))
+        end--;
+    return strndup(start, end - start);
+}
+
 
 /* Convert a hex string prefixed by "0x" to an integer value. */
 static int64_t hextol(const char *s) {
@@ -384,6 +399,7 @@ result              return RESULT;
 [a-zA-Z0-9_]+       yylval.string = strdup(yytext); return MYWORD;
 \"(\\.|[^"])*\"     yylval.string = quoted(yytext); return MYSTRING;
 \`(\\.|[^`])*\`     yylval.string = quoted(yytext); return BACK_QUOTED;
+{code}              yylval.string = extract_code_text(yytext); return CODE;
 [^ \t\n]            return (int) yytext[0];
 [ \t\n]+            /* ignore whitespace */;
 {cpp_comment}       /* ignore C++-style comment */;

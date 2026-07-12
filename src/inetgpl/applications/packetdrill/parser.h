@@ -220,7 +220,8 @@ extern int yydebug;
     INTEGER = 421,                 /* INTEGER  */
     HEX_INTEGER = 422,             /* HEX_INTEGER  */
     MYWORD = 423,                  /* MYWORD  */
-    MYSTRING = 424                 /* MYSTRING  */
+    MYSTRING = 424,                /* MYSTRING  */
+    CODE = 425                     /* CODE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -249,6 +250,7 @@ union YYSTYPE
     PacketDrillPacket *packet;
     struct syscall_spec *syscall;
     struct command_spec *command;
+    struct code_spec *code;
     PacketDrillStruct *sack_block;
     PacketDrillStruct *cause_item;
     PacketDrillExpression *expression;
@@ -268,7 +270,7 @@ union YYSTYPE
     uint8_t byte;
     PacketDrillSctpChunk *sctp_chunk;
 
-#line 272 "parser.h"
+#line 274 "parser.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
