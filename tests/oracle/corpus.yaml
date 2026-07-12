@@ -30,3 +30,4 @@ skips:
   # fixed IPv4 flag set in oracle.py. Not a kernel or INET bug -- a scope limit.
   kernel:tcp_syncookies_ip6_9k: "forces --ip_version=ipv6, out of IPv4-only scope"
   gtests:mtu_probe/basic-v6: "forces --ip_version=ipv6, out of IPv4-only scope"
+  gtests:fastopen/client/syn-data-icmp-unreach-frag-needed-with-seq-ipv6: "uses ICMPv6 'packet_too_big', out of IPv4-only scope (icmp_type_from_word only maps ICMPv4 'unreachable'); was masquerading as I_DIVERGE via semantic_error()'s generic 'Script error', not a real behavioral divergence"
