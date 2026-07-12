@@ -9,6 +9,7 @@
  #include <netinet/in.h>
  #include <netinet/tcp.h>
  #include <sys/epoll.h>
+ #include <poll.h>
  #include <linux/errqueue.h>
 #else
 #include "sys/stat.h"
@@ -73,6 +74,7 @@ struct int_symbol platform_symbols_table[] = {
     { SOL_SOCKET,                       "SOL_SOCKET"                      },
     { SOL_TCP,                          "SOL_TCP"                         },
     { TCP_CM_INQ,                       "TCP_CM_INQ"                      },
+    { SCM_TIMESTAMPING,                 "SCM_TIMESTAMPING"                },
 
     /* /usr/include/sys/epoll.h */
     { EPOLL_CTL_ADD,                    "EPOLL_CTL_ADD"                   },
@@ -92,6 +94,15 @@ struct int_symbol platform_symbols_table[] = {
     { IP_RECVERR,                       "CMSG_TYPE_RECVERR"               },
     { SO_EE_ORIGIN_ZEROCOPY,            "SO_EE_ORIGIN_ZEROCOPY"           },
     { SO_EE_CODE_ZEROCOPY_COPIED,       "SO_EE_CODE_ZEROCOPY_COPIED"      },
+
+    /* /usr/include/poll.h */
+    { POLLIN,                           "POLLIN"                          },
+    { POLLOUT,                          "POLLOUT"                         },
+    { POLLERR,                          "POLLERR"                         },
+    { POLLHUP,                          "POLLHUP"                         },
+    { POLLRDHUP,                        "POLLRDHUP"                       },
+    { POLLPRI,                          "POLLPRI"                         },
+    { POLLNVAL,                         "POLLNVAL"                        },
     /* Sentinel marking the end of the table. */
     { 0, nullptr },
 };

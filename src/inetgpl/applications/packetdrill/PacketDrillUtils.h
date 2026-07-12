@@ -281,6 +281,8 @@ enum expression_t {
     EXPR_IOVEC,    /* struct iovec_expr for msg_iov entries */
     EXPR_EPOLLEV,  /* struct epollev_expr for epoll_ctl/epoll_wait */
     EXPR_SOCK_EXTENDED_ERR, /* struct sock_extended_err_expr for cmsg_data of IP_RECVERR */
+    EXPR_SCM_TIMESTAMPING, /* struct scm_timestamping_expr for cmsg_data of SO_TIMESTAMPING */
+    EXPR_POLLFD,   /* struct pollfd_expr for poll() */
 
     NUM_EXPR_TYPES,
 };
@@ -509,6 +511,14 @@ struct epollev_expr
     PacketDrillExpression *u64;   /* nullptr if unused */
 };
 
+/* Parse tree for a struct pollfd in a poll() syscall. */
+struct pollfd_expr
+{
+    PacketDrillExpression *fd;
+    PacketDrillExpression *events;
+    PacketDrillExpression *revents;  /* defaults to integer 0 if omitted */
+};
+
 /* Parse tree for a struct sock_extended_err (delivered via MSG_ERRQUEUE, e.g. IP_RECVERR). */
 struct sock_extended_err_expr
 {
@@ -518,6 +528,18 @@ struct sock_extended_err_expr
     PacketDrillExpression *ee_code;
     PacketDrillExpression *ee_info;
     PacketDrillExpression *ee_data;
+};
+
+/* Parse tree for a struct scm_timestamping (delivered via SO_TIMESTAMPING cmsg).
+ * Upstream packetdrill stores an array of 3 timeval slots (ts[0..2], one per
+ * timestamp type SO_TIMESTAMPING can report), but the real corpus scripts
+ * targeted by this dialect only ever specify a single scm_sec/scm_nsec pair
+ * per cmsg_data, so a flat 2-field struct is used here instead of unused
+ * array infrastructure. */
+struct scm_timestamping_expr
+{
+    PacketDrillExpression *scm_sec;
+    PacketDrillExpression *scm_nsec;
 };
 
 class INETGPL_API PacketDrillConfig
@@ -638,6 +660,8 @@ class INETGPL_API PacketDrillExpression : public cObject
         struct iovec_expr *iovec;
         struct epollev_expr *epollev;
         struct sock_extended_err_expr *sockExtendedErr;
+        struct scm_timestamping_expr *scmTimestamping;
+        struct pollfd_expr *pollfd;
     } value;
     cQueue *list;
     const char *format; /* the printf format for printing the value */
@@ -686,6 +710,10 @@ class INETGPL_API PacketDrillExpression : public cObject
     struct epollev_expr *getEpollev() { return value.epollev; };
     void setSockExtendedErr(struct sock_extended_err_expr *exp) { value.sockExtendedErr = exp; }
     struct sock_extended_err_expr *getSockExtendedErr() { return value.sockExtendedErr; }
+    void setScmTimestamping(struct scm_timestamping_expr *exp) { value.scmTimestamping = exp; }
+    struct scm_timestamping_expr *getScmTimestamping() { return value.scmTimestamping; }
+    void setPollfd(struct pollfd_expr *exp) { value.pollfd = exp; }
+    struct pollfd_expr *getPollfd() { return value.pollfd; }
 
     int unescapeCstringExpression(const char *input_string, char **error);
     int getS32(int32_t *value, char **error);

@@ -58,6 +58,8 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>
+#include <math.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
@@ -222,6 +224,36 @@ static ByteVector hex_string_to_bytes(const char *hex)
     return bytes;
 }
 
+/* ICMP type/code words -> real ICMP wire values (RFC 792 / Linux <netinet/ip_icmp.h>
+ * naming). Deliberately small and explicit rather than routed through the
+ * general symbol table, since these are packet-line keywords, not
+ * expression-context symbols. */
+static int icmp_type_from_word(const char *word)
+{
+    if (!strcmp(word, "unreachable"))
+        return 3; /* ICMP_DESTINATION_UNREACHABLE */
+    semantic_error("unknown icmp type");
+    return -1;
+}
+
+static int icmp_code_from_word(const char *word)
+{
+    if (!word)
+        return 0; /* ICMP_DU_NETWORK_UNREACHABLE: default when no code word given */
+    if (!strcmp(word, "net_unreachable"))
+        return 0;
+    if (!strcmp(word, "host_unreachable"))
+        return 1;
+    if (!strcmp(word, "protocol_unreachable"))
+        return 2;
+    if (!strcmp(word, "port_unreachable"))
+        return 3;
+    if (!strcmp(word, "frag_needed"))
+        return 4;
+    semantic_error("unknown icmp code");
+    return -1;
+}
+
 %}
 
 %locations
@@ -281,6 +313,9 @@ static ByteVector hex_string_to_bytes(const char *hex)
 %token <reserved> MSG_NAME MSG_IOV MSG_FLAGS MSG_CONTROL CMSG_LEVEL CMSG_TYPE CMSG_DATA
 %token <reserved> EVENTS FD PTR U32 U64
 %token <reserved> EE_ERRNO EE_ORIGIN EE_TYPE EE_CODE EE_INFO EE_DATA
+%token <reserved> SCM_SEC SCM_NSEC
+%token <reserved> REVENTS
+%token <reserved> ICMP MTU
 %token <reserved> OPTION IPV4_TYPE IPV6_TYPE INET_ADDR
 %token <reserved> SPP_ASSOC_ID SPP_ADDRESS SPP_HBINTERVAL SPP_PATHMAXRXT SPP_PATHMTU
 %token <reserved> SPP_FLAGS SPP_IPV6_FLOWLABEL_ SPP_DSCP_
@@ -317,8 +352,11 @@ static ByteVector hex_string_to_bytes(const char *hex)
 %type <event> event events event_time action
 %type <option> option options opt_options
 %type <time_usecs> time opt_end_time
-%type <packet> packet_spec tcp_packet_spec udp_packet_spec sctp_packet_spec
+%type <packet> packet_spec tcp_packet_spec udp_packet_spec sctp_packet_spec icmp_packet_spec
 %type <packet> packet_prefix
+%type <string> icmp_type opt_icmp_code
+%type <tcp_sequence_info> opt_icmp_echoed
+%type <integer> opt_icmp_mtu
 %type <syscall> syscall_spec
 %type <command> command_spec
 %type <code> code_spec
@@ -355,7 +393,8 @@ static ByteVector hex_string_to_bytes(const char *hex)
 %type <expression> sctp_status sstat_state sstat_rwnd sstat_unackdata sstat_penddata
 %type <expression> sstat_instrms sstat_outstrms sstat_fragmentation_point sstat_primary
 %type <expression> sctp_add_streams
-%type <expression> msghdr cmsg_expr iovec epollev opt_cmsg sock_extended_err
+%type <expression> msghdr cmsg_expr iovec epollev opt_cmsg sock_extended_err scm_timestamping
+%type <expression> pollfd opt_revents
 %type <errno_info> opt_errno
 %type <integer> opt_flags opt_len opt_data_flags opt_abort_flags chunk_type
 %type <integer> opt_shutdown_complete_flags opt_tag opt_a_rwnd opt_os opt_is
@@ -562,6 +601,78 @@ packet_spec
 }
 | sctp_packet_spec {
     $$ = $1;
+}
+| icmp_packet_spec {
+    $$ = $1;
+}
+;
+
+icmp_packet_spec
+: packet_prefix ICMP icmp_type opt_icmp_code opt_icmp_mtu opt_icmp_echoed {
+    char *error = NULL;
+    PacketDrillPacket *outer = $1, *inner = NULL;
+    enum direction_t direction = outer->getDirection();
+
+    int icmpType = icmp_type_from_word($3);
+    int icmpCode = icmp_code_from_word($4);
+    free($3);
+    free($4);
+
+    Packet *pkt = PacketDrill::buildICMPPacket(in_config->getWireProtocol(), direction,
+                                                icmpType, icmpCode, $5,
+                                                $6.start_sequence, $6.payload_bytes, &error);
+    if (pkt == NULL) {
+        semantic_error(error);
+        free(error);
+    }
+
+    inner = new PacketDrillPacket();
+    inner->setInetPacket(pkt);
+    inner->setDirection(direction);
+
+    $$ = inner;
+}
+;
+
+icmp_type
+: MYWORD {
+    $$ = $1;
+}
+;
+
+opt_icmp_code
+:        {
+    $$ = NULL;
+}
+| MYWORD {
+    $$ = $1;
+}
+;
+
+/* Present for "fragmentation needed" (PMTUD) ICMP unreachables, e.g.
+ * "icmp unreachable frag_needed mtu 800". */
+opt_icmp_mtu
+:            {
+    $$ = -1;
+}
+| MTU INTEGER {
+    if (!is_valid_u16($2)) {
+        semantic_error("icmp mtu out of range");
+    }
+    $$ = $2;
+}
+;
+
+/* The TCP segment "echoed" inside the ICMP error payload -- reuses the
+ * same seq-range notation as a real TCP packet line ("[start:end(len)]"),
+ * per upstream google/packetdrill's opt_icmp_echoed. */
+opt_icmp_echoed
+:            {
+    $$.start_sequence = 0;
+    $$.payload_bytes = 0;
+}
+| '[' seq ']' {
+    $$ = $2;
 }
 ;
 
@@ -1453,6 +1564,31 @@ flags
     asprintf(&($$), "%s.", $1);
     free($1);
 }
+| MYFLOAT {
+    /* AccECN Accurate ECN Echo (ACE) field notation: ".5" etc, borrowed
+     * lexically from a float token but really "ACK flag + ACE value" --
+     * matches upstream's ack_and_ace shape (parser.y, google/packetdrill).
+     * Stored as the literal flags string; not decoded into real AccECN
+     * header bits here (INET has no AccECN implementation to decode into --
+     * these scripts land as an honest DIVERGENCE once they parse and run).
+     * Reconstruct the original ".<digit>" text (not "%g", which prints
+     * 0.0 as bare "0" with no '.' at all -- that would silently drop the
+     * ACK flag downstream, since buildTCPPacket() detects ACK via
+     * strchr(flags, '.'); ".0" is in fact the single most common ACE
+     * suffix in the real corpus). ACE is always a single decimal digit
+     * (0-7) in the corpus, so round to the nearest tenth. */
+    char buf[8];
+    int digit = (int)lround($1 * 10.0);
+    snprintf(buf, sizeof(buf), ".%d", digit);
+    $$ = strdup(buf);
+}
+| MYWORD MYFLOAT {
+    char buf[40];
+    int digit = (int)lround($2 * 10.0);
+    snprintf(buf, sizeof(buf), "%s.%d", $1, digit);
+    free($1);
+    $$ = strdup(buf);
+}
 | '-' {
     $$ = strdup("");
 }    /* no TCP flags set in segment */
@@ -1621,6 +1757,16 @@ opt_fastopen_cookie
 }
 | MYWORD {
     $$ = $1;
+}
+| INTEGER {
+    /* A purely-decimal-digit cookie (e.g. "1234123412341234") lexes as
+     * INTEGER, not MYWORD, since the lexer's digits-only rule wins over
+     * the generic word rule -- reconstruct the original digit string
+     * (fits safely in int64_t; hex_string_to_bytes() treats it as hex
+     * digit pairs, same as any other cookie value here). */
+    char buf[32];
+    snprintf(buf, sizeof(buf), "%" PRId64, $1);
+    $$ = strdup(buf);
 }
 ;
 
@@ -1879,6 +2025,12 @@ expression
 | sock_extended_err {
     $$ = $1;
 }
+| scm_timestamping  {
+    $$ = $1;
+}
+| pollfd {
+    $$ = $1;
+}
 ;
 
 
@@ -1969,6 +2121,17 @@ sock_extended_err
 }
 ;
 
+scm_timestamping
+: '{' SCM_SEC '=' expression ','
+      SCM_NSEC '=' expression '}' {
+    $$ = new PacketDrillExpression(EXPR_SCM_TIMESTAMPING);
+    struct scm_timestamping_expr *ts = (struct scm_timestamping_expr *) malloc(sizeof(struct scm_timestamping_expr));
+    ts->scm_sec = $4;
+    ts->scm_nsec = $8;
+    $$->setScmTimestamping(ts);
+}
+;
+
 iovec
 : '{' ELLIPSIS ',' decimal_integer '}' {
     $$ = new PacketDrillExpression(EXPR_IOVEC);
@@ -2002,6 +2165,26 @@ epollev
     struct epollev_expr *ev = (struct epollev_expr *) malloc(sizeof(struct epollev_expr));
     ev->events = $4; ev->fd = NULL; ev->ptr = NULL; ev->u32 = NULL; ev->u64 = $8;
     $$->setEpollev(ev);
+}
+;
+
+pollfd
+: '{' FD '=' expression ',' EVENTS '=' expression opt_revents '}' {
+    $$ = new PacketDrillExpression(EXPR_POLLFD);
+    struct pollfd_expr *pfd = (struct pollfd_expr *) malloc(sizeof(struct pollfd_expr));
+    pfd->fd = $4;
+    pfd->events = $8;
+    pfd->revents = $9;
+    $$->setPollfd(pfd);
+}
+;
+
+opt_revents
+:                             {
+    $$ = new_integer_expression(0, "%ld");
+}
+| ',' REVENTS '=' expression {
+    $$ = $4;
 }
 ;
 
@@ -2670,10 +2853,21 @@ word_list
 : MYWORD {
     $$ = $1;
 }
+| IS {
+    /* "is" is a reserved keyword elsewhere (IS '=' ...) but free-text
+     * errno notes like "(Operation is now in progress)" also use it as
+     * a plain word -- fold it back to text here since it never carries
+     * its own string value as a <reserved> token. */
+    $$ = strdup("is");
+}
 | word_list MYWORD {
     asprintf(&($$), "%s %s", $1, $2);
     free($1);
     free($2);
+}
+| word_list IS {
+    asprintf(&($$), "%s is", $1);
+    free($1);
 }
 ;
 

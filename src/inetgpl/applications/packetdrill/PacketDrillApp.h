@@ -182,6 +182,8 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
 
     int syscallEpollWait(struct syscall_spec *syscall, cQueue *args, char **error);
 
+    int syscallPoll(struct syscall_spec *syscall, cQueue *args, char **error);
+
     void runCodeEvent(PacketDrillEvent *event);
 
     std::string formatTcpInfoSnapshot(TcpStatusInfo *status);

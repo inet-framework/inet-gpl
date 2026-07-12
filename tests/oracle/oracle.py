@@ -220,8 +220,8 @@ def cmd_linux(args):
 # option set, and translate that set into INET ini overrides via mapping.yaml.
 # ---------------------------------------------------------------------------
 
-BACKTICK_RE = re.compile(r"`([^`]*)`", re.S)
-OPTION_LINE_RE = re.compile(r"(?m)^[ \t]*(--[a-zA-Z_][a-zA-Z_0-9]*(?:=\S+)?)[ \t]*$")
+BACKTICK_RE = re.compile(r"(?m)^[^\n`]*`([^`]*)`[^\n]*\n?")
+OPTION_LINE_RE = re.compile(r"(?m)^[ \t]*(--[a-zA-Z_][a-zA-Z_0-9]*(?:=\S+)?)[ \t]*(?://.*)?$")
 SYSCTL_LINE_RE = re.compile(r"^sysctl\s+-q\s+(.*)$")
 SYSCTL_ASSIGN_RE = re.compile(r'([a-zA-Z0-9_./]+)=("(?:[^"\\]|\\.)*"|\S+)')
 

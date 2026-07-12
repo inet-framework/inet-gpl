@@ -18,6 +18,7 @@
 #include "inet/common/packet/chunk/ByteCountChunk.h"
 #include "inet/networklayer/common/L3AddressTag_m.h"
 #include "inet/networklayer/common/L3Tools.h"
+#include "inet/networklayer/ipv4/IcmpHeader_m.h"
 #include "inet/networklayer/ipv4/Ipv4Header_m.h"
 #include "inet/transportlayer/common/L4Tools.h"
 #include "inet/transportlayer/contract/sctp/SctpCommand_m.h"
@@ -114,6 +115,64 @@ Packet *PacketDrill::buildUDPPacket(int address_family, enum direction_t directi
     ipHeader->setTotalLengthField(ipHeader->getTotalLengthField() + packet->getDataLength());
     PacketDrill::setIpv4HeaderCrc(ipHeader);
     packet->insertAtFront(ipHeader);
+    return packet;
+}
+
+Packet *PacketDrill::buildICMPPacket(int address_family, enum direction_t direction,
+                                     int icmpType, int icmpCode, int32_t mtu, uint32_t echoedStartSequence,
+                                     uint16_t echoedPayloadBytes, char **error)
+{
+    PacketDrillApp *app = PacketDrill::pdapp;
+    Packet *packet = new Packet("Inject ICMP");
+
+    // Quoted (echoed) inner TCP header: the original outbound segment this
+    // ICMP error is reporting on. Only src/dst ports and the sequence
+    // number are meaningful for INET's ICMP-to-connection matching
+    // (Tcp::processIcmpv4Error(), which peeks the quoted TCP header with
+    // Chunk::PF_ALLOW_INCOMPLETE) -- a minimal header is sufficient, and
+    // matches RFC 792's "first 8 bytes of the original datagram" quote.
+    auto innerTcpHeader = makeShared<TcpHeader>();
+    innerTcpHeader->setSrcPort(app->getLocalPort());
+    innerTcpHeader->setDestPort(app->getRemotePort());
+    innerTcpHeader->setSequenceNo(echoedStartSequence);
+    innerTcpHeader->setHeaderLength(TCP_MIN_HEADER_LENGTH);
+    innerTcpHeader->setChunkLength(TCP_MIN_HEADER_LENGTH);
+    packet->insertAtFront(innerTcpHeader);
+
+    // Quoted (echoed) inner IP header: the original outbound packet's own
+    // header, addressed local->remote like any real DIRECTION_OUTBOUND
+    // packet -- this is what triggered the router's ICMP response.
+    auto innerIpHeader = PacketDrill::makeIpv4Header(IP_PROT_TCP, DIRECTION_OUTBOUND,
+            app->getLocalAddress(), app->getRemoteAddress());
+    innerIpHeader->setTotalLengthField(innerIpHeader->getTotalLengthField() + packet->getDataLength());
+    PacketDrill::setIpv4HeaderCrc(innerIpHeader);
+    packet->insertAtFront(innerIpHeader);
+
+    // Outer ICMP header. A "fragmentation needed" (PMTUD) unreachable
+    // carries an extra MTU field, modeled by INET as the IcmpPtb subtype.
+    if (mtu >= 0) {
+        auto icmpHeader = makeShared<IcmpPtb>();
+        icmpHeader->setMtu(mtu);
+        icmpHeader->setChecksumMode(app->getCrcMode());
+        packet->insertAtFront(icmpHeader);
+    }
+    else {
+        auto icmpHeader = makeShared<IcmpHeader>();
+        icmpHeader->setType(static_cast<IcmpType>(icmpType));
+        icmpHeader->setCode(icmpCode);
+        icmpHeader->setChecksumMode(app->getCrcMode());
+        packet->insertAtFront(icmpHeader);
+    }
+
+    // Outer IP header: the ICMP packet itself, arriving from the network
+    // (an intermediate router), addressed remote->local like any other
+    // DIRECTION_INBOUND packet in this framework.
+    auto ipHeader = PacketDrill::makeIpv4Header(IP_PROT_ICMP, direction,
+            app->getLocalAddress(), app->getRemoteAddress());
+    ipHeader->setTotalLengthField(ipHeader->getTotalLengthField() + packet->getDataLength());
+    PacketDrill::setIpv4HeaderCrc(ipHeader);
+    packet->insertAtFront(ipHeader);
+
     return packet;
 }
 
@@ -1879,6 +1938,43 @@ int PacketDrill::evaluate(PacketDrillExpression *in, PacketDrillExpression *out,
                 return STATUS_ERR;
             }
             out->setSockExtendedErr(dst);
+            break;
+        }
+
+        case EXPR_SCM_TIMESTAMPING: {
+            struct scm_timestamping_expr *src = in->getScmTimestamping();
+            struct scm_timestamping_expr *dst = (struct scm_timestamping_expr *)malloc(sizeof(struct scm_timestamping_expr));
+            dst->scm_sec = new PacketDrillExpression(src->scm_sec->getType());
+            dst->scm_nsec = new PacketDrillExpression(src->scm_nsec->getType());
+            if (evaluate(src->scm_sec, dst->scm_sec, error) ||
+                evaluate(src->scm_nsec, dst->scm_nsec, error))
+            {
+                delete dst->scm_sec;
+                delete dst->scm_nsec;
+                free(dst);
+                return STATUS_ERR;
+            }
+            out->setScmTimestamping(dst);
+            break;
+        }
+
+        case EXPR_POLLFD: {
+            struct pollfd_expr *src = in->getPollfd();
+            struct pollfd_expr *dst = (struct pollfd_expr *)malloc(sizeof(struct pollfd_expr));
+            dst->fd = new PacketDrillExpression(src->fd->getType());
+            dst->events = new PacketDrillExpression(src->events->getType());
+            dst->revents = new PacketDrillExpression(src->revents->getType());
+            if (evaluate(src->fd, dst->fd, error) ||
+                evaluate(src->events, dst->events, error) ||
+                evaluate(src->revents, dst->revents, error))
+            {
+                delete dst->fd;
+                delete dst->events;
+                delete dst->revents;
+                free(dst);
+                return STATUS_ERR;
+            }
+            out->setPollfd(dst);
             break;
         }
 

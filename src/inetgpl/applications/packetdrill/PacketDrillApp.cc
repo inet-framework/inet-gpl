@@ -13,6 +13,7 @@
 #include <cmath>
 #include <map>
 #include <sstream>
+#include <poll.h>
 #include <sys/epoll.h>
 #include <sys/wait.h>
 #include <netinet/tcp.h>
@@ -452,7 +453,14 @@ void PacketDrillApp::runEvent(PacketDrillEvent *event)
             if (ipHeader->getTotalLengthField() < packetByteLength)
                 pk->setBackOffset(B(ipHeader->getTotalLengthField()) - ipHeader->getChunkLength());
 
-            if (protocol == IP_PROT_TCP) {
+            if (ipHeader->getProtocolId() == IP_PROT_ICMP) {
+                // An injected ICMP packet (e.g. "< icmp unreachable [...]")
+                // is fully built by PacketDrill::buildICMPPacket() already;
+                // unlike a TCP/SCTP segment for this connection, it carries
+                // no dynamic ack-number/timestamp/vtag state of ours to
+                // re-stamp at injection time -- send as constructed.
+            }
+            else if (protocol == IP_PROT_TCP) {
                 auto tcpHeader = pk->removeAtFront<TcpHeader>();
                 tcpHeader->setAckNo(tcpHeader->getAckNo() + relSequenceOut);
                 if (tcpHeader->getHeaderOptionArraySize() > 0) {
@@ -783,6 +791,9 @@ void PacketDrillApp::runSystemCallEvent(PacketDrillEvent *event, struct syscall_
     }
     else if (!strcmp(name, "epoll_wait")) {
         result = syscallEpollWait(syscall, args, &error);
+    }
+    else if (!strcmp(name, "poll")) {
+        result = syscallPoll(syscall, args, &error);
     }
     else if (!strcmp(name, "connect")) {
         result = syscallConnect(syscall, args, &error);
@@ -1897,6 +1908,53 @@ int PacketDrillApp::syscallEpollWait(struct syscall_spec *syscall, cQueue *args,
         if (!expectedEv->events || expectedEv->events->getU32(&expectedEvMask, error) || expectedEvMask != actualEvents)
             throw cTerminationException("Packetdrill error: epoll_wait returned unexpected events");
     }
+    return STATUS_OK;
+}
+
+int PacketDrillApp::syscallPoll(struct syscall_spec *syscall, cQueue *args, char **error)
+{
+    if (args->getLength() != 3)
+        return STATUS_ERR;
+    PacketDrillExpression *fdsExp = check_and_cast_nullable<PacketDrillExpression *>(args->get(0));
+    if (!fdsExp || (fdsExp->getType() != EXPR_LIST))
+        return STATUS_ERR;
+    cQueue *fdsList = fdsExp->getList();
+
+    // Unlike epoll_wait's optional edge-triggered mode, poll() is always
+    // level-triggered: every call reports current readiness fresh, with no
+    // per-fd registration/edge state to track.
+    int32_t readyCount = 0;
+    if (fdsList) {
+        for (cQueue::Iterator it(*fdsList); !it.end(); it++) {
+            auto *pollExp = check_and_cast<PacketDrillExpression *>(*it);
+            if (pollExp->getType() != EXPR_POLLFD)
+                return STATUS_ERR;
+            struct pollfd_expr *pfd = pollExp->getPollfd();
+
+            uint32_t requestedEvents;
+            if (!pfd->events || pfd->events->getU32(&requestedEvents, error))
+                return STATUS_ERR;
+
+            uint32_t actualRevents = 0;
+            if ((requestedEvents & POLLIN) && receivedPackets->getLength() > 0)
+                actualRevents |= POLLIN;
+            // This framework never models a full send buffer, so the
+            // socket is always writable once connected.
+            if (requestedEvents & POLLOUT)
+                actualRevents |= POLLOUT;
+
+            uint32_t expectedRevents;
+            if (!pfd->revents || pfd->revents->getU32(&expectedRevents, error) || expectedRevents != actualRevents)
+                throw cTerminationException("Packetdrill error: poll() returned unexpected revents");
+
+            if (actualRevents != 0)
+                readyCount++;
+        }
+    }
+
+    int32_t expectedReturn = syscall->result->getNum();
+    if (readyCount != expectedReturn)
+        throw cTerminationException("Packetdrill error: poll() returned unexpected ready-fd count");
     return STATUS_OK;
 }
 
