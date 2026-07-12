@@ -55,7 +55,14 @@ sysctl:
     transform: bitmask
     bits:
       "0x1": "**.tcp.fastopenClientEnabled"
-      "0x2": "**.tcp.fastopenServerEnabled"
+      # Bit 1 also implies fastopenExpOptionEnabled: Linux servers accept both
+      # the standard (kind 34) and legacy pre-standardization (kind 254 +
+      # 0xF989 magic, Workstream F4) wire forms whenever server Fast Open is
+      # on, with no separate sysctl to disable the legacy form -- INET's
+      # fastopenExpOptionEnabled is an INET-only extra opt-in gate (not
+      # present in Linux), so bundling it onto the same bit is the faithful
+      # translation of "server Fast Open enabled" for oracle purposes.
+      "0x2": ["**.tcp.fastopenServerEnabled", "**.tcp.fastopenExpOptionEnabled"]
   net.ipv4.tcp_congestion_control:
     ini: "**.tcp.tcpAlgorithmClass"
     transform: enum

@@ -309,7 +309,10 @@ def translate_to_ini(stripped, mapping):
                         blocking.append(f"{key}={val} (not an integer)")
                 else:
                     for bit_str, bit_ini in spec.get("bits", {}).items():
-                        ini[bit_ini] = "true" if (ival & int(bit_str, 0)) else "false"
+                        truthy = "true" if (ival & int(bit_str, 0)) else "false"
+                        bit_inis = bit_ini if isinstance(bit_ini, list) else [bit_ini]
+                        for one_ini in bit_inis:
+                            ini[one_ini] = truthy
             else:
                 unmapped.append(f"{key}={val}")
         elif key in ignore:
