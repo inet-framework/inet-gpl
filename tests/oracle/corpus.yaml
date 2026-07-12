@@ -17,7 +17,7 @@ environment:
   kernel_release: "7.1.1"          # `uname -r` on the leg-L host; golden/ is keyed by this
   packetdrill_binary: /etc/profiles/per-user/rhornig/bin/packetdrill  # nix profile, no --version support
   inet_commit: 2dc1c29741037de1bf168927f2d31db9807f9705
-  inetgpl_commit: 1403a22a17a8a10cfb898788cad26a84e12d03b7
+  inetgpl_commit: 943f4f8ecd3f59944be79696c6b4c3a4d0630076
   pinned_on: "2026-07-12"
 
 # Per-script overrides/skips, keyed by "<corpus>:<relpath-from-subdir-without-.pkt>".
