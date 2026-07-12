@@ -213,7 +213,7 @@ TcpOption *setOptionValues(PacketDrillTcpOption *opt)
                 option->setLength(length);
                 option->setSackItemArraySize(length / 8);
                 unsigned int count = 0;
-                for (int i = 0; i < 2 * opt->getBlockList()->getLength(); i += 2) {
+                for (int i = 0; i < opt->getBlockList()->getLength(); i++) {
                     SackItem si;
                     PacketDrillStruct *pds = check_and_cast<PacketDrillStruct *>(opt->getBlockList()->get(i));
                     si.setStart(pds->getValue1());
@@ -1985,7 +1985,7 @@ int PacketDrill::evaluate(PacketDrillExpression *in, PacketDrillExpression *out,
 
         case EXPR_BINARY:
             if (evaluate_binary_expression(in, out, error)) {
-                printf("Error in EXPR_BINARY\n");
+                return STATUS_ERR;
             }
             break;
 

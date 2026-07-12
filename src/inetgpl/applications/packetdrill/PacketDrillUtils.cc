@@ -31,6 +31,8 @@ struct int_symbol platform_symbols_table[] = {
 
     { SOCK_DGRAM,                       "SOCK_DGRAM"                      },
     { SOCK_STREAM,                      "SOCK_STREAM"                     },
+    { SOCK_NONBLOCK,                    "SOCK_NONBLOCK"                   },
+    { SOCK_CLOEXEC,                     "SOCK_CLOEXEC"                    },
 
     { IPPROTO_IP,                       "IPPROTO_IP"                      },
     { IPPROTO_UDP,                      "IPPROTO_UDP"                     },
@@ -70,6 +72,7 @@ struct int_symbol platform_symbols_table[] = {
     { F_GETFL,                          "F_GETFL"                         },
     { F_SETFL,                          "F_SETFL"                         },
     { O_RDWR,                           "PD_O_RDWR"                       },
+    { O_NONBLOCK,                       "O_NONBLOCK"                      },
 
     { SOL_SOCKET,                       "SOL_SOCKET"                      },
     { SOL_TCP,                          "SOL_TCP"                         },
@@ -88,12 +91,21 @@ struct int_symbol platform_symbols_table[] = {
     { EPOLLPRI,                         "EPOLLPRI"                        },
     { EPOLLET,                          "EPOLLET"                         },
     { EPOLLONESHOT,                     "EPOLLONESHOT"                    },
+    { EPOLLEXCLUSIVE,                   "EPOLLEXCLUSIVE"                  },
 
     /* /usr/include/linux/errqueue.h, /usr/include/netinet/in.h (MSG_ERRQUEUE cmsg for IP_RECVERR) */
     { SOL_IP,                           "CMSG_LEVEL_IP"                   },
     { IP_RECVERR,                       "CMSG_TYPE_RECVERR"               },
     { SO_EE_ORIGIN_ZEROCOPY,            "SO_EE_ORIGIN_ZEROCOPY"           },
     { SO_EE_CODE_ZEROCOPY_COPIED,       "SO_EE_CODE_ZEROCOPY_COPIED"      },
+
+    /* /usr/include/bits/socket.h -- send/recv flags */
+    { MSG_FASTOPEN,                     "MSG_FASTOPEN"                    },
+    { MSG_ZEROCOPY,                     "MSG_ZEROCOPY"                    },
+    { MSG_DONTWAIT,                     "MSG_DONTWAIT"                    },
+    { MSG_ERRQUEUE,                     "MSG_ERRQUEUE"                    },
+    { MSG_NOSIGNAL,                     "MSG_NOSIGNAL"                    },
+    { MSG_TRUNC,                        "MSG_TRUNC"                       },
 
     /* /usr/include/poll.h */
     { POLLIN,                           "POLLIN"                          },

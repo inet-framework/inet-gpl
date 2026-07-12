@@ -468,6 +468,7 @@ void PacketDrillApp::runEvent(PacketDrillEvent *event)
                         if (tcpHeader->getHeaderOption(i)->getKind() == TCPOPT_TIMESTAMP) {
                             TcpOptionTimestamp *option = new TcpOptionTimestamp();
                             option->setEchoedTimestamp(peerTS);
+                            tcpHeader->removeHeaderOption(i);
                             tcpHeader->setHeaderOption(i, option);
                         }
                     }
@@ -1125,13 +1126,30 @@ int PacketDrillApp::syscallWrite(struct syscall_spec *syscall, cQueue *args, cha
 
     switch (protocol) {
         case IP_PROT_TCP: {
-            // inet::Packet overrides setBitLength()/setByteLength() to throw
-            // (packet length must come from its Chunk content); give it a
-            // ByteCountChunk of the script's asserted length instead -- the
-            // actual byte values are irrelevant to this framework's model.
-            Packet *payload = new Packet("Write");
-            payload->insertAtBack(makeShared<ByteCountChunk>(B(syscall->result->getNum())));
-            tcpSocket.send(payload);
+            if (tcpSocket.getState() == TcpSocket::LISTENING && acceptSet) {
+                // The script's own event clock already ran accept() on this
+                // socket, but the real ESTABLISHED indication from the Tcp
+                // module is only delivered in a later event, not yet visible
+                // here -- mirrors the same manual state fixup syscallAccept()
+                // already applies via establishedPending, just reactively at
+                // the point of use instead of proactively at accept() time.
+                tcpSocket.setState(TcpSocket::CONNECTED);
+                acceptSet = false;
+            }
+            // A script's asserted return value can be a negative errno (e.g.
+            // "send(...) = -1 EPIPE" on a closed/reset connection) rather than
+            // a byte count -- only build and send a payload for a successful,
+            // non-negative return; an error return means nothing was sent.
+            if (syscall->result->getNum() > 0) {
+                // inet::Packet overrides setBitLength()/setByteLength() to
+                // throw (packet length must come from its Chunk content);
+                // give it a ByteCountChunk of the script's asserted length
+                // instead -- the actual byte values are irrelevant to this
+                // framework's model.
+                Packet *payload = new Packet("Write");
+                payload->insertAtBack(makeShared<ByteCountChunk>(B(syscall->result->getNum())));
+                tcpSocket.send(payload);
+            }
             break;
         }
         case IP_PROT_SCTP: {
@@ -1470,12 +1488,31 @@ int PacketDrillApp::syscallSendTo(struct syscall_spec *syscall, cQueue *args, ch
     if (!exp || (exp->getType() != EXPR_ELLIPSIS))
         return STATUS_ERR;
 
-    Packet *payload = new Packet("SendTo");
-    payload->insertAtBack(makeShared<ByteCountChunk>(B(count)));
-
     switch (protocol) {
-        case IP_PROT_UDP:
+        case IP_PROT_UDP: {
+            Packet *payload = new Packet("SendTo");
+            payload->insertAtBack(makeShared<ByteCountChunk>(B(count)));
             udpSocket.sendTo(payload, remoteAddress, remotePort);
+            break;
+        }
+
+        case IP_PROT_TCP:
+            // Zerocopy completion-notification semantics (MSG_ZEROCOPY) and
+            // Fast Open's cookie/early-data wire behavior (MSG_FASTOPEN) are
+            // not modeled here -- this just stops the hard crash and behaves
+            // like a plain connect()+write() on the existing TCP socket for
+            // this connection (real Fast Open's single-syscall SYN+data is
+            // Workstream F's job; this is deliberately an honest divergence,
+            // not a match, until that lands).
+            if (tcpSocket.getState() != TcpSocket::CONNECTED && tcpSocket.getState() != TcpSocket::CONNECTING) {
+                tcpSocket.connect(remoteAddress, remotePort);
+                tcpConnId = tcpSocket.getSocketId();
+            }
+            if (count > 0) {
+                Packet *payload = new Packet("SendTo");
+                payload->insertAtBack(makeShared<ByteCountChunk>(B(count)));
+                tcpSocket.send(payload);
+            }
             break;
 
         default:
