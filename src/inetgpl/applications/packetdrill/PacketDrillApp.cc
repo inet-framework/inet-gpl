@@ -877,8 +877,7 @@ std::string PacketDrillApp::formatTcpInfoSnapshot(TcpStatusInfo *status)
     // Symbolic constants: emitted unconditionally (cheap, harmless to
     // repeat every block) so a script comparing against one of these
     // doesn't spuriously NameError on the constant itself even when the
-    // paired tcpi_* variable isn't emitted (e.g. tcpi_ca_state, which this
-    // framework has no source for -- see the plan doc's field table).
+    // paired tcpi_* variable isn't emitted (sentinel-guarded fields below).
     out << "TCP_ESTABLISHED = 1\nTCP_SYN_SENT = 2\nTCP_SYN_RECV = 3\n"
            "TCP_FIN_WAIT1 = 4\nTCP_FIN_WAIT2 = 5\nTCP_TIME_WAIT = 6\n"
            "TCP_CLOSE = 7\nTCP_CLOSE_WAIT = 8\nTCP_LAST_ACK = 9\n"
@@ -931,6 +930,25 @@ std::string PacketDrillApp::formatTcpInfoSnapshot(TcpStatusInfo *status)
     if (status->getEctEnabled())
         options |= TCPI_OPT_ECN;
     out << "tcpi_options = " << options << "\n";
+
+    // Fields surfaced by INET's TcpStatusInfo extension (caState/backoff/
+    // lost/probes/bytesReceived/deliveredCe*/busyTime/rwndLimited). UINT_MAX
+    // sentinels ("no meaning for this flavour / SACK off") leave the tcpi_*
+    // name undefined so a script asserting on it gets an honest NameError
+    // divergence instead of a fabricated value. tcpi_sndbuf_limited and
+    // tcpi_notsent_bytes stay unemitted -- INET has no source for either.
+    out << "tcpi_ca_state = " << status->getCaState() << "\n";
+    if (status->getBackoff() != UINT_MAX)
+        out << "tcpi_backoff = " << status->getBackoff() << "\n";
+    if (status->getLost() != UINT_MAX)
+        out << "tcpi_lost = " << status->getLost() << "\n";
+    if (status->getProbes() != UINT_MAX)
+        out << "tcpi_probes = " << status->getProbes() << "\n";
+    out << "tcpi_bytes_received = " << status->getBytesReceived() << "\n";
+    out << "tcpi_delivered_ce = " << status->getDeliveredCePkts() << "\n";
+    out << "tcpi_delivered_ce_bytes = " << status->getDeliveredCeBytes() << "\n";
+    out << "tcpi_busy_time = " << (int64_t)llround(status->getBusyTime() * 1e6) << "\n";
+    out << "tcpi_rwnd_limited = " << (int64_t)llround(status->getRwndLimited() * 1e6) << "\n";
 
     return out.str();
 }
