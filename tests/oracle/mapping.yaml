@@ -17,17 +17,12 @@
 #             run (I_UNSUPPORTED_CONFIG) rather than silently proceed with INET's
 #             own default. Kept minimal (empty) by design: most gaps are more
 #             informative as an observed DIVERGENCE (with a kernel_source_hint)
-#             than as a pre-run block. Notably, `tcp_congestion_control` is NOT
-#             required even though every corpus script sets it to `cubic` (via
-#             defaults.sh, which INET cannot match -- no CUBIC flavour exists):
-#             blocking on that would mark ~every non-dialect-gapped script
-#             UNSUPPORTED_FEATURE and hide the more precise MATCH/DIVERGENCE
-#             signal for scripts where the CC algorithm never actually gets
-#             exercised (e.g. simple open/close). Instead it is left unmapped
-#             (INET keeps its own TcpReno default) and recorded in
-#             `unmapped_knobs`, so the comparator can flag "possibly
-#             CC-attributable" on any resulting DIVERGENCE without blocking
-#             scripts where it turns out not to matter.
+#             than as a pre-run block. `tcp_congestion_control=cubic` maps to
+#             INET's TcpCubic (Workstream C) since 2026-07-13; the remaining
+#             unmapped algorithms (bbr etc.) are recorded in `unmapped_knobs`
+#             so the comparator can flag "possibly CC-attributable" on any
+#             resulting DIVERGENCE without blocking scripts where the CC
+#             algorithm never actually gets exercised.
 #   known_preambles: backtick-block content patterns that resolve to a fixed
 #             sysctl set, so the preprocessor doesn't need to shell-parse
 #             defaults.sh at runtime. Effective sets copied verbatim from the
@@ -45,8 +40,40 @@ sysctl:
     ini: "**.tcp.timestampSupport"
     transform: bool
   net.ipv4.tcp_ecn:
-    ini: "**.tcp.ecnWillingness"
-    transform: bool   # 0 -> false; nonzero -> true (AccECN nuance is a dialect-gap concern, not a config one)
+    # Kernel 7.x AccECN-era semantics (verified against net/ipv4 source +
+    # the corpus's own script expectations, e.g. tcp_accecn_ecn3.pkt "tcp_ecn=4
+    # uses RFC3168 ECN for SYN", tcp_accecn_serverside_only.pkt tcp_ecn=5
+    # accepting SEWA without requesting): 0=off, 1=request+accept classic,
+    # 2=accept-only classic, 3=request+accept AccECN, 4=request classic /
+    # accept AccECN (INET has no exact mode; rfc3168 matches the client-side
+    # request behavior every corpus user of 4 asserts), 5=accept-only AccECN.
+    # Maps to tcpEcnMode (which supersedes ecnWillingness; INET errors if
+    # both are set, so this fully replaces the old bool mapping).
+    ini: "**.tcp.tcpEcnMode"
+    transform: enum
+    values:
+      "0": '"off"'
+      "1": '"rfc3168"'
+      "2": '"passive"'
+      "3": '"accecn"'
+      "4": '"rfc3168"'
+      "5": '"accecn-passive"'
+  net.ipv4.tcp_ecn_option:
+    # AccECN option (kinds 172/174): kernel 0=off, 1=minimal, 2=full. INET's
+    # accEcnOptionEnabled is a bool (G6); 0 -> false, 1/2 -> true. The
+    # kernel's tcp_ecn_option_beacon (per-RTT beacon frequency) has a
+    # different unit than INET's accEcnOptionBeaconAcks (per-ACK) and is left
+    # unmapped/recorded rather than mis-translated.
+    ini: "**.tcp.accEcnOptionEnabled"
+    transform: bool
+  net.ipv4.tcp_notsent_lowat:
+    # TCP_NOTSENT_LOWAT (Workstream H4): INET's notsentLowat is @unit(B) and
+    # uses -1 = disabled where Linux uses UINT_MAX.
+    ini: "**.tcp.notsentLowat"
+    transform: int
+    suffix: "B"
+    special:
+      "4294967295": "-1"
   net.ipv4.tcp_fastopen:
     # THROWAWAY PREVIEW (Workstream F checkpoint, 2026-07-12): temporarily mapped out
     # of `ignore:` to preview INET's Fast Open (F1-F3 + the client opt-in-scope fix)
@@ -72,8 +99,9 @@ sysctl:
       vegas: TcpVegas
       westwood: TcpWestwood
       dctcp: DcTcp
+      cubic: TcpCubic
       none: TcpNoCongestionControl
-      # cubic (Linux default via defaults.sh), bbr, bic, htcp, illinois, highspeed,
+      # bbr, bic, htcp, illinois, highspeed,
       # scalable, lp, veno, yeah, hybla: no INET flavour exists. Deliberately
       # absent from `values` -> recorded as unmapped_knob; NOT set in ini
       # (INET keeps its own default TcpReno), and NOT blocking (required below
@@ -129,10 +157,8 @@ ignore:
   - net.ipv4.tcp_tso_win_divisor
   - net.ipv4.tcp_pacing_ss_ratio
   - net.ipv4.tcp_pacing_ca_ratio
-  - net.ipv4.tcp_notsent_lowat
   - net.ipv4.tcp_fastopen_key
   - net.ipv4.tcp_syncookies
-  - net.ipv4.tcp_ecn_option
   - net.ipv4.tcp_metrics    # `ip tcp_metrics flush all` in defaults.sh -- no sysctl, no ini equivalent
   - net.ipv4.tcp_min_rtt_wlen
 

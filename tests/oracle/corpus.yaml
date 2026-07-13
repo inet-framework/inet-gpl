@@ -16,6 +16,9 @@ corpora:
 environment:
   kernel_release: "7.1.1"          # `uname -r` on the leg-L host; golden/ is keyed by this
   packetdrill_binary: /etc/profiles/per-user/rhornig/bin/packetdrill  # nix profile, no --version support
+  # fallback only: oracle.py overrides these two at load time with the LIVE
+  # `git rev-parse HEAD` of $INET_ROOT/$INETGPL_ROOT (the checkouts actually
+  # being run), after a stale pinned hash misattributed a 2026-07-13 run.
   inet_commit: 2dc1c29741037de1bf168927f2d31db9807f9705
   inetgpl_commit: 0ab1c3287ad7fa023d482488efef7e3ad621b127
   pinned_on: "2026-07-12"

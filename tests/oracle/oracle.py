@@ -52,9 +52,28 @@ LEG_I_TIMEOUT_S = 30
 LEG_I_SIM_TIME_LIMIT = "300s"
 
 
+def _live_commit(root_env_var):
+    try:
+        r = subprocess.run(["git", "-C", os.environ[root_env_var], "rev-parse", "HEAD"],
+                           capture_output=True, text=True, timeout=10)
+        if r.returncode == 0:
+            return r.stdout.strip()
+    except Exception:
+        pass
+    return None
+
+
 def load_corpus_config():
     with open(os.path.join(ORACLE_DIR, "corpus.yaml")) as f:
-        return yaml.safe_load(f)
+        cfg = yaml.safe_load(f)
+    # inet/inetgpl commits: read live from the checkouts actually being run
+    # against, not corpus.yaml's (stale-prone) pinned values -- the 2026-07-13
+    # status report caught the pinned hash misattributing a fresh run.
+    for env_var, key in (("INET_ROOT", "inet_commit"), ("INETGPL_ROOT", "inetgpl_commit")):
+        live = _live_commit(env_var)
+        if live:
+            cfg["environment"][key] = live
+    return cfg
 
 
 def load_mapping():
@@ -250,15 +269,20 @@ def preprocess_script(text, mapping):
 
     known_preambles = mapping.get("known_preambles", [])
     for content in stripped["backtick_blocks"]:
-        resolved = False
+        # A preamble (defaults.sh) may be FOLLOWED by explicit sysctl lines in
+        # the same backtick block (the accecn corpus's usual shape). Match the
+        # preamble against the first line only, apply its preset, then
+        # line-scan the rest so explicit sysctls layer on top of (and
+        # override) the preset -- previously a whole-content anchored match
+        # dropped the preset entirely for such mixed blocks.
+        lines = content.splitlines()
+        rest = lines
         for kp in known_preambles:
-            if re.match(kp["match"], content):
+            if lines and re.match(kp["match"], lines[0].strip()):
                 stripped["sysctls"].update(kp["sysctls"])
-                resolved = True
+                rest = lines[1:]
                 break
-        if resolved:
-            continue
-        for line in content.splitlines():
+        for line in rest:
             m = SYSCTL_LINE_RE.match(line.strip())
             if not m:
                 continue
@@ -291,7 +315,12 @@ def translate_to_ini(stripped, mapping):
                 truthy = val.strip() not in ("0", "", "0x0")
                 ini[spec["ini"]] = "true" if truthy else "false"
             elif transform == "int":
-                ini[spec["ini"]] = val.strip()
+                v = val.strip()
+                # optional special-value remap (e.g. Linux's UINT_MAX-means-
+                # disabled tcp_notsent_lowat -> INET's -1) and unit suffix
+                # (e.g. "B" for @unit(B) NED params)
+                v = spec.get("special", {}).get(v, v)
+                ini[spec["ini"]] = v + spec.get("suffix", "")
             elif transform == "enum":
                 mapped = spec.get("values", {}).get(val.strip())
                 if mapped is not None:
