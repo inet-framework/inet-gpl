@@ -1234,6 +1234,15 @@ void PacketDrillApp::sendTcpPayloadWithFlags(int64_t numBytes, int flags)
     // socket API -- MSG_EOR (Workstream H1) marks a record boundary,
     // MSG_ZEROCOPY (H2, gated on a prior SO_ZEROCOPY like Linux) requests a
     // completion notification collected by socketZerocopyCompletion().
+    if (tcpSocket.getState() == TcpSocket::LISTENING && acceptSet) {
+        // accept()/send same-tick race fixup (see syscallWrite's original
+        // comment): the script already ran accept() but the ESTABLISHED
+        // indication hasn't been delivered yet -- applies to every send-family
+        // syscall, not just write()/send() (caught live by sendmsg-based
+        // zerocopy scripts crashing on "state is LISTENING").
+        tcpSocket.setState(TcpSocket::CONNECTED);
+        acceptSet = false;
+    }
     Packet *payload = new Packet("Write");
     payload->insertAtBack(makeShared<ByteCountChunk>(B(numBytes)));
     if (flags & MSG_EOR)
@@ -1873,13 +1882,29 @@ int PacketDrillApp::syscallRead(PacketDrillEvent *event, struct syscall_spec *sy
         if (msgArrived || receivedPackets->getLength() > 0) {
             switch (protocol) {
                 case IP_PROT_TCP: {
-                    Request *msg = new Request("dataRequest", TCP_C_READ);
-                    TcpCommand *tcpcmd = new TcpCommand();
-                    msg->addTag<SocketReq>()->setSocketId(tcpConnId);
-                    msg->addTag<DispatchProtocolReq>()->setProtocol(&Protocol::tcp);
-                    msg->setControlInfo(tcpcmd);
-                    send(msg, "socketOut"); // send to TCP
-                    break;
+                    // This harness always runs TCP sockets in autoRead mode, so
+                    // arrived data was already delivered by socketDataArrived()
+                    // and queued -- consume and length-verify it directly. The
+                    // old TCP_C_READ request here was fatal whenever it actually
+                    // reached INET ("TCP READ arrived, but connection used in
+                    // autoRead mode").
+                    for (cQueue::Iterator it(*receivedPackets); !it.end(); it++) {
+                        auto *qpkt = dynamic_cast<Packet *>(*it);
+                        if (qpkt && tcpPayloadLength(qpkt) < 0) { // app data, not a queued tun/IP packet
+                            receivedPackets->remove(qpkt);
+                            long len = qpkt->getByteLength();
+                            delete (PacketDrillInfo *)qpkt->getContextPointer();
+                            delete qpkt;
+                            msgArrived = receivedPackets->getLength() > 0;
+                            if (len != syscall->result->getNum())
+                                throw cTerminationException("Packetdrill error: Wrong payload length");
+                            return STATUS_OK;
+                        }
+                    }
+                    // nothing delivered yet: defer, socketDataArrived() completes it
+                    msgArrived = false;
+                    recvFromSet = true;
+                    return STATUS_OK;
                 }
                 case IP_PROT_SCTP: {
                     Packet *pkt = new Packet("dataRequest", SCTP_C_RECEIVE);
