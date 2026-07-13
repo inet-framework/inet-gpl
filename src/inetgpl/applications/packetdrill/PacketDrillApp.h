@@ -191,6 +191,8 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
 
     int syscallRecvMsg(PacketDrillEvent *event, struct syscall_spec *syscall, cQueue *args, char **error);
 
+    int verifyMsgErrQueue(struct msghdr_expr *msgExpr, struct syscall_spec *syscall, char **error);
+
     int verifyMsgControlInq(struct msghdr_expr *msgExpr, char **error);
 
     int syscallEpollCreate(struct syscall_spec *syscall, cQueue *args, char **error);
@@ -251,6 +253,7 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     virtual void socketClosed(TcpSocket *socket) override;
     virtual void socketFailure(TcpSocket *socket, int code) override;
     virtual void socketStatusArrived(TcpSocket *socket, TcpStatusInfo *status) override;
+    virtual void socketZerocopyCompletion(TcpSocket *socket, unsigned int zerocopyId) override;
     virtual void socketDeleted(TcpSocket *socket) override {} // TODO
     //@}
 

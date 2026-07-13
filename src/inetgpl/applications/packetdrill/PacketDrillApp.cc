@@ -17,6 +17,7 @@
 #include <sys/epoll.h>
 #include <sys/wait.h>
 #include <netinet/tcp.h>
+#include <linux/errqueue.h>
 
 #include "inetgpl/applications/packetdrill/PacketDrillInfo_m.h"
 #include "inetgpl/applications/packetdrill/PacketDrillUtils.h"
@@ -207,6 +208,14 @@ void PacketDrillApp::socketClosed(TcpSocket *socket)
 void PacketDrillApp::socketFailure(TcpSocket *socket, int code)
 {
     delete socketMap.removeSocket(socket);
+}
+
+void PacketDrillApp::socketZerocopyCompletion(TcpSocket *socket, unsigned int zerocopyId)
+{
+    // MSG_ZEROCOPY completion (Workstream H2): collect ids in delivery order;
+    // recvmsg(MSG_ERRQUEUE) drains them against the script's asserted
+    // ee_info..ee_data range (verifyMsgErrQueue).
+    completedZerocopyIds.push_back(zerocopyId);
 }
 
 void PacketDrillApp::socketStatusArrived(TcpSocket *socket, TcpStatusInfo *status)
@@ -1893,12 +1902,22 @@ int PacketDrillApp::syscallSendMsg(struct syscall_spec *syscall, cQueue *args, c
 int PacketDrillApp::syscallRecvMsg(PacketDrillEvent *event, struct syscall_spec *syscall, cQueue *args, char **error)
 {
     PacketDrillExpression *exp;
+    int flags = 0;
 
     if (args->getLength() != 3)
         return STATUS_ERR;
     exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(1));
     if (!exp || (exp->getType() != EXPR_MSGHDR))
         return STATUS_ERR;
+    if (auto *flagsExp = check_and_cast_nullable<PacketDrillExpression *>(args->get(2)))
+        if (flagsExp->getType() == EXPR_INTEGER)
+            flags = (int)flagsExp->getNum();
+
+    // recvmsg(MSG_ERRQUEUE) reads the error queue (zerocopy completions,
+    // TX timestamps), never the data stream -- it must not consume a queued
+    // data packet nor arm the deferred-read machinery.
+    if (flags & MSG_ERRQUEUE)
+        return verifyMsgErrQueue(exp->getMsghdr(), syscall, error);
 
     if (msgArrived) {
         cPacket *msg = (receivedPackets->pop());
@@ -1959,6 +1978,65 @@ int PacketDrillApp::verifyMsgControlInq(struct msghdr_expr *msgExpr, char **erro
         if (actualInq != expectedInq) {
             EV_INFO << "TCP_CM_INQ mismatch: expected " << expectedInq << " actual " << actualInq << endl;
             return STATUS_ERR;
+        }
+    }
+    return STATUS_OK;
+}
+
+int PacketDrillApp::verifyMsgErrQueue(struct msghdr_expr *msgExpr, struct syscall_spec *syscall, char **error)
+{
+    // recvmsg(MSG_ERRQUEUE): verify the script's asserted error-queue entries
+    // against what INET reported. Only MSG_ZEROCOPY completion notifications
+    // (Workstream H2, collected in send order by socketZerocopyCompletion())
+    // are modeled; a Linux completion cmsg carries the id RANGE ee_info(lo)..
+    // ee_data(hi), which must exactly drain the front of the collected queue.
+    // TX timestamping entries (SCM_TIMESTAMPING / SO_EE_ORIGIN_TIMESTAMPING)
+    // have no INET counterpart -- H3 models RX delivery stamps only -- so any
+    // script asserting them gets an explicit, honest divergence rather than a
+    // silent skip.
+    if (syscall->result->getNum() < 0) {
+        // e.g. "recvmsg(...) = -1 EAGAIN": the script asserts an EMPTY error
+        // queue; pending completions Linux would have delivered are a mismatch.
+        if (!completedZerocopyIds.empty())
+            throw cTerminationException("Packetdrill error: error queue expected empty but zerocopy completions are pending");
+        return STATUS_OK;
+    }
+    if (!msgExpr || !msgExpr->msg_control)
+        return STATUS_OK;
+    cQueue *cmsgList = msgExpr->msg_control->getList();
+    if (!cmsgList)
+        return STATUS_OK;
+    for (cQueue::Iterator it(*cmsgList); !it.end(); it++) {
+        auto *cmsgExpr = check_and_cast<PacketDrillExpression *>(*it);
+        if (cmsgExpr->getType() != EXPR_CMSG)
+            continue;
+        struct cmsg_expr *cmsg = cmsgExpr->getCmsg();
+        int32_t cmsgType;
+        if (cmsg->cmsg_type->getS32(&cmsgType, error))
+            continue;
+        if (cmsgType == SCM_TIMESTAMPING)
+            throw cTerminationException("Packetdrill error: TX timestamping (SCM_TIMESTAMPING) not modeled in INET");
+        if (cmsgType != IP_RECVERR || !cmsg->cmsg_data || cmsg->cmsg_data->getType() != EXPR_SOCK_EXTENDED_ERR)
+            continue;
+        struct sock_extended_err_expr *ee = cmsg->cmsg_data->getSockExtendedErr();
+        int32_t origin = -1;
+        if (!ee->ee_origin || ee->ee_origin->getS32(&origin, error))
+            continue;
+        if (origin == SO_EE_ORIGIN_TIMESTAMPING)
+            throw cTerminationException("Packetdrill error: TX timestamping (SO_EE_ORIGIN_TIMESTAMPING) not modeled in INET");
+        if (origin != SO_EE_ORIGIN_ZEROCOPY)
+            continue;
+        int32_t lo = 0, hi = 0;
+        if (!ee->ee_info || ee->ee_info->getS32(&lo, error) || !ee->ee_data || ee->ee_data->getS32(&hi, error))
+            throw cTerminationException("Packetdrill error: zerocopy completion cmsg without a literal ee_info/ee_data id range");
+        for (int32_t id = lo; id <= hi; id++) {
+            if (completedZerocopyIds.empty())
+                throw cTerminationException("Packetdrill error: zerocopy completion id expected but none pending");
+            if (completedZerocopyIds.front() != (uint32_t)id) {
+                EV_INFO << "zerocopy completion mismatch: expected id " << id << " actual " << completedZerocopyIds.front() << endl;
+                throw cTerminationException("Packetdrill error: zerocopy completion id mismatch");
+            }
+            completedZerocopyIds.pop_front();
         }
     }
     return STATUS_OK;
