@@ -31,6 +31,8 @@
 #include "inet/networklayer/configurator/ipv4/Ipv4NodeConfigurator.h"
 #include "inet/networklayer/ipv4/Ipv4Header_m.h"
 #include "inet/transportlayer/contract/sctp/SctpCommand_m.h"
+#include "inet/transportlayer/contract/tcp/TcpSendEorTag_m.h"
+#include "inet/transportlayer/contract/tcp/TcpZerocopyTag_m.h"
 #include "inet/transportlayer/sctp/SctpAssociation.h"
 #include "inet/transportlayer/udp/UdpHeader_m.h"
 
@@ -820,12 +822,13 @@ void PacketDrillApp::runSystemCallEvent(PacketDrillEvent *event, struct syscall_
     args->clear();
     delete args;
     delete syscall->arguments;
-    free(syscall);
     if (result == STATUS_ERR) {
+        // note: report before free(syscall) -- name points into it
         EV_ERROR << event->getLineNumber() << ": runtime error in " << syscall->name << " call: " << error << endl;
         closeAllSockets();
         free(error);
     }
+    free(syscall);
     return;
 }
 
@@ -1107,9 +1110,25 @@ int PacketDrillApp::syscallAccept(struct syscall_spec *syscall, cQueue *args, ch
     return STATUS_OK;
 }
 
+void PacketDrillApp::sendTcpPayloadWithFlags(int64_t numBytes, int flags)
+{
+    // Shared TCP send path for write()/send()/sendto()/sendmsg(): builds the
+    // ByteCountChunk payload and routes the send-flag extensions to INET's
+    // socket API -- MSG_EOR (Workstream H1) marks a record boundary,
+    // MSG_ZEROCOPY (H2, gated on a prior SO_ZEROCOPY like Linux) requests a
+    // completion notification collected by socketZerocopyCompletion().
+    Packet *payload = new Packet("Write");
+    payload->insertAtBack(makeShared<ByteCountChunk>(B(numBytes)));
+    if (flags & MSG_EOR)
+        payload->addTagIfAbsent<TcpSendEorReq>();
+    if ((flags & MSG_ZEROCOPY) && zerocopyEnabled)
+        payload->addTagIfAbsent<TcpSendZerocopyReq>();
+    tcpSocket.send(payload);
+}
+
 int PacketDrillApp::syscallWrite(struct syscall_spec *syscall, cQueue *args, char **error)
 {
-    int script_fd, count;
+    int script_fd, count, flags = 0;
     PacketDrillExpression *exp;
 
     if (args->getLength() > 4)
@@ -1123,6 +1142,11 @@ int PacketDrillApp::syscallWrite(struct syscall_spec *syscall, cQueue *args, cha
     exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(2));
     if (!exp || exp->getS32(&count, error))
         return STATUS_ERR;
+    if (args->getLength() == 4) { // send() has a flags argument, write() doesn't
+        exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(3));
+        if (!exp || exp->getS32(&flags, error))
+            return STATUS_ERR;
+    }
 
     switch (protocol) {
         case IP_PROT_TCP: {
@@ -1143,12 +1167,10 @@ int PacketDrillApp::syscallWrite(struct syscall_spec *syscall, cQueue *args, cha
             if (syscall->result->getNum() > 0) {
                 // inet::Packet overrides setBitLength()/setByteLength() to
                 // throw (packet length must come from its Chunk content);
-                // give it a ByteCountChunk of the script's asserted length
-                // instead -- the actual byte values are irrelevant to this
-                // framework's model.
-                Packet *payload = new Packet("Write");
-                payload->insertAtBack(makeShared<ByteCountChunk>(B(syscall->result->getNum())));
-                tcpSocket.send(payload);
+                // sendTcpPayloadWithFlags gives it a ByteCountChunk of the
+                // script's asserted length instead -- the actual byte values
+                // are irrelevant to this framework's model.
+                sendTcpPayloadWithFlags(syscall->result->getNum(), flags);
             }
             break;
         }
@@ -1203,7 +1225,11 @@ int PacketDrillApp::syscallConnect(struct syscall_spec *syscall, cQueue *args, c
             break;
 
         case IP_PROT_TCP:
-            tcpSocket.connect(remoteAddress, remotePort);
+            // A prior setsockopt(TCP_FASTOPEN_CONNECT) turns this connect()
+            // into INET's Fast Open connect (deferred SYN when a cookie is
+            // cached, cookie-request SYN otherwise) -- Workstream F.
+            tcpSocket.connect(remoteAddress, remotePort, fastopenConnectPending);
+            fastopenConnectPending = false;
             // tcpConnId is otherwise never assigned (stays at its -1 default),
             // so later syscalls (close, read, ...) tag their SocketReq with -1,
             // which Tcp interprets as "create a new connection" instead of
@@ -1223,13 +1249,75 @@ int PacketDrillApp::syscallConnect(struct syscall_spec *syscall, cQueue *args, c
     return STATUS_OK;
 }
 
+int PacketDrillApp::setsockoptTcpLevel(int level, cQueue *args, char **error)
+{
+    // TCP/UDP-family setsockopt (harness upgrade for INET Workstreams F/G/H):
+    // dispatch on (level, optname) and route the options INET's TcpSocket now
+    // models to its new API calls; recognize-and-ignore the rest so scripts
+    // don't fail on secondary knobs. The value argument is usually a
+    // single-element list ([1], [4000]); flag combinations (SO_TIMESTAMPING)
+    // have already been folded to one integer by expression evaluation.
+    int optname = -1;
+    int64_t optval = 0;
+    PacketDrillExpression *exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(2));
+    if (!exp || exp->getS32(&optname, error))
+        return STATUS_ERR;
+    exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(3));
+    if (exp && exp->getType() == EXPR_LIST && exp->getList() && exp->getList()->getLength() == 1) {
+        if (auto *v = check_and_cast_nullable<PacketDrillExpression *>(exp->getList()->get(0)))
+            if (v->getType() == EXPR_INTEGER)
+                optval = v->getNum();
+    }
+
+    if (level == SOL_SOCKET) {
+        switch (optname) {
+            case SO_ZEROCOPY:
+                // Gate for MSG_ZEROCOPY sends, mirroring Linux's requirement
+                // that the flag only works after SO_ZEROCOPY is enabled.
+                zerocopyEnabled = (optval != 0);
+                return STATUS_OK;
+            case SO_TIMESTAMPING:
+                // INET models RX delivery-time stamps only (TcpRxTimestampInd);
+                // the TX flag bits (SOF_TIMESTAMPING_TX_*) requested by the
+                // corpus's timestamping scripts have no INET counterpart --
+                // recorded so recvmsg(MSG_ERRQUEUE) can report the honest gap.
+                timestampingFlags = (int)optval;
+                tcpSocket.setTimestamping(optval != 0);
+                return STATUS_OK;
+            default:
+                EV_INFO << "setsockopt(SOL_SOCKET, " << optname << ") not modeled, ignored\n";
+                return STATUS_OK;
+        }
+    }
+    else if (level == IPPROTO_TCP) { // == SOL_TCP
+        switch (optname) {
+            case TCP_NOTSENT_LOWAT:
+                tcpSocket.setNotsentLowat((int)optval);
+                return STATUS_OK;
+            case TCP_FASTOPEN_CONNECT:
+                // Consumed by syscallConnect: the next connect() on this
+                // socket uses INET's fastOpen connect overload.
+                fastopenConnectPending = (optval != 0);
+                return STATUS_OK;
+            case TCP_FASTOPEN:
+                // Server-side enable; leg I already enables INET's
+                // fastopenServerEnabled via the sysctl-driven ini mapping.
+                return STATUS_OK;
+            default:
+                EV_INFO << "setsockopt(SOL_TCP, " << optname << ") not modeled, ignored\n";
+                return STATUS_OK;
+        }
+    }
+    EV_INFO << "setsockopt(level=" << level << ") not modeled, ignored\n";
+    return STATUS_OK;
+}
+
 int PacketDrillApp::syscallSetsockopt(struct syscall_spec *syscall, cQueue *args, char **error)
 {
     int script_fd, level, optname;
     PacketDrillExpression *exp;
 
     args->setName("syscallSetsockopt");
-    assert(protocol == IP_PROT_SCTP);
     if (args->getLength() != 5)
         return STATUS_ERR;
     exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(0));
@@ -1238,6 +1326,8 @@ int PacketDrillApp::syscallSetsockopt(struct syscall_spec *syscall, cQueue *args
     exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(1));
     if (!exp || exp->getS32(&level, error))
         return STATUS_ERR;
+    if (protocol != IP_PROT_SCTP)
+        return setsockoptTcpLevel(level, args, error);
     if (level != IPPROTO_SCTP) {
         return STATUS_ERR;
     }
@@ -1424,7 +1514,6 @@ int PacketDrillApp::syscallGetsockopt(struct syscall_spec *syscall, cQueue *args
     int script_fd, level, optname;
     PacketDrillExpression *exp;
 
-    assert(protocol == IP_PROT_SCTP);
     if (args->getLength() != 5)
         return STATUS_ERR;
     exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(0));
@@ -1433,6 +1522,14 @@ int PacketDrillApp::syscallGetsockopt(struct syscall_spec *syscall, cQueue *args
     exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(1));
     if (!exp || exp->getS32(&level, error))
         return STATUS_ERR;
+    if (protocol != IP_PROT_SCTP) {
+        // TCP/UDP-family getsockopt: the script's bracketed value is its own
+        // asserted expectation of what the kernel returns; INET has no
+        // readback path for these options, so recognize-and-accept rather
+        // than fail the whole script on a query.
+        EV_INFO << "getsockopt(level=" << level << ") not modeled, accepted as asserted\n";
+        return STATUS_OK;
+    }
     if (level != IPPROTO_SCTP) {
         return STATUS_ERR;
     }
@@ -1497,22 +1594,18 @@ int PacketDrillApp::syscallSendTo(struct syscall_spec *syscall, cQueue *args, ch
         }
 
         case IP_PROT_TCP:
-            // Zerocopy completion-notification semantics (MSG_ZEROCOPY) and
-            // Fast Open's cookie/early-data wire behavior (MSG_FASTOPEN) are
-            // not modeled here -- this just stops the hard crash and behaves
-            // like a plain connect()+write() on the existing TCP socket for
-            // this connection (real Fast Open's single-syscall SYN+data is
-            // Workstream F's job; this is deliberately an honest divergence,
-            // not a match, until that lands).
+            // sendto(..., MSG_FASTOPEN, ...) is Linux's single-syscall Fast
+            // Open connect+send: route the implicit connect through INET's
+            // fastOpen overload (Workstream F) so a cached cookie defers the
+            // SYN and attaches this data to it, and a cookie-less socket sends
+            // the bare cookie-request SYN -- exactly Linux's two TFO phases.
             if (tcpSocket.getState() != TcpSocket::CONNECTED && tcpSocket.getState() != TcpSocket::CONNECTING) {
-                tcpSocket.connect(remoteAddress, remotePort);
+                tcpSocket.connect(remoteAddress, remotePort, (flags & MSG_FASTOPEN) || fastopenConnectPending);
+                fastopenConnectPending = false;
                 tcpConnId = tcpSocket.getSocketId();
             }
-            if (count > 0) {
-                Packet *payload = new Packet("SendTo");
-                payload->insertAtBack(makeShared<ByteCountChunk>(B(count)));
-                tcpSocket.send(payload);
-            }
+            if (count > 0)
+                sendTcpPayloadWithFlags(count, flags);
             break;
 
         default:
@@ -1758,12 +1851,16 @@ int PacketDrillApp::syscallRecvFrom(PacketDrillEvent *event, struct syscall_spec
 int PacketDrillApp::syscallSendMsg(struct syscall_spec *syscall, cQueue *args, char **error)
 {
     PacketDrillExpression *exp;
+    int flags = 0;
 
     if (args->getLength() != 3)
         return STATUS_ERR;
     exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(1));
     if (!exp || (exp->getType() != EXPR_MSGHDR))
         return STATUS_ERR;
+    exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(2));
+    if (exp && exp->getType() == EXPR_INTEGER)
+        flags = (int)exp->getNum();
 
     // Errors (e.g. sendmsg-empty-iov's EINVAL) have nothing to send.
     if (syscall->result->getNum() < 0)
@@ -1772,13 +1869,18 @@ int PacketDrillApp::syscallSendMsg(struct syscall_spec *syscall, cQueue *args, c
     switch (protocol) {
         case IP_PROT_TCP: {
             // Same coarse "send N bytes, trust the script's asserted return
-            // value" model as syscallWrite() -- msg_flags (MSG_MORE etc.)
-            // and msg_control on the send side aren't modeled; any behavior
-            // difference they'd cause in the real kernel shows up as an
-            // honest DIVERGENCE on the resulting packet, not here.
-            Packet *payload = new Packet("SendMsg");
-            payload->insertAtBack(makeShared<ByteCountChunk>(B(syscall->result->getNum())));
-            tcpSocket.send(payload);
+            // value" model as syscallWrite(); the flag argument's modeled
+            // bits (MSG_EOR/MSG_ZEROCOPY/MSG_FASTOPEN) now route through the
+            // same shared path as send()/sendto(). msg_control on the send
+            // side is still not modeled.
+            if ((flags & MSG_FASTOPEN)
+                && tcpSocket.getState() != TcpSocket::CONNECTED && tcpSocket.getState() != TcpSocket::CONNECTING)
+            {
+                tcpSocket.connect(remoteAddress, remotePort, true);
+                tcpConnId = tcpSocket.getSocketId();
+            }
+            if (syscall->result->getNum() > 0)
+                sendTcpPayloadWithFlags(syscall->result->getNum(), flags);
             break;
         }
         default:

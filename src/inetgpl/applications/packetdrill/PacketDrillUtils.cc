@@ -11,6 +11,8 @@
  #include <sys/epoll.h>
  #include <poll.h>
  #include <linux/errqueue.h>
+ #include <linux/net_tstamp.h>
+ #include <cerrno>
 #else
 #include "sys/stat.h"
 #include "sys/types.h"
@@ -106,6 +108,40 @@ struct int_symbol platform_symbols_table[] = {
     { MSG_ERRQUEUE,                     "MSG_ERRQUEUE"                    },
     { MSG_NOSIGNAL,                     "MSG_NOSIGNAL"                    },
     { MSG_TRUNC,                        "MSG_TRUNC"                       },
+    { MSG_EOR,                          "MSG_EOR"                         },
+    { MSG_MORE,                         "MSG_MORE"                        },
+
+    /* socket options routed to INET's TCP socket-API extensions (harness
+     * upgrade for Workstreams F/G/H; a recognized symbol makes the syscall
+     * *run* -- see syscallSetsockopt for which ones act vs. no-op) */
+    { SO_REUSEADDR,                     "SO_REUSEADDR"                    },
+    { SO_KEEPALIVE,                     "SO_KEEPALIVE"                    },
+    { SO_SNDBUF,                        "SO_SNDBUF"                       },
+    { SO_MARK,                          "SO_MARK"                         },
+    { SO_ZEROCOPY,                      "SO_ZEROCOPY"                     },
+    { SO_TIMESTAMPING,                  "SO_TIMESTAMPING"                 },
+    { SO_ERROR,                         "SO_ERROR"                        },
+    { TCP_MAXSEG,                       "TCP_MAXSEG"                      },
+    { TCP_KEEPIDLE,                     "TCP_KEEPIDLE"                    },
+    { TCP_SYNCNT,                       "TCP_SYNCNT"                      },
+    { TCP_FASTOPEN,                     "TCP_FASTOPEN"                    },
+    { TCP_FASTOPEN_CONNECT,             "TCP_FASTOPEN_CONNECT"            },
+    { TCP_FASTOPEN_KEY,                 "TCP_FASTOPEN_KEY"                },
+    { TCP_NOTSENT_LOWAT,                "TCP_NOTSENT_LOWAT"               },
+
+    /* /usr/include/linux/net_tstamp.h -- SO_TIMESTAMPING request flags */
+    { SOF_TIMESTAMPING_TX_SOFTWARE,     "SOF_TIMESTAMPING_TX_SOFTWARE"    },
+    { SOF_TIMESTAMPING_TX_SCHED,        "SOF_TIMESTAMPING_TX_SCHED"       },
+    { SOF_TIMESTAMPING_TX_ACK,          "SOF_TIMESTAMPING_TX_ACK"         },
+    { SOF_TIMESTAMPING_SOFTWARE,        "SOF_TIMESTAMPING_SOFTWARE"       },
+    { SOF_TIMESTAMPING_OPT_ID,          "SOF_TIMESTAMPING_OPT_ID"         },
+
+    /* /usr/include/linux/errqueue.h -- timestamping errqueue entries */
+    { SO_EE_ORIGIN_TIMESTAMPING,        "SO_EE_ORIGIN_TIMESTAMPING"       },
+    { SCM_TSTAMP_SND,                   "SCM_TSTAMP_SND"                  },
+    { SCM_TSTAMP_SCHED,                 "SCM_TSTAMP_SCHED"                },
+    { SCM_TSTAMP_ACK,                   "SCM_TSTAMP_ACK"                  },
+    { ENOMSG,                           "ENOMSG"                          },
 
     /* /usr/include/poll.h */
     { POLLIN,                           "POLLIN"                          },

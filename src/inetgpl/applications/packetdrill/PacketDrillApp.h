@@ -7,6 +7,7 @@
 #ifndef __INETGPL_PACKETDRILLAPP_H
 #define __INETGPL_PACKETDRILLAPP_H
 
+#include <deque>
 
 #include "inet/applications/base/ApplicationBase.h"
 #include "inet/common/socket/SocketMap.h"
@@ -127,6 +128,18 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     bool epollInEdgePending = false;
     bool epollOutEdgePending = false;
 
+    // Socket-API extensions (harness upgrade for INET Workstreams F/G/H):
+    // SO_ZEROCOPY gate for MSG_ZEROCOPY sends; SO_TIMESTAMPING's requested
+    // SOF_ flag bits (INET models RX-only stamps -- TX bits are recorded so
+    // recvmsg(MSG_ERRQUEUE) can report the honest gap); TCP_FASTOPEN_CONNECT
+    // marker consumed by the next connect(); completed MSG_ZEROCOPY
+    // notification ids collected from socketZerocopyCompletion() in send
+    // order, drained by recvmsg(MSG_ERRQUEUE).
+    bool zerocopyEnabled = false;
+    int timestampingFlags = 0;
+    bool fastopenConnectPending = false;
+    std::deque<uint32_t> completedZerocopyIds;
+
     // %{ }% Python-assertion blocks: each block's tcp_info-equivalent
     // snapshot (captured via an async TCP_C_STATUS request at the block's
     // scheduled time) plus its raw Python text are accumulated here, in
@@ -157,6 +170,10 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     int syscallAccept(struct syscall_spec *syscall, cQueue *args, char **error);
 
     int syscallSetsockopt(struct syscall_spec *syscall, cQueue *args, char **error);
+
+    int setsockoptTcpLevel(int level, cQueue *args, char **error);
+
+    void sendTcpPayloadWithFlags(int64_t numBytes, int flags);
 
     int syscallGetsockopt(struct syscall_spec *syscall, cQueue *args, char **error);
 

@@ -12,7 +12,28 @@
 #include "omnetpp/platdep/sockets.h"
 #if !defined(_WIN32) && !defined(__WIN32__) && !defined(WIN32) && !defined(__CYGWIN__) && !defined(_WIN64)
  #include <sys/socket.h>
+ #include <netinet/tcp.h>
 #endif
+
+/* Kernel uapi values not guaranteed to be exposed by every libc's headers
+ * (netinet/tcp.h lags linux/tcp.h; SO_ZEROCOPY needs glibc >= 2.27). Values
+ * are the x86-64 Linux ABI constants. */
+#ifndef SO_ZEROCOPY
+#define SO_ZEROCOPY 60
+#endif
+#ifndef TCP_FASTOPEN
+#define TCP_FASTOPEN 23
+#endif
+#ifndef TCP_FASTOPEN_CONNECT
+#define TCP_FASTOPEN_CONNECT 30
+#endif
+#ifndef TCP_FASTOPEN_KEY
+#define TCP_FASTOPEN_KEY 33
+#endif
+#ifndef TCP_NOTSENT_LOWAT
+#define TCP_NOTSENT_LOWAT 25
+#endif
+
 #include "inet/transportlayer/sctp/SctpAssociation.h"
 #include "inet/transportlayer/sctp/SctpHeader.h"
 
