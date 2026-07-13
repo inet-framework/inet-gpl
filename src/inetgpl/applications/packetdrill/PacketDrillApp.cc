@@ -2431,6 +2431,21 @@ int PacketDrillApp::verifyTime(enum eventTime_t timeType, simtime_t scriptTime, 
 
 bool PacketDrillApp::compareDatagram(Packet *storedPacket, Packet *livePacket)
 {
+    // A comparable outbound datagram always begins with an Ipv4Header. A live
+    // packet that does not (e.g. app-layer payload delivered to the socket as a
+    // bare ByteCountChunk, which can reach the outbound path when the app
+    // receives data while an outbound segment is still pending) is not a
+    // datagram we can match -- report a divergence rather than crashing on the
+    // chunk-type conversion.
+    // Probe the front chunk via the generic base type and a dynamic cast (as
+    // tcpPayloadLength() does) -- peeking/hasAtFront directly as Ipv4Header would
+    // itself throw the ByteCountChunk->Ipv4Header conversion error we are guarding
+    // against.
+    if (!dynamicPtrCast<const Ipv4Header>(storedPacket->peekAtFront<Chunk>())
+        || !dynamicPtrCast<const Ipv4Header>(livePacket->peekAtFront<Chunk>())) {
+        EV_WARN << "compareDatagram: a packet does not begin with an Ipv4Header (live app data on the outbound path?)\n";
+        return false;
+    }
     const auto& storedDatagram = storedPacket->peekAtFront<Ipv4Header>();
     const auto& liveDatagram = livePacket->peekAtFront<Ipv4Header>();
 

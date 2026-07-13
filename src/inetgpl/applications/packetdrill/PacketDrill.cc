@@ -360,6 +360,15 @@ Packet *PacketDrill::buildTCPPacket(int address_family, enum direction_t directi
     tcpHeader->setPshBit(strchr(flags, 'P'));
     tcpHeader->setAckBit(strchr(flags, '.'));
     tcpHeader->setUrgBit(strchr(flags, 'U'));
+    // ECN / AccECN flag letters (packetdrill notation): E=ECE, W=CWR, A=AE.
+    // Without these, an injected AccECN-request SYN ("SEWA") reaches INET looking
+    // like a plain SYN, so the stack never negotiates ECN/AccECN. Digits from the
+    // numeric ACE notation (".5", "P.6") never collide with these letters. The
+    // outbound comparator ignores these bits (compareTcpHeader), so decoding them
+    // only affects inbound-injection behavior, which is exactly what we want.
+    tcpHeader->setEceBit(strchr(flags, 'E'));
+    tcpHeader->setCwrBit(strchr(flags, 'W'));
+    tcpHeader->setAeBit(strchr(flags, 'A'));
     if (tcpHeader->getSynBit() && !tcpHeader->getAckBit())
         packet->setName("Inject SYN");
     else if (tcpHeader->getSynBit() && tcpHeader->getAckBit())
