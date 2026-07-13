@@ -140,6 +140,20 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     bool fastopenConnectPending = false;
     std::deque<uint32_t> completedZerocopyIds;
 
+    // GSO aggregation for outbound comparison: leg L runs the real kernel
+    // with GSO, so corpus scripts assert super-segments (e.g. one 10000-byte
+    // outbound packet) where INET emits wire-realistic MSS-sized segments.
+    // When the script's expected outbound TCP payload exceeds the live
+    // segment's, the expected packet parks here and consecutive
+    // seq-contiguous live segments are accumulated against it until the
+    // payload total matches (PSH compared leniently across the aggregate --
+    // Linux only sets it on the final GSO sub-segment, and INET has no
+    // push-on-queue-drain semantics at all; see the status report).
+    inet::Packet *aggExpectedOutbound = nullptr;
+    uint32_t aggRemainingPayload = 0;
+    uint32_t aggNextSeq = 0;
+    bool comparePshLeniently = false;
+
     // %{ }% Python-assertion blocks: each block's tcp_info-equivalent
     // snapshot (captured via an async TCP_C_STATUS request at the block's
     // scheduled time) plus its raw Python text are accumulated here, in
@@ -192,6 +206,10 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     int syscallRecvMsg(PacketDrillEvent *event, struct syscall_spec *syscall, cQueue *args, char **error);
 
     int verifyMsgErrQueue(struct msghdr_expr *msgExpr, struct syscall_spec *syscall, char **error);
+
+    static int64_t tcpPayloadLength(inet::Packet *pkt);
+    void startOutboundComparison(inet::Packet *expectedPacket, inet::Packet *livePacket);
+    void continueOutboundAggregation(inet::Packet *livePacket);
 
     int verifyMsgControlInq(struct msghdr_expr *msgExpr, char **error);
 

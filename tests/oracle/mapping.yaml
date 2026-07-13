@@ -94,13 +94,17 @@ sysctl:
     ini: "**.tcp.tcpAlgorithmClass"
     transform: enum
     values:
-      reno: TcpReno
-      newreno: TcpNewReno
-      vegas: TcpVegas
-      westwood: TcpWestwood
-      dctcp: DcTcp
-      cubic: TcpCubic
-      none: TcpNoCongestionControl
+      # values are quoted: command-line --key=value goes through OMNeT++'s ini
+      # expression parser, where an unquoted word is a parameter reference,
+      # not a string (caught live the first time an enum value was actually
+      # emitted -- previously cubic was unmapped so this never fired)
+      reno: '"TcpReno"'
+      newreno: '"TcpNewReno"'
+      vegas: '"TcpVegas"'
+      westwood: '"TcpWestwood"'
+      dctcp: '"DcTcp"'
+      cubic: '"TcpCubic"'
+      none: '"TcpNoCongestionControl"'
       # bbr, bic, htcp, illinois, highspeed,
       # scalable, lp, veno, yeah, hybla: no INET flavour exists. Deliberately
       # absent from `values` -> recorded as unmapped_knob; NOT set in ini

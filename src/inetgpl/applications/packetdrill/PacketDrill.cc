@@ -275,12 +275,23 @@ TcpOption *setOptionValues(PacketDrillTcpOption *opt)
         }
         case TCPOPT_ACCECN0:
         case TCPOPT_ACCECN1: {
-            // INET has no AccECN implementation -- carry the present fields
-            // as raw bytes, always serialized in e0b/e1b/ceb order regardless
-            // of the order the script specified them in (this is a
-            // self-consistent encoding for comparison purposes only; INET
-            // never emits this option, so scripts that assert it always end
-            // up a genuine, correctly-attributed DIVERGENCE, not a false MATCH).
+            // Full 3-field form (159 of the corpus's 162 uses): build INET's
+            // typed TcpOptionAccEcn (Workstream G6) so inbound injected
+            // packets serialize with the correct kind-dependent field order
+            // and outbound comparison can check e0b/e1b/ceb by name.
+            constexpr uint32_t all = ACCECN_PRESENT_E0B | ACCECN_PRESENT_E1B | ACCECN_PRESENT_CEB;
+            if (opt->getAccEcnPresent() == all) {
+                auto *option = new TcpOptionAccEcn();
+                option->setKind(static_cast<TcpOptionNumbers>(opt->getKind()));
+                option->setLength(length);
+                option->setEct0Bytes(opt->getAccEcnE0b());
+                option->setEct1Bytes(opt->getAccEcnE1b());
+                option->setCeBytes(opt->getAccEcnCeb());
+                return option;
+            }
+            // Partial forms (a minority of scripts): INET always emits the
+            // full 11-byte option, so these can only ever be a genuine
+            // length-mismatch DIVERGENCE -- keep them as raw bytes.
             auto *option = new TcpOptionUnknown();
             option->setKind(static_cast<TcpOptionNumbers>(opt->getKind()));
             option->setLength(length);
