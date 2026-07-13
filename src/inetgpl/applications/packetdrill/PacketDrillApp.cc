@@ -985,10 +985,14 @@ std::string PacketDrillApp::formatTcpInfoSnapshot(TcpStatusInfo *status)
     if (stateIt != stateMap.end())
         out << "tcpi_state = " << stateIt->second << "\n";
 
+    // Linux reports tcpi_snd_cwnd / tcpi_snd_ssthresh in MSS units (segments);
+    // INET tracks both in bytes. Convert so `assert tcpi_snd_cwnd == N` (N a
+    // segment count, as every corpus script writes it) compares correctly.
+    uint32_t mssUnit = status->getSnd_mss() > 0 ? status->getSnd_mss() : 1;
     if (status->getCwnd() != UINT_MAX)
-        out << "tcpi_snd_cwnd = " << status->getCwnd() << "\n";
+        out << "tcpi_snd_cwnd = " << (status->getCwnd() / mssUnit) << "\n";
     if (status->getSsthresh() != UINT_MAX)
-        out << "tcpi_snd_ssthresh = " << status->getSsthresh() << "\n";
+        out << "tcpi_snd_ssthresh = " << (status->getSsthresh() / mssUnit) << "\n";
     out << "tcpi_reordering = " << status->getReordering() << "\n";
     if (status->getSnd_mss() > 0)
         out << "tcpi_snd_mss = " << status->getSnd_mss() << "\n";
