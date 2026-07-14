@@ -2656,14 +2656,27 @@ bool PacketDrillApp::compareTcpHeader(const Ptr<const TcpHeader>& storedTcp, con
                         return false;
                     }
                     break;
-                case TCPOPTION_TIMESTAMP:
-                    if (!(storedOption->getLength() == 10 &&
-                          check_and_cast<const TcpOptionTimestamp *>(storedOption)->getSenderTimestamp()
-                          == check_and_cast<const TcpOptionTimestamp *>(liveOption)->getSenderTimestamp()))
+                case TCPOPTION_TIMESTAMP: {
+                    // The outbound TSval (sender timestamp) is the DUT's own
+                    // timestamp clock; no stack can be made to emit the script's
+                    // literal placeholder value, so -- exactly as upstream
+                    // packetdrill does -- it is a wildcard here (previously this
+                    // required TSval == the script literal, which no real INET run
+                    // could ever satisfy, failing every timestamped outbound
+                    // segment on cosmetics). The TSecr (echoed timestamp) is NOT
+                    // wildcarded: it must reproduce the peer's timestamp the DUT is
+                    // echoing, so it stays a strict check -- that is what tests like
+                    // ts_recent / ts-progress actually verify, and relaxing it would
+                    // manufacture false matches on genuine TS-echo divergences.
+                    const auto *storedTs = check_and_cast<const TcpOptionTimestamp *>(storedOption);
+                    const auto *liveTs = check_and_cast<const TcpOptionTimestamp *>(liveOption);
+                    if (storedOption->getLength() != 10
+                        || storedTs->getEchoedTimestamp() != liveTs->getEchoedTimestamp())
                     {
                         return false;
                     }
                     break;
+                }
                 case TCPOPTION_TCP_FASTOPEN: {
                     // RFC 7413 kind 34 -- typed TcpOptionTcpFastOpen (Workstream F).
                     const auto *storedFo = check_and_cast<const TcpOptionTcpFastOpen *>(storedOption);
