@@ -224,6 +224,31 @@ static ByteVector hex_string_to_bytes(const char *hex)
     return bytes;
 }
 
+/* Decode a TCP Fast Open cookie token from a script. A token is either a
+ * literal hex string (e.g. "01234567aabbccdd") or one of the corpus's symbolic
+ * cookie names: TFO_COOKIE ("some valid server-issued cookie") or
+ * TFO_COOKIE_ZERO ("an all-zero cookie"). Upstream packetdrill binds TFO_COOKIE
+ * to the deterministic cookie the kernel derives from the fixed tcp_fastopen_key;
+ * INET's TFO server instead accepts any cookie under lenient validation (the
+ * oracle default, Tcp::fastopenLenientCookieValidation), so a symbol only needs
+ * to expand to a well-formed fixed cookie of the canonical 8-byte length. Any
+ * token carrying a non-hex-digit character is treated as symbolic; pure hex
+ * literals decode as before. */
+static ByteVector cookie_token_to_bytes(const char *tok)
+{
+    bool symbolic = false;
+    for (const char *p = tok; *p != '\0'; p++) {
+        if (!isxdigit((unsigned char)*p)) { symbolic = true; break; }
+    }
+    if (symbolic) {
+        if (!strcmp(tok, "TFO_COOKIE_ZERO"))
+            return ByteVector(8, 0x00);
+        // TFO_COOKIE (or any other symbolic name): a fixed, recognizable cookie.
+        return ByteVector{ 0xf0, 0x0d, 0xca, 0xfe, 0xde, 0xad, 0xbe, 0xef };
+    }
+    return hex_string_to_bytes(tok);
+}
+
 /* ICMP type/code words -> real ICMP wire values (RFC 792 / Linux <netinet/ip_icmp.h>
  * naming). Deliberately small and explicit rather than routed through the
  * general symbol table, since these are packet-line keywords, not
@@ -1727,7 +1752,7 @@ tcp_option
     $$->setMd5Digest(digest);
 }
 | FO opt_fastopen_cookie {
-    ByteVector cookie = hex_string_to_bytes($2);
+    ByteVector cookie = cookie_token_to_bytes($2);
     free($2);
     if (cookie.size() > MAX_TCP_FAST_OPEN_COOKIE_BYTES) {
         semantic_error("fast open cookie too long");
@@ -1737,7 +1762,7 @@ tcp_option
     $$->setFastOpenExperimental(false);
 }
 | FOEXP opt_fastopen_cookie {
-    ByteVector cookie = hex_string_to_bytes($2);
+    ByteVector cookie = cookie_token_to_bytes($2);
     free($2);
     if (cookie.size() > MAX_TCP_FAST_OPEN_COOKIE_BYTES) {
         semantic_error("fast open experimental cookie too long");
