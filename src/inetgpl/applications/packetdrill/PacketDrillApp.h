@@ -164,6 +164,16 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     bool codeEventPending = false;
     const char *pendingCodeText = nullptr;
 
+    // Set once every scripted event has been consumed (and every EXPECTED
+    // outbound packet already matched). Real packetdrill ends the test at its
+    // last script line; leg L (the golden) therefore never observes the DUT's
+    // post-script timer activity (an RTO retransmit, a delayed ACK). INET's
+    // simulation keeps running to the sim-time-limit, so those trailing packets
+    // would otherwise be flagged as unexpected "wrong time" divergences. Once
+    // this is set, socketDataArrived() ignores further outbound packets, giving
+    // leg I the same observation window as leg L.
+    bool scriptComplete = false;
+
   private:
     void scheduleEvent();
 

@@ -328,6 +328,15 @@ void PacketDrillApp::addressAddedArrived(SctpSocket *socket, L3Address localAddr
 void PacketDrillApp::socketDataArrived(TunSocket *socket, Packet *packet)
 {
     // received from tunnel interface
+    if (scriptComplete) {
+        // Every scripted event has already been consumed and every expected
+        // outbound packet matched; real packetdrill would have ended the test
+        // here. Ignore INET's post-script timer traffic (RTO retransmit,
+        // delayed ACK) so leg I observes the same window as the leg-L golden.
+        delete (PacketDrillInfo *)packet->getContextPointer();
+        delete packet;
+        return;
+    }
     if (aggExpectedOutbound != nullptr) {
         // an expected GSO super-segment is being matched by consecutive live
         // MSS-sized segments -- this packet continues (or completes) it
@@ -409,6 +418,16 @@ void PacketDrillApp::startOutboundComparison(Packet *expectedPacket, Packet *liv
     if (!eventTimer->isScheduled() && eventCounter < numEvents - 1) {
         eventCounter++;
         scheduleEvent();
+    }
+    // If that outbound expectation was the script's last event, no further
+    // event timer fires to re-run the handleTimer() completion check, so mark
+    // completion here too -- otherwise post-script timer traffic would still be
+    // flagged (see the scriptComplete comment in the header).
+    else if (eventCounter >= numEvents - 1 && !codeEventPending && outboundPackets->getLength() == 0) {
+        if (!codeBlockBuffer.empty())
+            executeCodeBlocks();
+        closeAllSockets();
+        scriptComplete = true;
     }
     delete (PacketDrillInfo *)livePacket->getContextPointer();
     delete livePacket;
@@ -787,6 +806,7 @@ void PacketDrillApp::handleTimer(cMessage *msg)
                 if (!codeBlockBuffer.empty())
                     executeCodeBlocks();
                 closeAllSockets();
+                scriptComplete = true;
             }
             break;
         }
