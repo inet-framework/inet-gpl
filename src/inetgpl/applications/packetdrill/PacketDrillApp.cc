@@ -231,6 +231,18 @@ void PacketDrillApp::socketStatusArrived(TcpSocket *socket, TcpStatusInfo *statu
         eventCounter++;
         scheduleEvent();
     }
+    // If this STATUS reply completed the script's LAST event (a %{ }% code
+    // block), no further event timer fires to run the handleTimer() completion
+    // check -- so run the buffered assertions and mark completion here too.
+    // Without this, a script ending on a %{ }% block never sets scriptComplete
+    // and its post-script timer traffic (an RTO retransmit of data the script
+    // stopped ACKing) leaks through as a spurious "wrong time" divergence.
+    else if (eventCounter >= numEvents - 1 && !codeEventPending && outboundPackets->getLength() == 0) {
+        if (!codeBlockBuffer.empty())
+            executeCodeBlocks();
+        closeAllSockets();
+        scriptComplete = true;
+    }
 }
 
 // SctpSocket:
@@ -1115,6 +1127,10 @@ void PacketDrillApp::executeCodeBlocks()
         std::string message = "Packetdrill error: %{ }% assertion failed: " + output;
         throw cTerminationException("%s", message.c_str());
     }
+    // Consumed -- the buffer holds the whole script's accumulated blocks and is
+    // run once at completion. Clearing it keeps the three "if (!codeBlockBuffer
+    // .empty()) executeCodeBlocks()" completion sites single-shot.
+    codeBlockBuffer.clear();
 }
 
 int PacketDrillApp::syscallSocket(struct syscall_spec *syscall, cQueue *args, char **error)
