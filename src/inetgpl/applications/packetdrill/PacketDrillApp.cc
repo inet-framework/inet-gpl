@@ -660,8 +660,23 @@ void PacketDrillApp::runEvent(PacketDrillEvent *event)
             tunSocket.send(pk);
         }
         else if (event->getPacket()->getDirection() == DIRECTION_OUTBOUND) { // >
-            if (receivedPackets->getLength() > 0) {
-                Packet *livePacket = check_and_cast<Packet *>(receivedPackets->pop());
+            // Find the first queued OUTBOUND IP datagram, skipping any app-layer
+            // read data. A server that both ACKs a segment and delivers its
+            // payload to the app queues BOTH into receivedPackets (the TCP-socket
+            // data callback and the tun callback share the queue); only the IP
+            // datagrams are outbound packets to compare -- app data (a bare
+            // ByteCountChunk, tcpPayloadLength < 0) stays queued for
+            // read()/recvfrom() to consume.
+            Packet *livePacket = nullptr;
+            for (cQueue::Iterator it(*receivedPackets); !it.end(); it++) {
+                auto *p = dynamic_cast<Packet *>(check_and_cast<cPacket *>(*it));
+                if (p && tcpPayloadLength(p) >= 0) {
+                    livePacket = p;
+                    break;
+                }
+            }
+            if (livePacket) {
+                receivedPackets->remove(livePacket);
                 if (pk && livePacket) {
                     PacketDrillInfo *liveInfo = (PacketDrillInfo *)livePacket->getContextPointer();
                     if (verifyTime(event->getTimeType(), event->getEventTime(),
