@@ -1058,6 +1058,8 @@ std::string PacketDrillApp::formatTcpInfoSnapshot(TcpStatusInfo *status)
         options |= TCPI_OPT_WSCALE;
     if (status->getEctEnabled())
         options |= TCPI_OPT_ECN;
+    if (status->getSynDataAccepted())
+        options |= TCPI_OPT_SYN_DATA;
     out << "tcpi_options = " << options << "\n";
 
     // Fields surfaced by INET's TcpStatusInfo extension (caState/backoff/
