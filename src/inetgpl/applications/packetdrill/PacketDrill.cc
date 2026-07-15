@@ -369,6 +369,21 @@ Packet *PacketDrill::buildTCPPacket(int address_family, enum direction_t directi
     tcpHeader->setEceBit(strchr(flags, 'E'));
     tcpHeader->setCwrBit(strchr(flags, 'W'));
     tcpHeader->setAeBit(strchr(flags, 'A'));
+    // AccECN ACE field on a non-SYN segment (packetdrill ".N" / "P.N" notation):
+    // post-handshake, the 3-bit Accurate ECN echo counter rides the AE/CWR/ECE
+    // bits. INET reads them to derive the peer's CE-packet count, so an injected
+    // ".5" ACK must arrive with AE/CWR/ECE = 101, not 000 -- otherwise INET
+    // decodes a bogus counter delta (receivedAce 0 vs the intended 5) and
+    // fabricates CE marks. SYN packets never use this numeric form (they carry
+    // the SEWA letters), so this cannot collide with the negotiation bits.
+    if (const char *dot = strchr(flags, '.')) {
+        if (isdigit((unsigned char)dot[1])) {
+            int ace = dot[1] - '0';
+            tcpHeader->setAeBit((ace & 4) != 0);
+            tcpHeader->setCwrBit((ace & 2) != 0);
+            tcpHeader->setEceBit((ace & 1) != 0);
+        }
+    }
     if (tcpHeader->getSynBit() && !tcpHeader->getAckBit())
         packet->setName("Inject SYN");
     else if (tcpHeader->getSynBit() && tcpHeader->getAckBit())
