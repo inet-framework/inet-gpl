@@ -118,6 +118,14 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     std::map<uint32_t, uint32_t> seqNumMap;
     simtime_t peerHeartbeatTime;
     cMessage *eventTimer = nullptr;
+    // A %{ }% block requests tcp_info via an async STATUS command. When the block
+    // sits at +0 after an inbound packet, that packet is still propagating
+    // tun->ip->tcp (0-delay hops) while a direct STATUS command would reach TCP
+    // first -- capturing a pre-ACK snapshot (e.g. cwnd one ACK stale). This timer
+    // defers requestStatus() by an infinitesimal delay so it fires after the
+    // same-instant inbound processing settles, matching packetdrill's synchronous
+    // post-event tcp_info read.
+    cMessage *statusRequestTimer = nullptr;
     ChecksumMode crcMode = CHECKSUM_MODE_UNDEFINED;
     int bytesSent = 0;
 

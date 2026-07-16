@@ -46,6 +46,7 @@ using namespace tcp;
 
 #define MSGKIND_START    0
 #define MSGKIND_EVENT    1
+#define MSGKIND_STATUS_REQUEST 2
 
 PacketDrillApp::PacketDrillApp()
 {
@@ -71,6 +72,7 @@ void PacketDrillApp::initialize(int stage)
         numEvents = 0;
         localVTag = 0;
         eventTimer = new cMessage("event timer", MSGKIND_EVENT);
+        statusRequestTimer = new cMessage("status request", MSGKIND_STATUS_REQUEST);
         simStartTime = simTime();
         simRelTime = simTime();
     }
@@ -823,6 +825,12 @@ void PacketDrillApp::handleTimer(cMessage *msg)
             break;
         }
 
+        case MSGKIND_STATUS_REQUEST:
+            // Fired an instant after runCodeEvent() so any same-instant inbound
+            // packet has settled; now take the tcp_info snapshot.
+            tcpSocket.requestStatus();
+            break;
+
         default:
             throw cRuntimeError("Unknown message kind");
     }
@@ -987,7 +995,11 @@ void PacketDrillApp::runCodeEvent(PacketDrillEvent *event)
     // does the rest once the TcpStatusInfo reply arrives.
     pendingCodeText = event->getCode()->text;
     codeEventPending = true;
-    tcpSocket.requestStatus();
+    // Defer the STATUS request by an infinitesimal delay so an inbound packet at
+    // this same simulated instant (the very common "< ... ack N" immediately
+    // followed by "+0 %{ assert ... }%") finishes propagating up the stack and
+    // updating TCP state before the snapshot is taken -- see statusRequestTimer.
+    rescheduleAfter(SimTime(1, SIMTIME_NS), statusRequestTimer);
 }
 
 std::string PacketDrillApp::formatTcpInfoSnapshot(TcpStatusInfo *status)
@@ -2432,6 +2444,7 @@ void PacketDrillApp::finish()
 PacketDrillApp::~PacketDrillApp()
 {
     cancelAndDelete(eventTimer);
+    cancelAndDelete(statusRequestTimer);
     delete pd;
     delete receivedPackets;
     delete outboundPackets;
