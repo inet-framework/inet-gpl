@@ -98,6 +98,14 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     simtime_t simRelTime;
     uint32_t expectedMessageSize = 0;
     uint32_t relSequenceOut = 0;
+    // Peer's ISN, captured from the injected SYN/SYN-ACK's sequence number. The
+    // script writes outbound ACK numbers relative to the peer's ISN (packetdrill
+    // maps the tester's ISN to 0), so a peer that opens on a non-zero ISN -- e.g.
+    // the TFO-client corpus's "< S. 123:123(0)" -- makes DUT ACKs land at
+    // peer_ISN+N while the script asserts N. Add this to the expected ACK to
+    // undo that, symmetric to relSequenceOut for the sequence direction. Zero
+    // for the common "< S. 0:0(0)" peer, so ordinary scripts are unaffected.
+    uint32_t relSequenceIn = 0;
     uint32_t peerTS = 0;
     uint16_t peerWindow = 0;
     uint16_t peerInStreams = 0;

@@ -589,6 +589,8 @@ void PacketDrillApp::runEvent(PacketDrillEvent *event)
             }
             else if (protocol == IP_PROT_TCP) {
                 auto tcpHeader = pk->removeAtFront<TcpHeader>();
+                if (tcpHeader->getSynBit()) // peer's ISN: injected raw, becomes our irs; maps our outbound ACKs back to the script's peer-relative frame
+                    relSequenceIn = tcpHeader->getSequenceNo();
                 tcpHeader->setAckNo(tcpHeader->getAckNo() + relSequenceOut);
                 if (tcpHeader->getHeaderOptionArraySize() > 0) {
                     for (unsigned int i = 0; i < tcpHeader->getHeaderOptionArraySize(); i++) {
@@ -2619,8 +2621,8 @@ bool PacketDrillApp::compareTcpHeader(const Ptr<const TcpHeader>& storedTcp, con
         EV_WARN << "TCP compare: seq expected " << storedTcp->getSequenceNo() + relSequenceOut << " actual " << liveTcp->getSequenceNo() << "\n";
         return false;
     }
-    if (!(storedTcp->getAckNo() == liveTcp->getAckNo())) {
-        EV_WARN << "TCP compare: ack expected " << storedTcp->getAckNo() << " actual " << liveTcp->getAckNo() << "\n";
+    if (!(storedTcp->getAckNo() + (storedTcp->getAckBit() ? relSequenceIn : 0) == liveTcp->getAckNo())) {
+        EV_WARN << "TCP compare: ack expected " << storedTcp->getAckNo() + (storedTcp->getAckBit() ? relSequenceIn : 0) << " actual " << liveTcp->getAckNo() << "\n";
         return false;
     }
     if (!(storedTcp->getUrgBit() == liveTcp->getUrgBit()) || !(storedTcp->getAckBit() == liveTcp->getAckBit()) ||
