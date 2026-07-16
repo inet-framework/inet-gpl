@@ -242,7 +242,15 @@ def cmd_linux(args):
 BACKTICK_RE = re.compile(r"(?m)^[^\n`]*`([^`]*)`[^\n]*\n?")
 OPTION_LINE_RE = re.compile(r"(?m)^[ \t]*(--[a-zA-Z_][a-zA-Z_0-9]*(?:=\S+)?)[ \t]*(?://.*)?$")
 SYSCTL_LINE_RE = re.compile(r"^sysctl\s+-q\s+(.*)$")
+# The corpus's other sysctl mechanism: a helper script that pokes /proc/sys
+# directly, e.g. `../../common/set_sysctls.py /proc/sys/net/ipv4/tcp_timestamps=0
+# /proc/sys/net/ipv4/tcp_ecn=1`. Same key=value assignments as `sysctl -q`, but
+# the keys are /proc/sys/ paths (stripped below). 59 corpus scripts use it, 32
+# to set tcp_timestamps=0 -- without this they kept INET's default TS on and
+# emitted an extra SYN option.
+SET_SYSCTLS_RE = re.compile(r"set_sysctls\.py\s+(.+)$")
 SYSCTL_ASSIGN_RE = re.compile(r'([a-zA-Z0-9_./]+)=("(?:[^"\\]|\\.)*"|\S+)')
+PROC_SYS_PREFIX_RE = re.compile(r"^/?proc/sys/")
 
 
 def preprocess_script(text, mapping):
@@ -283,11 +291,14 @@ def preprocess_script(text, mapping):
                 rest = lines[1:]
                 break
         for line in rest:
-            m = SYSCTL_LINE_RE.match(line.strip())
-            if not m:
+            line = line.strip()
+            m = SYSCTL_LINE_RE.match(line)
+            sm = SET_SYSCTLS_RE.search(line) if not m else None
+            if not m and not sm:
                 continue
-            for am in SYSCTL_ASSIGN_RE.finditer(m.group(1)):
-                key = am.group(1).replace("/", ".")  # sysctl accepts both net/ipv4/x and net.ipv4.x
+            for am in SYSCTL_ASSIGN_RE.finditer((m or sm).group(1)):
+                key = PROC_SYS_PREFIX_RE.sub("", am.group(1))  # set_sysctls.py uses /proc/sys/net/ipv4/x paths
+                key = key.replace("/", ".")  # sysctl accepts both net/ipv4/x and net.ipv4.x
                 stripped["sysctls"][key] = am.group(2).strip('"')
 
     return text2, stripped
