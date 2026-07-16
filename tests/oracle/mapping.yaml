@@ -82,14 +82,17 @@ sysctl:
     transform: bitmask
     bits:
       "0x1": "**.tcp.fastopenClientEnabled"
-      # Bit 1 also implies fastopenExpOptionEnabled: Linux servers accept both
-      # the standard (kind 34) and legacy pre-standardization (kind 254 +
-      # 0xF989 magic, Workstream F4) wire forms whenever server Fast Open is
-      # on, with no separate sysctl to disable the legacy form -- INET's
-      # fastopenExpOptionEnabled is an INET-only extra opt-in gate (not
-      # present in Linux), so bundling it onto the same bit is the faithful
-      # translation of "server Fast Open enabled" for oracle purposes.
-      "0x2": ["**.tcp.fastopenServerEnabled", "**.tcp.fastopenExpOptionEnabled"]
+      # Bit 1 (TFO_SERVER_ENABLE) means server Fast Open is *available*, but a
+      # plain listener still has to opt in via setsockopt(TCP_FASTOPEN); only the
+      # WO_SOCKOPT bits make a listener accept TFO without that opt-in. INET does
+      # not model the per-listener setsockopt, so map "accept TFO data on any
+      # listener" to bit 0x400 (TFO_SERVER_WO_SOCKOPT2). Otherwise a non-TFO
+      # listener under tcp_fastopen=2 (fastopen/server/basic-non-tfo-listener)
+      # would wrongly accept the SYN data. fastopenExpOptionEnabled (can PARSE
+      # the kind-254 legacy form) rides bit 1, since parsing is harmless even
+      # when the listener won't accept -- Linux has no separate toggle for it.
+      "0x2": "**.tcp.fastopenExpOptionEnabled"
+      "0x400": "**.tcp.fastopenServerEnabled"
   net.ipv4.tcp_congestion_control:
     ini: "**.tcp.tcpAlgorithmClass"
     transform: enum

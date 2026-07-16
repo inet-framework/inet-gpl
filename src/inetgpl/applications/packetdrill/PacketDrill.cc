@@ -260,17 +260,19 @@ TcpOption *setOptionValues(PacketDrillTcpOption *opt)
         }
         case TCPOPT_EXP: {
             // Experimental option (RFC 6994); the fork only ever builds this
-            // for Fast Open experimental (FOEXP), so the payload is always
-            // the 2-byte 0xF989 magic followed by the cookie.
-            auto *option = new TcpOptionUnknown();
-            option->setKind(static_cast<TcpOptionNumbers>(TCPOPT_EXP));
+            // for Fast Open experimental (FOEXP, RFC 7413 Appendix A: kind 254 +
+            // 0xF989 magic + cookie). Build INET's typed TcpOptionTcpFastOpenExp
+            // (not a raw TcpOptionUnknown) so its option dispatch -- which
+            // dynamic_casts to this type -- recognizes an injected packet's
+            // experimental cookie instead of dropping it as unknown, exactly as
+            // the kind-34 and AccECN cases above build their typed options.
+            auto *option = new TcpOptionTcpFastOpenExp();
             option->setLength(length);
+            option->setExpId(TCPOPT_FASTOPEN_MAGIC);
             const ByteVector& cookie = opt->getFastOpenCookie();
-            option->setBytesArraySize(2 + cookie.size());
-            option->setBytes(0, (TCPOPT_FASTOPEN_MAGIC >> 8) & 0xff);
-            option->setBytes(1, TCPOPT_FASTOPEN_MAGIC & 0xff);
+            option->setCookieArraySize(cookie.size());
             for (size_t i = 0; i < cookie.size(); i++)
-                option->setBytes(2 + i, cookie[i]);
+                option->setCookie(i, cookie[i]);
             return option;
         }
         case TCPOPT_ACCECN0:

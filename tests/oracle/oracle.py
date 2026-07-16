@@ -487,6 +487,17 @@ def run_leg_inet(corpus_name, script_id, path, mapping, preproc_dir):
     clean_text, stripped = preprocess_script(text, mapping)
     ini_overrides, unmapped, blocking = translate_to_ini(stripped, mapping)
 
+    # A listener that opts into server Fast Open via setsockopt(TCP_FASTOPEN)
+    # accepts TFO SYN data regardless of the sysctl's WO_SOCKOPT bits. INET has
+    # no per-listener TFO opt-in (fastopenServerEnabled is module-wide), so treat
+    # the presence of that setsockopt as enabling the server side -- complementing
+    # the tcp_fastopen 0x400 (accept-on-any-listener) mapping. Without this, a
+    # setsockopt-opt-in listener under e.g. tcp_fastopen=0x3 would wrongly reject
+    # the SYN data; without the mapping side, a non-opt-in listener under
+    # tcp_fastopen=2 would wrongly accept it.
+    if re.search(r"setsockopt\([^)]*TCP_FASTOPEN\b(?!_CONNECT)", clean_text):
+        ini_overrides["**.tcp.fastopenServerEnabled"] = "true"
+
     pp_name = f"{corpus_name}__{script_id.replace('/', '__')}.pkt"
     pp_path = os.path.join(preproc_dir, pp_name)
     os.makedirs(preproc_dir, exist_ok=True)
