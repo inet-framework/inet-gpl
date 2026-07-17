@@ -239,7 +239,17 @@ def cmd_linux(args):
 # option set, and translate that set into INET ini overrides via mapping.yaml.
 # ---------------------------------------------------------------------------
 
-BACKTICK_RE = re.compile(r"(?m)^[^\n`]*`([^`]*)`[^\n]*\n?")
+# Only UNTIMED backtick blocks (the line's first non-blank char is the
+# backtick) are stripped and hoisted into the global sysctl set: those are
+# the head preamble (defaults.sh + sysctl lines) and the tail
+# /tmp/sysctl_restore_$PPID.sh call. A TIMED backtick line ("+.07 `sysctl
+# -q net.ipv4.tcp_timestamps=0`") is a mid-script COMMAND event: hoisting
+# it misconfigures the connections BEFORE it (zerocopy/fastopen-client's
+# first connection expects TS on) and deleting it shifts every later
+# relative timestamp. The INET-fork parser reads backtick commands natively
+# (BACK_QUOTED -> command_spec -> COMMAND_EVENT), so timed blocks stay in
+# the script; PacketDrillApp applies the known-sysctl subset at runtime.
+BACKTICK_RE = re.compile(r"(?m)^[ \t]*`([^`]*)`[^\n]*\n?")
 OPTION_LINE_RE = re.compile(r"(?m)^[ \t]*(--[a-zA-Z_][a-zA-Z_0-9]*(?:=\S+)?)[ \t]*(?://.*)?$")
 SYSCTL_LINE_RE = re.compile(r"^sysctl\s+-q\s+(.*)$")
 # The corpus's other sysctl mechanism: a helper script that pokes /proc/sys

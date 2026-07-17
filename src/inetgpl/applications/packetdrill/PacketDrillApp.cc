@@ -72,6 +72,15 @@ void PacketDrillApp::initialize(int stage)
         numEvents = 0;
         localVTag = 0;
         eventTimer = new cMessage("event timer", MSGKIND_EVENT);
+        // Real packetdrill's tuntap write is synchronous: the kernel fully
+        // processes an injected packet before the next script line runs. In
+        // the simulation an injected packet traverses the stack in several
+        // same-simtime events, so run each script event AFTER all same-time
+        // default-priority events (in-flight packets) have settled -- else a
+        // "+0" syscall right after an inbound injection (e.g. epoll_wait
+        // asserting a zerocopy completion the in-flight ACK delivers) sees
+        // pre-packet state that the real kernel never exposes.
+        eventTimer->setSchedulingPriority(100);
         statusRequestTimer = new cMessage("status request", MSGKIND_STATUS_REQUEST);
         simStartTime = simTime();
         simRelTime = simTime();
@@ -158,29 +167,23 @@ void PacketDrillApp::socketDataArrived(TcpSocket *socket, Packet *msg, bool urge
     // (`delete msg`) without ever queuing it, so read()/recvfrom()/recvmsg()
     // could never actually verify TCP payload lengths.
     epollInEdgePending = true;
+    PacketDrillInfo *info = new PacketDrillInfo();
+    info->setLiveTime(getSimulation()->getSimTime());
+    msg->setContextPointer(info);
+    receivedPackets->insert(msg);
+    msgArrived = true;
     if (recvFromSet) {
+        // a read()/recv() is blocked on this stream: complete it once enough
+        // bytes have accumulated (stream semantics -- the read may span
+        // several arrival chunks), else keep waiting
+        if (availableAppBytes() < expectedMessageSize)
+            return;
         recvFromSet = false;
-        msgArrived = false;
-        if (!(msg->getByteLength() == expectedMessageSize)) {
-            delete msg;
-            throw cTerminationException("Packetdrill error: Received data has unexpected size");
-        }
-        delete msg;
-        if (!eventTimer->isScheduled() && eventCounter < numEvents - 1) {
-            eventCounter++;
-            scheduleEvent();
-        }
+        consumeAppBytes(expectedMessageSize);
     }
-    else {
-        PacketDrillInfo *info = new PacketDrillInfo();
-        info->setLiveTime(getSimulation()->getSimTime());
-        msg->setContextPointer(info);
-        receivedPackets->insert(msg);
-        msgArrived = true;
-        if (!eventTimer->isScheduled() && eventCounter < numEvents - 1) {
-            eventCounter++;
-            scheduleEvent();
-        }
+    if (!eventTimer->isScheduled() && eventCounter < numEvents - 1) {
+        eventCounter++;
+        scheduleEvent();
     }
 }
 
@@ -216,8 +219,10 @@ void PacketDrillApp::socketZerocopyCompletion(TcpSocket *socket, unsigned int ze
 {
     // MSG_ZEROCOPY completion (Workstream H2): collect ids in delivery order;
     // recvmsg(MSG_ERRQUEUE) drains them against the script's asserted
-    // ee_info..ee_data range (verifyMsgErrQueue).
+    // ee_info..ee_data range (verifyMsgErrQueue). Each arrival is also an
+    // epoll wakeup: EPOLLERR reports once per new-arrival batch.
     completedZerocopyIds.push_back(zerocopyId);
+    epollErrEdgePending = true;
 }
 
 void PacketDrillApp::socketStatusArrived(TcpSocket *socket, TcpStatusInfo *status)
@@ -396,6 +401,57 @@ int64_t PacketDrillApp::tcpPayloadLength(Packet *pkt)
         return -1;
     const auto& tcp = pkt->peekDataAt<TcpHeader>(ip->getChunkLength());
     return pkt->getByteLength() - B(ip->getChunkLength()).get() - B(tcp->getHeaderLength()).get();
+}
+
+int64_t PacketDrillApp::availableAppBytes()
+{
+    // Total unread bytes across queued app-data messages (the TCP receive
+    // stream), net of the partially-read front message's consumed prefix.
+    int64_t total = 0;
+    for (cQueue::Iterator it(*receivedPackets); !it.end(); it++) {
+        auto *qpkt = dynamic_cast<Packet *>(*it);
+        if (qpkt && tcpPayloadLength(qpkt) < 0)
+            total += qpkt->getByteLength() - (qpkt == partialReadPkt ? partialReadOffset : 0);
+    }
+    return total;
+}
+
+void PacketDrillApp::consumeAppBytes(int64_t count)
+{
+    // Drain `count` bytes from the receive stream in arrival order,
+    // discarding fully-read messages and advancing the partial-read offset
+    // into a message a read stops in the middle of. Caller has verified
+    // availableAppBytes() >= count.
+    std::vector<Packet *> appData;
+    for (cQueue::Iterator it(*receivedPackets); !it.end(); it++) {
+        auto *qpkt = dynamic_cast<Packet *>(*it);
+        if (qpkt && tcpPayloadLength(qpkt) < 0)
+            appData.push_back(qpkt);
+    }
+    for (auto *qpkt : appData) {
+        if (count <= 0)
+            break;
+        int64_t avail = qpkt->getByteLength() - (qpkt == partialReadPkt ? partialReadOffset : 0);
+        if (avail <= count) {
+            count -= avail;
+            receivedPackets->remove(qpkt);
+            if (qpkt == partialReadPkt) {
+                partialReadPkt = nullptr;
+                partialReadOffset = 0;
+            }
+            delete (PacketDrillInfo *)qpkt->getContextPointer();
+            delete qpkt;
+        }
+        else {
+            if (qpkt != partialReadPkt) {
+                partialReadPkt = qpkt;
+                partialReadOffset = 0;
+            }
+            partialReadOffset += count;
+            count = 0;
+        }
+    }
+    msgArrived = receivedPackets->getLength() > 0;
 }
 
 void PacketDrillApp::startOutboundComparison(Packet *expectedPacket, Packet *livePacket)
@@ -595,7 +651,19 @@ void PacketDrillApp::runEvent(PacketDrillEvent *event)
                 if (tcpHeader->getHeaderOptionArraySize() > 0) {
                     for (unsigned int i = 0; i < tcpHeader->getHeaderOptionArraySize(); i++) {
                         if (tcpHeader->getHeaderOption(i)->getKind() == TCPOPT_TIMESTAMP) {
+                            // TSecr must echo the DUT's LIVE timestamp clock, which
+                            // the script cannot know -- re-stamp it with the last
+                            // TSval observed on a live outbound segment (peerTS),
+                            // like upstream packetdrill's ecr remapping. The TSval
+                            // is the scripted PEER's own clock and must be
+                            // PRESERVED verbatim: the DUT stores it as ts_recent
+                            // and echoes it back, and the script's outbound "ecr"
+                            // assertions are written against these literals.
+                            // (Previously the whole option was rebuilt with only
+                            // ecr set, silently zeroing every injected TSval.)
+                            auto *oldTs = check_and_cast<const TcpOptionTimestamp *>(tcpHeader->getHeaderOption(i));
                             TcpOptionTimestamp *option = new TcpOptionTimestamp();
+                            option->setSenderTimestamp(oldTs->getSenderTimestamp());
                             option->setEchoedTimestamp(peerTS);
                             tcpHeader->removeHeaderOption(i);
                             tcpHeader->setHeaderOption(i, option);
@@ -794,11 +862,64 @@ void PacketDrillApp::runEvent(PacketDrillEvent *event)
         runSystemCallEvent(event, event->getSyscall());
     }
     else if (event->getType() == COMMAND_EVENT) {
+        runCommandEvent(event);
         eventCounter++;
         scheduleEvent();
     }
     else if (event->getType() == CODE_EVENT) {
         runCodeEvent(event);
+    }
+}
+
+void PacketDrillApp::runCommandEvent(PacketDrillEvent *event)
+{
+    // A timed backtick shell command. Real packetdrill hands the line to
+    // /bin/sh; the only effect worth modeling for the simulated stack is a
+    // sysctl assignment that changes TCP behavior for LATER connections
+    // (INET's Tcp module reads its parameters per connection at open time,
+    // which is also when Linux samples these). Everything else the corpus
+    // uses in timed commands (nstat, tc qdisc, ip tcp_metrics flush, the
+    // sysctl_restore tail script) is a no-op here. The key->parameter
+    // mapping mirrors oracle.py mapping.yaml's preamble translation.
+    const char *cmdline = event->getCommand() ? event->getCommand()->command_line : nullptr;
+    if (!cmdline)
+        return;
+    cModule *tcpModule = getParentModule()->getSubmodule("tcp");
+    std::istringstream tokens(cmdline);
+    std::string token;
+    while (tokens >> token) {
+        size_t eq = token.find('=');
+        if (eq == std::string::npos || eq == 0)
+            continue;
+        std::string key = token.substr(0, eq);
+        std::string value = token.substr(eq + 1);
+        // normalize /proc/sys/net/ipv4/x and net/ipv4/x to net.ipv4.x
+        if (key.compare(0, 10, "/proc/sys/") == 0)
+            key = key.substr(10);
+        std::replace(key.begin(), key.end(), '/', '.');
+        if (key.compare(0, 4, "net.") != 0)
+            continue; // shell noise (redirections, flags), not a sysctl
+        if (!tcpModule) {
+            EV_WARN << "command event: no tcp sibling module, ignoring sysctl " << key << "\n";
+            continue;
+        }
+        if (key == "net.ipv4.tcp_timestamps") {
+            tcpModule->par("timestampSupport").setBoolValue(atoi(value.c_str()) != 0);
+            EV_INFO << "command event: timestampSupport <- " << value << " for later connections\n";
+        }
+        else if (key == "net.ipv4.tcp_fastopen") {
+            // same bit interpretation as mapping.yaml (0x2/0x400 deliberately
+            // swapped from the kernel's nominal meaning -- see the mapping's
+            // comment on modeling the per-listener TCP_FASTOPEN setsockopt)
+            long bits = strtol(value.c_str(), nullptr, 0);
+            tcpModule->par("fastopenClientEnabled").setBoolValue((bits & 0x1) != 0);
+            tcpModule->par("fastopenExpOptionEnabled").setBoolValue((bits & 0x2) != 0);
+            tcpModule->par("fastopenServerEnabled").setBoolValue((bits & 0x400) != 0);
+            tcpModule->par("fastopenAcceptWithoutCookie").setBoolValue((bits & 0x200) != 0);
+            EV_INFO << "command event: fastopen params <- " << value << " for later connections\n";
+        }
+        else
+            EV_WARN << "command event: unmodeled sysctl " << key << "=" << value << " ignored\n";
     }
 }
 
@@ -1824,7 +1945,12 @@ int PacketDrillApp::syscallSendTo(struct syscall_spec *syscall, cQueue *args, ch
                 fastopenConnectPending = false;
                 tcpConnId = tcpSocket.getSocketId();
             }
-            if (count > 0)
+            // A script-asserted failure return means Linux REJECTED the data:
+            // sendto(MSG_FASTOPEN) with no cached cookie returns -1 EINPROGRESS
+            // and only the (dataless, cookie-requesting) connect proceeds -- the
+            // payload is never queued, so nothing must be transmitted after the
+            // handshake either. Queuing it would emit a phantom data segment.
+            if (count > 0 && syscall->result->getNum() >= 0)
                 sendTcpPayloadWithFlags(count, flags);
             break;
 
@@ -1978,24 +2104,20 @@ int PacketDrillApp::syscallRead(PacketDrillEvent *event, struct syscall_spec *sy
                 case IP_PROT_TCP: {
                     // This harness always runs TCP sockets in autoRead mode, so
                     // arrived data was already delivered by socketDataArrived()
-                    // and queued -- consume and length-verify it directly. The
-                    // old TCP_C_READ request here was fatal whenever it actually
-                    // reached INET ("TCP READ arrived, but connection used in
-                    // autoRead mode").
-                    for (cQueue::Iterator it(*receivedPackets); !it.end(); it++) {
-                        auto *qpkt = dynamic_cast<Packet *>(*it);
-                        if (qpkt && tcpPayloadLength(qpkt) < 0) { // app data, not a queued tun/IP packet
-                            receivedPackets->remove(qpkt);
-                            long len = qpkt->getByteLength();
-                            delete (PacketDrillInfo *)qpkt->getContextPointer();
-                            delete qpkt;
-                            msgArrived = receivedPackets->getLength() > 0;
-                            if (len != syscall->result->getNum())
-                                throw cTerminationException("Packetdrill error: Wrong payload length");
-                            return STATUS_OK;
-                        }
+                    // and queued. The queued messages form ONE byte stream
+                    // (Linux read() semantics): a read may stop mid-message
+                    // (partial read, e.g. read(...,1000)=1000 of 10000 queued)
+                    // or span several arrival chunks. A short read (result <
+                    // count) is legal exactly when it drains the stream.
+                    int64_t expected = syscall->result->getNum();
+                    int64_t avail = availableAppBytes();
+                    if (avail >= expected) {
+                        if (expected < count && avail > expected)
+                            throw cTerminationException("Packetdrill error: Wrong payload length"); // short read asserted while more data was queued
+                        consumeAppBytes(expected);
+                        return STATUS_OK;
                     }
-                    // nothing delivered yet: defer, socketDataArrived() completes it
+                    // not enough delivered yet: defer, socketDataArrived() completes it
                     msgArrived = false;
                     recvFromSet = true;
                     return STATUS_OK;
@@ -2115,8 +2237,60 @@ int PacketDrillApp::syscallSendMsg(struct syscall_spec *syscall, cQueue *args, c
                 tcpSocket.connect(remoteAddress, remotePort, true);
                 tcpConnId = tcpSocket.getSocketId();
             }
-            if (syscall->result->getNum() > 0)
-                sendTcpPayloadWithFlags(syscall->result->getNum(), flags);
+            if (syscall->result->getNum() > 0) {
+                // MSG_ZEROCOPY pins each iovec element as one skb frag, so an
+                // iov of more than MAX_SKB_FRAGS (17 with 4K pages) elements
+                // spills into multiple skbs -- each transmitted as its own
+                // PSH-marked segment (tcp/zerocopy/maxfrags.pkt pins the
+                // 17+1 and 17+17+17+13 shapes). Model an skb boundary as a
+                // record boundary (MSG_EOR): sendSegment then stops and sets
+                // PSH exactly at the chunk edges. The zerocopy completion
+                // stays ONE per sendmsg (tag only the final chunk). Without
+                // zerocopy (or with a small iov) the elements coalesce into
+                // one linear skb -- the plain single-payload path.
+                std::vector<int64_t> chunks;
+                exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(1));
+                struct msghdr_expr *msghdr = exp ? exp->getMsghdr() : nullptr;
+                if ((flags & MSG_ZEROCOPY) && zerocopyEnabled && msghdr && msghdr->msg_iov
+                        && msghdr->msg_iov->getType() == EXPR_LIST)
+                {
+                    const int MAX_SKB_FRAGS = 17;
+                    int64_t chunkBytes = 0, totalBytes = 0;
+                    int frags = 0;
+                    for (cQueue::Iterator it(*msghdr->msg_iov->getList()); !it.end(); it++) {
+                        auto *iovExp = check_and_cast<PacketDrillExpression *>(*it);
+                        struct iovec_expr *iov = iovExp->getIovec();
+                        int32_t len = 0;
+                        char *err = nullptr;
+                        if (!iov || !iov->iov_len || iov->iov_len->getS32(&len, &err))
+                            { chunks.clear(); totalBytes = -1; break; }
+                        if (frags == MAX_SKB_FRAGS) {
+                            chunks.push_back(chunkBytes);
+                            chunkBytes = 0;
+                            frags = 0;
+                        }
+                        chunkBytes += len;
+                        totalBytes += len;
+                        frags++;
+                    }
+                    if (chunkBytes > 0)
+                        chunks.push_back(chunkBytes);
+                    // only trust the split if the iov's total matches the
+                    // asserted return (no partial-write modeling)
+                    if (totalBytes != syscall->result->getNum())
+                        chunks.clear();
+                }
+                if (chunks.size() > 1) {
+                    for (size_t i = 0; i < chunks.size(); i++) {
+                        int chunkFlags = (flags | MSG_EOR);
+                        if (i + 1 < chunks.size())
+                            chunkFlags &= ~MSG_ZEROCOPY;
+                        sendTcpPayloadWithFlags(chunks[i], chunkFlags);
+                    }
+                }
+                else
+                    sendTcpPayloadWithFlags(syscall->result->getNum(), flags);
+            }
             break;
         }
         default:
@@ -2277,6 +2451,8 @@ int PacketDrillApp::syscallEpollCreate(struct syscall_spec *syscall, cQueue *arg
     epollWatchedEvents = 0;
     epollInEdgePending = false;
     epollOutEdgePending = false;
+    epollErrEdgePending = false;
+    epollOneshotFired = false;
     return STATUS_OK;
 }
 
@@ -2306,12 +2482,16 @@ int PacketDrillApp::syscallEpollCtl(struct syscall_spec *syscall, cQueue *args, 
     epollWatchedEvents = events;
     epollRegistered = true;
     // (Re-)registering counts as a fresh edge for edge-triggered watches:
-    // any already-queued data, and writability (this framework's TCP writes
-    // always succeed immediately, so the socket is always "writable"), are
-    // both new-to-report as of this call.
-    if (receivedPackets->getLength() > 0)
+    // any already-queued data, writability (this framework's TCP writes
+    // always succeed immediately, so the socket is always "writable"), and
+    // any pending error-queue entries are all new-to-report as of this call.
+    // EPOLL_CTL_MOD also re-arms an EPOLLONESHOT-disabled fd.
+    if (availableAppBytes() > 0)
         epollInEdgePending = true;
     epollOutEdgePending = true;
+    if (!completedZerocopyIds.empty())
+        epollErrEdgePending = true;
+    epollOneshotFired = false;
     return STATUS_OK;
 }
 
@@ -2325,20 +2505,37 @@ int PacketDrillApp::syscallEpollWait(struct syscall_spec *syscall, cQueue *args,
     struct epollev_expr *expectedEv = exp->getEpollev();
 
     uint32_t actualEvents = 0;
-    if (epollRegistered) {
+    if (epollRegistered && !((epollWatchedEvents & EPOLLONESHOT) && epollOneshotFired)) {
         bool edgeTriggered = (epollWatchedEvents & EPOLLET) != 0;
-        if ((epollWatchedEvents & EPOLLIN) && receivedPackets->getLength() > 0 &&
+        // EPOLLERR cannot be masked out by the watched-events set. For the
+        // error queue it is "not edge-triggered but not level-triggered
+        // either" (the kernel's own zerocopy epoll tests' words): it reports
+        // once per batch of new error-queue arrivals, regardless of EPOLLET,
+        // and a non-empty-but-already-reported queue stays silent.
+        bool errReady = epollErrEdgePending && !completedZerocopyIds.empty();
+        // In edge-triggered mode a wakeup on ANY event puts the fd on the
+        // ready list, and epoll_wait then reports the fd's entire current
+        // readiness mask -- e.g. a new-data or errqueue wakeup re-reports
+        // EPOLLOUT even though its own edge was already consumed. (EPOLLOUT
+        // itself: this framework never models a full send buffer, so the
+        // socket is always writable once connected; its own edge only fires
+        // right after registration.)
+        bool wakeup = errReady
+            || ((epollWatchedEvents & EPOLLIN) && availableAppBytes() > 0 &&
                 (!edgeTriggered || epollInEdgePending))
-        {
-            actualEvents |= EPOLLIN;
+            || ((epollWatchedEvents & EPOLLOUT) && (!edgeTriggered || epollOutEdgePending));
+        if (wakeup) {
+            if (errReady)
+                actualEvents |= EPOLLERR;
+            if ((epollWatchedEvents & EPOLLIN) && availableAppBytes() > 0)
+                actualEvents |= EPOLLIN;
+            if (epollWatchedEvents & EPOLLOUT)
+                actualEvents |= EPOLLOUT;
+            epollErrEdgePending = false;
             epollInEdgePending = false;
-        }
-        // EPOLLOUT: this framework never models a full send buffer, so the
-        // socket is always writable once connected; edge-triggered mode
-        // therefore only ever reports it once, right after registration.
-        if ((epollWatchedEvents & EPOLLOUT) && (!edgeTriggered || epollOutEdgePending)) {
-            actualEvents |= EPOLLOUT;
             epollOutEdgePending = false;
+            if (epollWatchedEvents & EPOLLONESHOT)
+                epollOneshotFired = true;
         }
     }
 
@@ -2380,7 +2577,9 @@ int PacketDrillApp::syscallPoll(struct syscall_spec *syscall, cQueue *args, char
                 return STATUS_ERR;
 
             uint32_t actualRevents = 0;
-            if ((requestedEvents & POLLIN) && receivedPackets->getLength() > 0)
+            // readable = unread APP data only; a captured outbound tun packet
+            // queued ahead of its expectation event is not socket read data
+            if ((requestedEvents & POLLIN) && availableAppBytes() > 0)
                 actualRevents |= POLLIN;
             // This framework never models a full send buffer, so the
             // socket is always writable once connected.

@@ -143,6 +143,8 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     uint32_t epollWatchedEvents = 0;
     bool epollInEdgePending = false;
     bool epollOutEdgePending = false;
+    bool epollErrEdgePending = false; // set on each new error-queue arrival (zerocopy completion)
+    bool epollOneshotFired = false; // EPOLLONESHOT: fd disarmed after one report until EPOLL_CTL_MOD
 
     // Socket-API extensions (harness upgrade for INET Workstreams F/G/H):
     // SO_ZEROCOPY gate for MSG_ZEROCOPY sends; SO_TIMESTAMPING's requested
@@ -195,6 +197,7 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
 
     void runEvent(PacketDrillEvent *event);
     void runSystemCallEvent(PacketDrillEvent *event, struct syscall_spec *syscall);
+    void runCommandEvent(PacketDrillEvent *event); // timed backtick block: apply known-sysctl assignments
     void closeAllSockets();
 
     int syscallSocket(struct syscall_spec *syscall, cQueue *args, char **error);
@@ -234,6 +237,14 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     int verifyMsgErrQueue(struct msghdr_expr *msgExpr, struct syscall_spec *syscall, char **error);
 
     static int64_t tcpPayloadLength(inet::Packet *pkt);
+
+    // TCP receive-stream model for read()/recv(): queued app-data messages
+    // form one byte stream; reads may consume part of a message (Linux read
+    // semantics), tracked by a byte offset into the front app-data message.
+    int64_t availableAppBytes();
+    void consumeAppBytes(int64_t count);
+    omnetpp::cPacket *partialReadPkt = nullptr;
+    int64_t partialReadOffset = 0;
     void startOutboundComparison(inet::Packet *expectedPacket, inet::Packet *livePacket);
     void continueOutboundAggregation(inet::Packet *livePacket);
 
