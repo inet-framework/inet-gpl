@@ -93,6 +93,13 @@ sysctl:
       # when the listener won't accept -- Linux has no separate toggle for it.
       "0x2": "**.tcp.fastopenExpOptionEnabled"
       "0x400": "**.tcp.fastopenServerEnabled"
+      # Bit 9 (0x200, TFO_SERVER_COOKIE_NOT_REQD): accept SYN data carrying no
+      # cookie option at all. The corpus's basic-cookie-not-reqd / zerocopy
+      # fastopen-server tests set 0x202/0x207 plus a per-listener
+      # setsockopt(TCP_FASTOPEN) (which oracle.py's script scan translates to
+      # fastopenServerEnabled), so this bit only needs to carry the
+      # cookie-not-required half.
+      "0x200": "**.tcp.fastopenAcceptWithoutCookie"
   net.ipv4.tcp_congestion_control:
     ini: "**.tcp.tcpAlgorithmClass"
     transform: enum

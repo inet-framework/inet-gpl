@@ -1796,7 +1796,13 @@ int PacketDrillApp::syscallSendTo(struct syscall_spec *syscall, cQueue *args, ch
             // fastOpen overload (Workstream F) so a cached cookie defers the
             // SYN and attaches this data to it, and a cookie-less socket sends
             // the bare cookie-request SYN -- exactly Linux's two TFO phases.
-            if (tcpSocket.getState() != TcpSocket::CONNECTED && tcpSocket.getState() != TcpSocket::CONNECTING) {
+            // A LISTENING socket is the SERVER side: sendto() there is a plain
+            // send on the accepted connection (e.g. sendto(..., MSG_ZEROCOPY)
+            // in the zerocopy fastopen-server tests), never an implicit
+            // connect -- sendTcpPayloadWithFlags()'s LISTENING+acceptSet fixup
+            // handles the socket state, same as write()/send().
+            if (tcpSocket.getState() != TcpSocket::CONNECTED && tcpSocket.getState() != TcpSocket::CONNECTING
+                    && tcpSocket.getState() != TcpSocket::LISTENING) {
                 tcpSocket.connect(remoteAddress, remotePort, (flags & MSG_FASTOPEN) || fastopenConnectPending);
                 fastopenConnectPending = false;
                 tcpConnId = tcpSocket.getSocketId();
