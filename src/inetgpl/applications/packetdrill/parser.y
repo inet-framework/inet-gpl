@@ -241,10 +241,15 @@ static ByteVector cookie_token_to_bytes(const char *tok)
         if (!isxdigit((unsigned char)*p)) { symbolic = true; break; }
     }
     if (symbolic) {
+        // The oracle binds these for leg L (real packetdrill -D defines) to the
+        // cookies Linux derives with SipHash-2-4 from the canonical peer/local
+        // address pair (192.0.2.1 -> 192.168.0.1) under defaults.sh's key
+        // (TFO_COOKIE) and the all-zero key (TFO_COOKIE_ZERO). INET reproduces
+        // the same derivation (Tcp::generateFastOpenCookie with fastopenKey),
+        // so the same literals hold on leg I.
         if (!strcmp(tok, "TFO_COOKIE_ZERO"))
-            return ByteVector(8, 0x00);
-        // TFO_COOKIE (or any other symbolic name): a fixed, recognizable cookie.
-        return ByteVector{ 0xf0, 0x0d, 0xca, 0xfe, 0xde, 0xad, 0xbe, 0xef };
+            return ByteVector{ 0xb7, 0xc1, 0x23, 0x50, 0xa9, 0x0d, 0xc8, 0xf5 };
+        return ByteVector{ 0x30, 0x21, 0xb9, 0xd8, 0x89, 0x01, 0x7e, 0xeb };
     }
     return hex_string_to_bytes(tok);
 }

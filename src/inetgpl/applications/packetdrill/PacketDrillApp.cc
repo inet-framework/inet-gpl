@@ -645,9 +645,26 @@ void PacketDrillApp::runEvent(PacketDrillEvent *event)
             }
             else if (protocol == IP_PROT_TCP) {
                 auto tcpHeader = pk->removeAtFront<TcpHeader>();
-                if (tcpHeader->getSynBit()) // peer's ISN: injected raw, becomes our irs; maps our outbound ACKs back to the script's peer-relative frame
+                // stamp the CURRENT port pair: prebuilt packets carry the
+                // parse-time ports, stale after a multi-connection script's
+                // per-socket local-port bump (see syscallSocket)
+                tcpHeader->setSrcPort(remotePort);
+                tcpHeader->setDestPort(localPort);
+                // Upstream packetdrill's tcpdump convention: a SYN's seq is the
+                // absolute peer ISN (injected raw, remembered); every other
+                // inbound packet's seq is RELATIVE to it (e.g. simple1's
+                // "< . 1:1(0)" after "< S 1428932:..." must arrive at wire seq
+                // 1428933). Zero for the common 0-based scripts.
+                if (tcpHeader->getSynBit())
                     relSequenceIn = tcpHeader->getSequenceNo();
-                tcpHeader->setAckNo(tcpHeader->getAckNo() + relSequenceOut);
+                else
+                    tcpHeader->setSequenceNo(tcpHeader->getSequenceNo() + relSequenceIn);
+                // ack: script acks the DUT's data relative to the DUT's script
+                // ISN; on a SYN(-ACK) packet the script literal is absolute in
+                // the script's own frame, so the declared script ISN is
+                // subtracted before rebasing onto the live ISN.
+                tcpHeader->setAckNo(tcpHeader->getAckNo() + relSequenceOut
+                    - (tcpHeader->getSynBit() ? scriptIsnOut : 0));
                 if (tcpHeader->getHeaderOptionArraySize() > 0) {
                     for (unsigned int i = 0; i < tcpHeader->getHeaderOptionArraySize(); i++) {
                         if (tcpHeader->getHeaderOption(i)->getKind() == TCPOPT_TIMESTAMP) {
@@ -906,6 +923,12 @@ void PacketDrillApp::runCommandEvent(PacketDrillEvent *event)
         if (key == "net.ipv4.tcp_timestamps") {
             tcpModule->par("timestampSupport").setBoolValue(atoi(value.c_str()) != 0);
             EV_INFO << "command event: timestampSupport <- " << value << " for later connections\n";
+        }
+        else if (key == "net.ipv4.tcp_fastopen_key") {
+            // primary key only ("primary,backup" allowed by Linux)
+            std::string primary = value.substr(0, value.find(','));
+            tcpModule->par("fastopenKey").setStringValue(primary.c_str());
+            EV_INFO << "command event: fastopenKey <- " << primary << "\n";
         }
         else if (key == "net.ipv4.tcp_fastopen") {
             // same bit interpretation as mapping.yaml (0x2/0x400 deliberately
@@ -1313,6 +1336,23 @@ int PacketDrillApp::syscallSocket(struct syscall_spec *syscall, cQueue *args, ch
             break;
 
         case IP_PROT_TCP:
+            // Each script socket() call is a FRESH socket. Sequential
+            // multi-connection scripts (TFO cache warmup + the real attempt,
+            // close-listener-then-relisten servers) reuse the single primary
+            // TcpSocket member; without renewing it, the second socket()'s
+            // bind() throws "socket already bound" on the stale state.
+            if (tcpSocket.getState() != TcpSocket::NOT_BOUND) {
+                tcpSocket.renewSocket();
+                // ... on a fresh LOCAL PORT: real packetdrill gives every
+                // socket a new ephemeral port, and the previous connection
+                // (TIME_WAIT, or a still-open listener) would otherwise
+                // capture the new connection's 5-tuple -- an injected conn-2
+                // SYN-ACK delivered to conn-1's TIME_WAIT PCB kills both.
+                // Injection and comparison stamp ports at run time (packets
+                // are prebuilt with the parse-time port), so everything
+                // follows this member.
+                localPort++;
+            }
             tcpSocket.setOutputGate(gate("socketOut"));
             // Without this, TcpSocket::processMessage()'s `if (cb) cb->...`
             // guard is always false and every TcpSocket::ICallback override
@@ -1638,6 +1678,46 @@ int PacketDrillApp::setsockoptTcpLevel(int level, cQueue *args, char **error)
                 // Server-side enable; leg I already enables INET's
                 // fastopenServerEnabled via the sysctl-driven ini mapping.
                 return STATUS_OK;
+            case TCP_FASTOPEN_KEY: {
+                // 16 raw key bytes as a quoted string of \xNN escapes --
+                // equivalent to writing the tcp_fastopen_key sysctl. Convert
+                // to the sysctl's "%08x-..." text form (le32 words) and set
+                // the Tcp module's fastopenKey, so INET's Linux-compatible
+                // SipHash cookie derivation uses it for later connections.
+                PacketDrillExpression *sexp = check_and_cast_nullable<PacketDrillExpression *>(args->get(3));
+                if (sexp && sexp->getType() == EXPR_STRING && sexp->getString()) {
+                    std::vector<uint8_t> bytes;
+                    const char *p = sexp->getString();
+                    size_t n = strlen(p);
+                    for (size_t i = 0; i < n; ) {
+                        if (p[i] == '\\' && i + 3 < n && (p[i+1] == 'x' || p[i+1] == 'X')) {
+                            bytes.push_back((uint8_t)strtol(std::string(p + i + 2, 2).c_str(), nullptr, 16));
+                            i += 4;
+                        }
+                        else {
+                            bytes.push_back((uint8_t)p[i]);
+                            i++;
+                        }
+                    }
+                    if (bytes.size() >= 16) {
+                        auto w = [&](int k) {
+                            return (uint32_t)bytes[k] | ((uint32_t)bytes[k+1] << 8)
+                                 | ((uint32_t)bytes[k+2] << 16) | ((uint32_t)bytes[k+3] << 24);
+                        };
+                        char buf[40];
+                        snprintf(buf, sizeof(buf), "%08x-%08x-%08x-%08x", w(0), w(4), w(8), w(12));
+                        if (cModule *tcpModule = getParentModule()->getSubmodule("tcp"))
+                            tcpModule->par("fastopenKey").setStringValue(buf);
+                        EV_INFO << "setsockopt(TCP_FASTOPEN_KEY): fastopenKey <- " << buf << "\n";
+                    }
+                    else
+                        EV_WARN << "setsockopt(TCP_FASTOPEN_KEY): only " << bytes.size() << " bytes parsed, ignored\n";
+                }
+                else
+                    EV_WARN << "setsockopt(TCP_FASTOPEN_KEY): unexpected value expr type "
+                            << (sexp ? (int)sexp->getType() : -1) << ", ignored\n";
+                return STATUS_OK;
+            }
             default:
                 EV_INFO << "setsockopt(SOL_TCP, " << optname << ") not modeled, ignored\n";
                 return STATUS_OK;
@@ -2619,6 +2699,13 @@ int PacketDrillApp::syscallClose(struct syscall_spec *syscall, cQueue *args, cha
         }
 
         case IP_PROT_TCP: {
+            // close() on a connection this app already closed (e.g. a script
+            // whose second connect attempt failed, leaving tcpConnId pointing
+            // at the previous, closed connection) must be a no-op like the
+            // real syscall, not a fatal "Duplicate CLOSE command".
+            if (closedTcpConnIds.count(tcpConnId))
+                break;
+            closedTcpConnIds.insert(tcpConnId);
             Request *msg = new Request("close", TCP_C_CLOSE);
             TcpCommand *cmd = new TcpCommand();
             msg->addTag<SocketReq>()->setSocketId(tcpConnId);
@@ -2742,7 +2829,6 @@ bool PacketDrillApp::compareDatagram(Packet *storedPacket, Packet *livePacket)
 //    if (!(storedDatagram->getSrcAddress() == liveDatagram->getSrcAddress())) {
 //        return false;
 //    }
-    std::cout << __LINE__ << endl;
     if (!(storedDatagram->getDestAddress() == liveDatagram->getDestAddress())) {
         return false;
     }
@@ -2793,8 +2879,9 @@ bool PacketDrillApp::compareDatagram(Packet *storedPacket, Packet *livePacket)
         case IP_PROT_TCP: {
             const auto& storedTcp = storedPacket->peekDataAt<TcpHeader>(storedDatagram->getChunkLength());
             const auto& liveTcp = livePacket->peekDataAt<TcpHeader>(liveDatagram->getChunkLength());
-            if (storedTcp->getSynBit()) { // SYN was sent. Store the sequence number for comparisons
+            if (storedTcp->getSynBit()) { // SYN was sent. Store live ISN + the script's literal for it
                 relSequenceOut = liveTcp->getSequenceNo();
+                scriptIsnOut = storedTcp->getSequenceNo();
             }
             if (storedTcp->getSynBit() && storedTcp->getAckBit()) {
                 peerWindow = liveTcp->getWindow();
@@ -2831,20 +2918,34 @@ bool PacketDrillApp::compareTcpHeader(const Ptr<const TcpHeader>& storedTcp, con
 {
     // Divergence diagnostics: name the first mismatching field (EV_WARN so it
     // lands in the oracle's captured context_log without detail-level logging).
-    if (!(storedTcp->getSrcPort() == liveTcp->getSrcPort())) {
-        EV_WARN << "TCP compare: srcPort expected " << storedTcp->getSrcPort() << " actual " << liveTcp->getSrcPort() << "\n";
+    // ports are checked against the CURRENT pair (stored packets carry the
+    // parse-time ports, stale after a per-socket local-port bump)
+    if (!(liveTcp->getSrcPort() == localPort)) {
+        EV_WARN << "TCP compare: srcPort expected " << localPort << " actual " << liveTcp->getSrcPort() << "\n";
         return false;
     }
-    if (!(storedTcp->getDestPort() == liveTcp->getDestPort())) {
-        EV_WARN << "TCP compare: destPort expected " << storedTcp->getDestPort() << " actual " << liveTcp->getDestPort() << "\n";
+    if (!(liveTcp->getDestPort() == remotePort)) {
+        EV_WARN << "TCP compare: destPort expected " << remotePort << " actual " << liveTcp->getDestPort() << "\n";
         return false;
     }
-    if (!(storedTcp->getSequenceNo() + relSequenceOut == liveTcp->getSequenceNo())) {
-        EV_WARN << "TCP compare: seq expected " << storedTcp->getSequenceNo() + relSequenceOut << " actual " << liveTcp->getSequenceNo() << "\n";
+    // Upstream packetdrill's tcpdump convention (its socket.h): seq/ack in
+    // packets WITH the SYN flag are ABSOLUTE script literals; in all other
+    // packets they are RELATIVE to the first SYN of the respective direction.
+    // seq: non-SYN expects script + live ISN; a SYN's script literal is the
+    // declared script ISN itself (script + liveISN - scriptISN).
+    uint32_t expectedSeq = storedTcp->getSequenceNo() + relSequenceOut
+        - (storedTcp->getSynBit() ? scriptIsnOut : 0);
+    if (!(expectedSeq == liveTcp->getSequenceNo())) {
+        EV_WARN << "TCP compare: seq expected " << expectedSeq << " actual " << liveTcp->getSequenceNo() << "\n";
         return false;
     }
-    if (!(storedTcp->getAckNo() + (storedTcp->getAckBit() ? relSequenceIn : 0) == liveTcp->getAckNo())) {
-        EV_WARN << "TCP compare: ack expected " << storedTcp->getAckNo() + (storedTcp->getAckBit() ? relSequenceIn : 0) << " actual " << liveTcp->getAckNo() << "\n";
+    // ack: absolute on SYN/SYN-ACK packets (e.g. the simple1-3 server tests'
+    // "> S. 0:0(0) ack 1428933"), peer-ISN-relative on all others (e.g. the
+    // TFO-client tests' "> . 1:1(0) ack 1" after "< S. 123:123(0)").
+    uint32_t expectedAck = storedTcp->getAckNo()
+        + ((storedTcp->getAckBit() && !storedTcp->getSynBit()) ? relSequenceIn : 0);
+    if (!(expectedAck == liveTcp->getAckNo())) {
+        EV_WARN << "TCP compare: ack expected " << expectedAck << " actual " << liveTcp->getAckNo() << "\n";
         return false;
     }
     if (!(storedTcp->getUrgBit() == liveTcp->getUrgBit()) || !(storedTcp->getAckBit() == liveTcp->getAckBit()) ||
@@ -2909,7 +3010,10 @@ bool PacketDrillApp::compareTcpHeader(const Ptr<const TcpHeader>& storedTcp, con
                 }
             }
             if (!liveOption) {
-                EV_INFO << "TCP option kind=" << storedOption->getKind() << " expected but not present";
+                EV_WARN << "TCP compare: option kind=" << storedOption->getKind() << " expected but not present; live kinds:";
+                for (const TcpOption *lo : liveOpts)
+                    EV_WARN << " " << lo->getKind();
+                EV_WARN << "\n";
                 return false;
             }
             if (storedOption->getLength() != liveOption->getLength()) {
@@ -2963,6 +3067,8 @@ bool PacketDrillApp::compareTcpHeader(const Ptr<const TcpHeader>& storedTcp, con
                     if (storedOption->getLength() != 10
                         || storedTs->getEchoedTimestamp() != liveTs->getEchoedTimestamp())
                     {
+                        EV_WARN << "TCP compare: TS option mismatch, TSecr expected " << storedTs->getEchoedTimestamp()
+                                << " actual " << liveTs->getEchoedTimestamp() << "\n";
                         return false;
                     }
                     break;
@@ -2971,11 +3077,17 @@ bool PacketDrillApp::compareTcpHeader(const Ptr<const TcpHeader>& storedTcp, con
                     // RFC 7413 kind 34 -- typed TcpOptionTcpFastOpen (Workstream F).
                     const auto *storedFo = check_and_cast<const TcpOptionTcpFastOpen *>(storedOption);
                     const auto *liveFo = check_and_cast<const TcpOptionTcpFastOpen *>(liveOption);
-                    if (storedFo->getCookieArraySize() != liveFo->getCookieArraySize())
+                    if (storedFo->getCookieArraySize() != liveFo->getCookieArraySize()) {
+                        EV_WARN << "TCP compare: FO cookie length expected " << storedFo->getCookieArraySize()
+                                << " actual " << liveFo->getCookieArraySize() << "\n";
                         return false;
+                    }
                     for (unsigned int b = 0; b < storedFo->getCookieArraySize(); b++) {
-                        if (storedFo->getCookie(b) != liveFo->getCookie(b))
+                        if (storedFo->getCookie(b) != liveFo->getCookie(b)) {
+                            EV_WARN << "TCP compare: FO cookie byte " << b << " expected "
+                                    << (int)storedFo->getCookie(b) << " actual " << (int)liveFo->getCookie(b) << "\n";
                             return false;
+                        }
                     }
                     break;
                 }
@@ -3015,7 +3127,31 @@ bool PacketDrillApp::compareTcpHeader(const Ptr<const TcpHeader>& storedTcp, con
                 }
                 case TCPOPT_MD5SIG:
                 case TCPOPT_EXP: {
-                    // no typed INET option; both sides carry raw bytes
+                    // kind 254: INET now EMITS a typed TcpOptionTcpFastOpenExp when
+                    // echoing an experimental-form Fast Open cookie, and the script
+                    // side builds the same type for FOEXP -- compare those field-wise.
+                    const auto *storedFoe = dynamic_cast<const TcpOptionTcpFastOpenExp *>(storedOption);
+                    const auto *liveFoe = dynamic_cast<const TcpOptionTcpFastOpenExp *>(liveOption);
+                    if (storedFoe && liveFoe) {
+                        if (storedFoe->getCookieArraySize() != liveFoe->getCookieArraySize()) {
+                            EV_WARN << "TCP compare: FOEXP cookie length expected " << storedFoe->getCookieArraySize()
+                                    << " actual " << liveFoe->getCookieArraySize() << "\n";
+                            return false;
+                        }
+                        for (unsigned int b = 0; b < storedFoe->getCookieArraySize(); b++) {
+                            if (storedFoe->getCookie(b) != liveFoe->getCookie(b)) {
+                                EV_WARN << "TCP compare: FOEXP cookie byte " << b << " expected "
+                                        << (int)storedFoe->getCookie(b) << " actual " << (int)liveFoe->getCookie(b) << "\n";
+                                return false;
+                            }
+                        }
+                        break;
+                    }
+                    if (storedFoe != nullptr || liveFoe != nullptr) {
+                        EV_WARN << "TCP compare: kind-254 typed/raw mismatch (FOEXP on one side only)\n";
+                        return false;
+                    }
+                    // other kind-254 uses and MD5SIG: both sides carry raw bytes
                     const auto *storedUnknown = check_and_cast<const TcpOptionUnknown *>(storedOption);
                     const auto *liveUnknown = check_and_cast<const TcpOptionUnknown *>(liveOption);
                     if (storedUnknown->getBytesArraySize() != liveUnknown->getBytesArraySize())

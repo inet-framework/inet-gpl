@@ -293,6 +293,10 @@ def preprocess_script(text, mapping):
         # line-scan the rest so explicit sysctls layer on top of (and
         # override) the preset -- previously a whole-content anchored match
         # dropped the preset entirely for such mixed blocks.
+        # join backslash-continued lines first: multi-line set_sysctls.py
+        # invocations ("set_sysctls.py \\\n  /proc/sys/... \\\n  ...") must
+        # line-scan as ONE logical line, or every continued assignment is lost
+        content = re.sub(r"\\\s*\n\s*", " ", content)
         lines = content.splitlines()
         rest = lines
         for kp in known_preambles:
@@ -342,6 +346,11 @@ def translate_to_ini(stripped, mapping):
                 # (e.g. "B" for @unit(B) NED params)
                 v = spec.get("special", {}).get(v, v)
                 ini[spec["ini"]] = v + spec.get("suffix", "")
+            elif transform == "string":
+                # quoted verbatim string param (e.g. the Fast Open key);
+                # Linux allows "primary,backup" -- INET models the primary only
+                v = val.strip().strip('"').split(",")[0]
+                ini[spec["ini"]] = '"' + v + '"'
             elif transform == "enum":
                 mapped = spec.get("values", {}).get(val.strip())
                 if mapped is not None:
@@ -385,7 +394,7 @@ def translate_to_ini(stripped, mapping):
             unmapped.append(opt)
             continue
         if val is not None:
-            ini[spec["ini"]] = val
+            ini[spec["ini"]] = ('"' + val + '"') if spec.get("quoted") else val
 
     return ini, unmapped, blocking
 

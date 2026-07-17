@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
+#include <cctype>
 #include <fcntl.h>
 #if !defined(_WIN32) && !defined(__WIN32__) && !defined(WIN32) && !defined(__CYGWIN__) && !defined(_WIN64)
  #include <netinet/in.h>
@@ -253,6 +254,26 @@ int PacketDrillExpression::unescapeCstringExpression(const char *input_string, c
                 case 'v':
                     *c_out = '\v';
                     break;
+
+                case 'x': {
+                    // \xNN hex escape -- binary payloads, e.g. the 16 raw key
+                    // bytes of setsockopt(TCP_FASTOPEN_KEY, "\xf7\x63...").
+                    // (A NUL byte would truncate the C-string result; the
+                    // corpus's binary literals contain none.)
+                    int v = 0, n = 0;
+                    while (n < 2 && isxdigit((unsigned char)c_in[1])) {
+                        char d = c_in[1];
+                        v = v * 16 + (isdigit((unsigned char)d) ? d - '0' : (tolower((unsigned char)d) - 'a' + 10));
+                        ++c_in;
+                        ++n;
+                    }
+                    if (n == 0) {
+                        EV_DEBUG << "Empty \\x escape" << endl;
+                        return STATUS_ERR;
+                    }
+                    *c_out = (char)v;
+                    break;
+                }
 
                 default:
                     EV_DEBUG << "Unsupported escape code: " << *c_in << endl;

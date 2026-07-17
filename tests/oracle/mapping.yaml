@@ -100,6 +100,12 @@ sysctl:
       # fastopenServerEnabled), so this bit only needs to carry the
       # cookie-not-required half.
       "0x200": "**.tcp.fastopenAcceptWithoutCookie"
+  net.ipv4.tcp_fastopen_key:
+    # Server-role TFO cookie key. INET reproduces Linux's SipHash-2-4 cookie
+    # derivation exactly when this is set (fastopen/server/simple1-3 pin the
+    # key->cookie vectors), so the corpus's explicit-cookie assertions match.
+    ini: "**.tcp.fastopenKey"
+    transform: string
   net.ipv4.tcp_frto:
     # F-RTO spurious-RTO detection (RFC 5682). Kernel: 0=off, 1=basic, 2=SACK-
     # enhanced when possible (the default, what defaults.sh pins). INET
@@ -143,8 +149,17 @@ option:
   # leg I). A script setting these to the same values we already use is a
   # no-op; recorded as unmapped rather than silently dropped so a script that
   # ever needs a genuinely different address is still visible in the report.
-  --remote_ip: {ini: null, transform: ignore}
-  --local_ip: {ini: null, transform: ignore}
+  # local_ip/remote_ip are honored: the tun host's addresses are plain module
+  # parameters (PacketDrillApp assigns the tun interface's address itself, and
+  # the routing file's default route covers any remote). simple1-3 pin the TFO
+  # cookie's SipHash INPUT (the address pair), so running them on the default
+  # addresses can never produce the asserted cookie.
+  --remote_ip:
+    ini: "**.pdhost.tunApp[0].remoteAddress"
+    quoted: true
+  --local_ip:
+    ini: "**.pdhost.tunApp[0].localAddress"
+    quoted: true
   --ip_version: {ini: null, transform: ignore}
   --gateway_ip: {ini: null, transform: ignore}
   --netmask_ip: {ini: null, transform: ignore}
@@ -176,7 +191,6 @@ ignore:
   - net.ipv4.tcp_tso_win_divisor
   - net.ipv4.tcp_pacing_ss_ratio
   - net.ipv4.tcp_pacing_ca_ratio
-  - net.ipv4.tcp_fastopen_key
   - net.ipv4.tcp_syncookies
   - net.ipv4.tcp_metrics    # `ip tcp_metrics flush all` in defaults.sh -- no sysctl, no ini equivalent
   - net.ipv4.tcp_min_rtt_wlen
@@ -215,7 +229,7 @@ known_preambles:
       # the mapping surfaces windowScalingSupport=true for kernel-corpus scripts;
       # INET's own default is false, so this materially matters.
       net.ipv4.tcp_window_scaling: "1"
-  - match: '^\.\./(common/)?defaults\.sh$'
+  - match: '^(\.\./)+(common/)?defaults\.sh$'
     # google/packetdrill gtests/net/tcp/common/defaults.sh (and net/common/defaults.sh)
     # (commit 2c4001c4, pinned 2026-03-11) -- same content as the kernel selftest
     # defaults.sh plus tcp_ecn_option; net-effect on our sysctl map is identical.

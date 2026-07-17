@@ -65,8 +65,10 @@ static char *option(const char *s) {
 /* Copy the string inside a quoted string. */
 static char *quoted(const char *s) {
     const int delim_len = 1;
-    char *str = (char *)malloc (strlen(s) - 2*delim_len);
-    strncpy(str, s + delim_len, strlen(s) - 2*delim_len);
+    size_t len = strlen(s) - 2*delim_len;
+    char *str = (char *)malloc(len + 1); // + NUL: the old malloc(len) left the copy unterminated
+    strncpy(str, s + delim_len, len);
+    str[len] = '\0';
     return str;
 }
 

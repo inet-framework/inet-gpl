@@ -8,6 +8,7 @@
 #define __INETGPL_PACKETDRILLAPP_H
 
 #include <deque>
+#include <set>
 
 #include "inet/applications/base/ApplicationBase.h"
 #include "inet/common/socket/SocketMap.h"
@@ -97,14 +98,17 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     simtime_t simStartTime;
     simtime_t simRelTime;
     uint32_t expectedMessageSize = 0;
+    // Sequence-number mapping between script and wire, following upstream
+    // packetdrill's tcpdump convention (socket.h there): seq/ack numbers in
+    // packets WITH the SYN flag are ABSOLUTE, all other packets' numbers are
+    // RELATIVE to the first SYN of their direction.
+    // relSequenceOut = the DUT's live ISN (captured from the live outbound
+    // SYN); scriptIsnOut = the script's literal for that same SYN (usually 0,
+    // but e.g. pure-syn-data writes "> S. 1234:1234"). relSequenceIn = the
+    // peer's ISN, i.e. the injected SYN/SYN-ACK's literal (the tool "picks"
+    // the remote live ISN, so wire == script literal there).
     uint32_t relSequenceOut = 0;
-    // Peer's ISN, captured from the injected SYN/SYN-ACK's sequence number. The
-    // script writes outbound ACK numbers relative to the peer's ISN (packetdrill
-    // maps the tester's ISN to 0), so a peer that opens on a non-zero ISN -- e.g.
-    // the TFO-client corpus's "< S. 123:123(0)" -- makes DUT ACKs land at
-    // peer_ISN+N while the script asserts N. Add this to the expected ACK to
-    // undo that, symmetric to relSequenceOut for the sequence direction. Zero
-    // for the common "< S. 0:0(0)" peer, so ordinary scripts are unaffected.
+    uint32_t scriptIsnOut = 0;
     uint32_t relSequenceIn = 0;
     uint32_t peerTS = 0;
     uint16_t peerWindow = 0;
@@ -157,6 +161,7 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     int timestampingFlags = 0;
     bool fastopenConnectPending = false;
     std::deque<uint32_t> completedZerocopyIds;
+    std::set<int> closedTcpConnIds; // close() already sent for these connection ids (duplicate close is a no-op)
 
     // GSO aggregation for outbound comparison: leg L runs the real kernel
     // with GSO, so corpus scripts assert super-segments (e.g. one 10000-byte
