@@ -100,6 +100,12 @@ sysctl:
       # fastopenServerEnabled), so this bit only needs to carry the
       # cookie-not-required half.
       "0x200": "**.tcp.fastopenAcceptWithoutCookie"
+  net.ipv4.tcp_frto:
+    # F-RTO spurious-RTO detection (RFC 5682). Kernel: 0=off, 1=basic, 2=SACK-
+    # enhanced when possible (the default, what defaults.sh pins). INET
+    # implements the SACK-enhanced variant behind a single bool.
+    ini: "**.tcp.frtoEnabled"
+    transform: bool
   net.ipv4.tcp_congestion_control:
     ini: "**.tcp.tcpAlgorithmClass"
     transform: enum
@@ -161,7 +167,6 @@ ignore:
   # or out of tier-1 scope; not worth per-script mapping yet.
   - net.ipv4.tcp_syn_retries
   - net.ipv4.tcp_synack_retries
-  - net.ipv4.tcp_frto
   - net.ipv4.tcp_dsack
   - net.ipv4.tcp_fack
   - net.ipv4.tcp_reordering
