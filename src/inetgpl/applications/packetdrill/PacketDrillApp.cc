@@ -1114,6 +1114,8 @@ std::string PacketDrillApp::formatTcpInfoSnapshot(TcpStatusInfo *status)
         out << "tcpi_backoff = " << status->getBackoff() << "\n";
     if (status->getLost() != UINT_MAX)
         out << "tcpi_lost = " << status->getLost() << "\n";
+    if (status->getRetrans() != UINT_MAX)
+        out << "tcpi_retrans = " << status->getRetrans() << "\n";
     if (status->getProbes() != UINT_MAX)
         out << "tcpi_probes = " << status->getProbes() << "\n";
     out << "tcpi_bytes_received = " << status->getBytesReceived() << "\n";
