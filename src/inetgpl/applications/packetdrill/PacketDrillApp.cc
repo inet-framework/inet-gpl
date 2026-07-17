@@ -600,6 +600,21 @@ void PacketDrillApp::runEvent(PacketDrillEvent *event)
                             tcpHeader->removeHeaderOption(i);
                             tcpHeader->setHeaderOption(i, option);
                         }
+                        else if (auto *sackOpt = dynamic_cast<TcpOptionSack *>(tcpHeader->getHeaderOptionForUpdate(i))) {
+                            // SACK blocks report ranges of the DUT's OWN sequence
+                            // space, which the script writes relative to the DUT's
+                            // ISN (packetdrill maps it to 0) -- shift them by the
+                            // live ISN exactly like the ACK number above. Unshifted,
+                            // a "sack 1001:2001" block lands below snd_una and INET
+                            // rightly discards it as stale/D-SACK, so injected
+                            // dupacks never arm fast retransmit and every loss
+                            // -recovery script ends in an RTO instead.
+                            for (unsigned int s = 0; s < sackOpt->getSackItemArraySize(); s++) {
+                                auto& item = sackOpt->getSackItemForUpdate(s);
+                                item.setStart(item.getStart() + relSequenceOut);
+                                item.setEnd(item.getEnd() + relSequenceOut);
+                            }
+                        }
                     }
                 }
                 pk->insertAtFront(tcpHeader);
