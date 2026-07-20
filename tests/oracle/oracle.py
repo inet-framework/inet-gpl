@@ -548,7 +548,10 @@ def run_leg_inet(corpus_name, script_id, path, mapping, preproc_dir):
 
     start = time.monotonic()
     try:
-        proc = subprocess.run(cmd, cwd=ORACLE_DIR, capture_output=True, text=True, timeout=LEG_I_TIMEOUT_S)
+        # errors='replace': the simulation's stdout can carry non-UTF-8 bytes (e.g. raw
+        # payload echoed into an EV line); a decode error must not abort the whole leg.
+        proc = subprocess.run(cmd, cwd=ORACLE_DIR, capture_output=True, text=True,
+                              errors='replace', timeout=LEG_I_TIMEOUT_S)
         duration = time.monotonic() - start
         output = proc.stdout + proc.stderr
         verdict, detail = classify_inet_output(output, proc.returncode, [])
@@ -667,7 +670,7 @@ KERNEL_SOURCE_HINTS = {
     "basic": "net/ipv4/tcp_input.c, net/ipv4/tcp_output.c",
 }
 DEFAULT_KERNEL_SOURCE_HINT = "net/ipv4/tcp_input.c"
-KERNEL_SRC_ROOT = "~/w/kernel/linux-7.2-rc2/"
+KERNEL_SRC_ROOT = "~/w/3rdparty/linux-7.2-rc2/"
 
 
 def categorize(script_id):

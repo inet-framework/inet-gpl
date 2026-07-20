@@ -3,18 +3,18 @@
 
 corpora:
   kernel:
-    path: /home/rhornig/w/kernel/linux-packetdrill-corpus
+    path: /home/rhornig/w/3rdparty/linux-packetdrill-corpus
     subdir: tools/testing/selftests/net/packetdrill
     git_commit: d96fcfe1b7f94ac742984ae7986b94a116abff1b
     pinned_date: "2026-07-10"
   gtests:
-    path: /home/rhornig/w/kernel/packetdrill-upstream
+    path: /home/rhornig/w/3rdparty/packetdrill-upstream
     subdir: gtests/net/tcp
     git_commit: 2c4001c4d6fc04a3bbd01d4b92be62717a37648a
     pinned_date: "2026-03-11"
 
 environment:
-  kernel_release: "7.1.1"          # `uname -r` on the leg-L host; golden/ is keyed by this
+  kernel_release: "7.1.3"          # `uname -r` on the leg-L host; golden/ is keyed by this
   packetdrill_binary: /etc/profiles/per-user/rhornig/bin/packetdrill  # nix profile, no --version support
   # fallback only: oracle.py overrides these two at load time with the LIVE
   # `git rev-parse HEAD` of $INET_ROOT/$INETGPL_ROOT (the checkouts actually
