@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/client/fastopen-connect-keepalive",
+  "corpus": "gtests",
+  "script_sha256": "ea01eba76c932f56c80077d2d502ef072d66a42fe46d34a3158685067725fa8b",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 1.243,
+  "diagnostic": null,
+  "divergence": null
+}

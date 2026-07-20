@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/client/syn-data-rtt-from-syn-data",
+  "corpus": "gtests",
+  "script_sha256": "6679864eece37f028788cfdf7cfdb3a7111baaf36f6e45ff1315a855e0ee9b91",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.291,
+  "diagnostic": null,
+  "divergence": null
+}

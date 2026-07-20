@@ -1,0 +1,16 @@
+{
+  "script": "cubic/cubic-bulk-166k",
+  "corpus": "gtests",
+  "script_sha256": "f3c166fc79557070ea845274ab2d1ba5e2001c6eba007aaf7ce401519b2e4804",
+  "leg": "linux",
+  "verdict": "L_ERROR",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 20.315,
+  "diagnostic": "20\n30\n36\ncubic-bulk-166k.pkt:53: error in Python code\nTraceback (most recent call last):\n  File \"/tmp/code_ElAaw9\", line 453, in <module>\n    print(tcpi_snd_cwnd); assert tcpi_snd_cwnd == 40, tcpi_snd_cwnd\n                                 ^^^^^^^^^^^^^^^^^^^\nAssertionError: 36\ncubic-bulk-166k.pkt: error executing code: 'python3' returned non-zero status 1",
+  "divergence": null
+}

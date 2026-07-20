@@ -1,0 +1,24 @@
+{
+  "script": "fastopen/server/opt34/simple2",
+  "corpus": "gtests",
+  "script_sha256": "0f9820906d0cd370315843bf0dd906756b05cb22f98d6531a9523f3178844e49",
+  "leg": "linux",
+  "verdict": "L_FAIL",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.177,
+  "diagnostic": "bad value in outbound TCP option (kind=34): expected: FO 1313a2da994a0951 actual: FO f49b0ef989d9f624",
+  "divergence": {
+    "script_line": 25,
+    "message": "bad value in outbound TCP option (kind=34): expected: FO 1313a2da994a0951 actual: FO f49b0ef989d9f624",
+    "expected_packet": "0.000104 S. 0:0(0) ack 9873243 <mss 1460,sackOK,TS val 10000 ecr 1,nop,wscale 8,FO 1313a2da994a0951,nop,nop>",
+    "actual_packet": "0.000100 S. 0:0(0) ack 9873243 win 65535 <mss 1460,sackOK,TS val 10000 ecr 1,nop,wscale 8,FO f49b0ef989d9f624,nop,nop>",
+    "context_log": [
+      "simple2.pkt:25: error handling packet: bad value in outbound TCP option (kind=34): expected: FO 1313a2da994a0951 actual: FO f49b0ef989d9f624"
+    ]
+  }
+}

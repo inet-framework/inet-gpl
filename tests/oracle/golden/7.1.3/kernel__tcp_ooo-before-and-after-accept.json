@@ -1,0 +1,16 @@
+{
+  "script": "tcp_ooo-before-and-after-accept",
+  "corpus": "kernel",
+  "script_sha256": "8c9fb370970c90dbe9a163f9088111bd48fd244849b42c84941b4e6793f57200",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.405,
+  "diagnostic": null,
+  "divergence": null
+}

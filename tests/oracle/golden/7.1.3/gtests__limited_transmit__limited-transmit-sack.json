@@ -1,0 +1,16 @@
+{
+  "script": "limited_transmit/limited-transmit-sack",
+  "corpus": "gtests",
+  "script_sha256": "39d66783f8042c09de3ca7fa2ac702c9d4447299b31037358240b853333db3a1",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.883,
+  "diagnostic": null,
+  "divergence": null
+}

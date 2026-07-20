@@ -1,0 +1,16 @@
+{
+  "script": "tcp_accecn_ipflags_drop",
+  "corpus": "kernel",
+  "script_sha256": "3c485be8dbd89122ff0265b2157f6072be12f75516cda1fb000966bf0d6213fc",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 1.286,
+  "diagnostic": null,
+  "divergence": null
+}

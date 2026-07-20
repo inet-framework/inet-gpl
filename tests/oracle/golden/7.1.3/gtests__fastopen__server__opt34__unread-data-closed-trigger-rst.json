@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/server/opt34/unread-data-closed-trigger-rst",
+  "corpus": "gtests",
+  "script_sha256": "55323c1a87f71e2a3d1fcb3bb07d67a4b6ded1b77dac895d757a3578c6e7c14c",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.499,
+  "diagnostic": null,
+  "divergence": null
+}

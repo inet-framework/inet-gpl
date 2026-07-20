@@ -1,0 +1,16 @@
+{
+  "script": "tcp_sendfile_sendfile-simple",
+  "corpus": "kernel",
+  "script_sha256": "60c7730d7258958a8e23928f958146f64ef961f4dbc680a0f61b3372a331e59f",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.179,
+  "diagnostic": null,
+  "divergence": null
+}

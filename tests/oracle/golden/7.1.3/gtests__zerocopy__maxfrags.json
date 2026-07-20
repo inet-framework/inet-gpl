@@ -1,0 +1,24 @@
+{
+  "script": "zerocopy/maxfrags",
+  "corpus": "gtests",
+  "script_sha256": "b30ef6786bad996ed0fc4f6d3640bf677cc4bb6de9d329d0acd0e1d52fc7196b",
+  "leg": "linux",
+  "verdict": "L_FAIL",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 1.169,
+  "diagnostic": "incorrect outbound data payload",
+  "divergence": {
+    "script_line": 55,
+    "message": "incorrect outbound data payload",
+    "expected_packet": "1.001301 P. 36:37(1) ack 1",
+    "actual_packet": "1.001298 P. 36:37(1) ack 1 win 1050",
+    "context_log": [
+      "maxfrags.pkt:55: error handling packet: incorrect outbound data payload"
+    ]
+  }
+}

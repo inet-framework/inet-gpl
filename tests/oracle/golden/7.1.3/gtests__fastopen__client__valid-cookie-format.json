@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/client/valid-cookie-format",
+  "corpus": "gtests",
+  "script_sha256": "11e2de7b62d6746b71c43ffbf004d84c5334fb3eaee60cf9e19c3d26de57d42e",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.647,
+  "diagnostic": null,
+  "divergence": null
+}

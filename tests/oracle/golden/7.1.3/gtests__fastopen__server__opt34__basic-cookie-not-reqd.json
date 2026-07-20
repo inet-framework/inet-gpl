@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/server/opt34/basic-cookie-not-reqd",
+  "corpus": "gtests",
+  "script_sha256": "18b465a3233d63fe44a93bac33f79dc611cebe648fde137f0aa18fcda423ec5b",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.601,
+  "diagnostic": null,
+  "divergence": null
+}

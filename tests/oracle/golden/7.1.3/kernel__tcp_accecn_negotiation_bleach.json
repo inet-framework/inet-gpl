@@ -1,0 +1,16 @@
+{
+  "script": "tcp_accecn_negotiation_bleach",
+  "corpus": "kernel",
+  "script_sha256": "ac5f07321b1a3f9387350b937f6708b6422842fce288de3f37ba37d3880d9ee0",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.337,
+  "diagnostic": null,
+  "divergence": null
+}

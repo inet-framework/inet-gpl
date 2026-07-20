@@ -1,0 +1,16 @@
+{
+  "script": "cwnd_moderation/cwnd-moderation-disorder-no-moderation",
+  "corpus": "gtests",
+  "script_sha256": "429d8027d0c5bd58431478dd99a3d49b38781e90cbe7ae9d17ca8310eaa72743",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.503,
+  "diagnostic": null,
+  "divergence": null
+}

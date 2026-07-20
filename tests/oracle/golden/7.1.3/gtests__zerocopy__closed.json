@@ -1,0 +1,16 @@
+{
+  "script": "zerocopy/closed",
+  "corpus": "gtests",
+  "script_sha256": "019ceefd02e1c13ee94a7e61a5fd36b4ded7ccd11262cba594b216faaeb13508",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.278,
+  "diagnostic": null,
+  "divergence": null
+}

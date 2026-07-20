@@ -1,0 +1,24 @@
+{
+  "script": "gro/gro-mss-option",
+  "corpus": "gtests",
+  "script_sha256": "22fadbbec9eb4a8564e452c260779d16be6e733694b6c7f571154ec81a5a0cfe",
+  "leg": "linux",
+  "verdict": "L_FAIL",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.17,
+  "diagnostic": "expected: 10001 (0x2711) vs actual: 1 (0x1)",
+  "divergence": {
+    "script_line": 20,
+    "message": "expected: 10001 (0x2711) vs actual: 1 (0x1)",
+    "expected_packet": "0.000218 . 1:1(0) ack 10001",
+    "actual_packet": "0.000217 . 1:1(0) ack 1 win 1050",
+    "context_log": [
+      "gro-mss-option.pkt:20: error handling packet: live packet field tcp_ack_seq: expected: 10001 (0x2711) vs actual: 1 (0x1)"
+    ]
+  }
+}

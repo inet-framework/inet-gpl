@@ -1,0 +1,16 @@
+{
+  "script": "tcp_info/tcp-info-sndbuf-limited",
+  "corpus": "gtests",
+  "script_sha256": "b210842cadfbc6d0ce1fee19afb3790dc9b9fe8c1fe02673288a646e3239e644",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.355,
+  "diagnostic": null,
+  "divergence": null
+}

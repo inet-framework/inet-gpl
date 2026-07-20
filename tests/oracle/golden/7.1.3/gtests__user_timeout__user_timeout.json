@@ -1,0 +1,16 @@
+{
+  "script": "user_timeout/user_timeout",
+  "corpus": "gtests",
+  "script_sha256": "0229ee144b7f8fd5f4c30efcb364b8c3f2c82a20c766b83ac133b621167b7f53",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 3.555,
+  "diagnostic": null,
+  "divergence": null
+}

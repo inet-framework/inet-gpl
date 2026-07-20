@@ -1,0 +1,16 @@
+{
+  "script": "notsent_lowat/notsent-lowat-sysctl",
+  "corpus": "gtests",
+  "script_sha256": "1eccbbf8187a17b6852bb588a5d9136a4c16faea9c4482eb4c58ab336154bc6d",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.238,
+  "diagnostic": null,
+  "divergence": null
+}

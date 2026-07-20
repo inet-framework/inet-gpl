@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/server/opt34/reset-after-accept",
+  "corpus": "gtests",
+  "script_sha256": "4f002423579db051a1e6ade9b5527d183915282334f12dd6661a1a743f21e7fc",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.568,
+  "diagnostic": null,
+  "divergence": null
+}

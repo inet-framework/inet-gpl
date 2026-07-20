@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/server/fin-close-socket",
+  "corpus": "gtests",
+  "script_sha256": "b104c33dc9664acf581b2e5ff3dd519c8f3c8cac30bb5821db6812ab3a7b3dae",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 1.014,
+  "diagnostic": null,
+  "divergence": null
+}

@@ -1,0 +1,16 @@
+{
+  "script": "slow_start/slow-start-app-limited",
+  "corpus": "gtests",
+  "script_sha256": "7c486a28882c3c2748e1b9c5771052b2c947da38032438e5214249f767b9c7a0",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.531,
+  "diagnostic": null,
+  "divergence": null
+}

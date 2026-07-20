@@ -1,0 +1,16 @@
+{
+  "script": "validate/validate-established-no-flags",
+  "corpus": "gtests",
+  "script_sha256": "a6e5dfc01b14bf3731c649141a11ef9dd1ba14a6d78f295ddf5cea9a55ff5d3d",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.207,
+  "diagnostic": null,
+  "divergence": null
+}

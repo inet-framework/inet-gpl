@@ -1,0 +1,16 @@
+{
+  "script": "tcp_accecn_delivered_maxack",
+  "corpus": "kernel",
+  "script_sha256": "eeb421d58fd5d46072bc8011ff149dee6225402573e86e7b30e5c121bd256665",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.331,
+  "diagnostic": null,
+  "divergence": null
+}

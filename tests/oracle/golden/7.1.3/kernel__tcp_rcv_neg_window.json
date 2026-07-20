@@ -1,0 +1,16 @@
+{
+  "script": "tcp_rcv_neg_window",
+  "corpus": "kernel",
+  "script_sha256": "067b625f73bd0f013e816de10ade2a3f37570ee7e2554e59cc1ff2a5d7050310",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.308,
+  "diagnostic": null,
+  "divergence": null
+}

@@ -1,0 +1,16 @@
+{
+  "script": "tcp_rcv_big_endseq",
+  "corpus": "kernel",
+  "script_sha256": "8b57ab621c0fb0e74a7179683b19215a23930a9c0772a4a037aab322a7a01f90",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 1.334,
+  "diagnostic": null,
+  "divergence": null
+}

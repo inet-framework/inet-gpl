@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/client/syn-data-icmp-unreach-frag-needed-with-seq",
+  "corpus": "gtests",
+  "script_sha256": "a32b255a9c2e56468419a8e0e4736368df22e4a46c77b9c2ce30e4cb819ab6da",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.365,
+  "diagnostic": null,
+  "divergence": null
+}

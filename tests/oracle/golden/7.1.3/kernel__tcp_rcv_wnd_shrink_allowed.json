@@ -1,0 +1,16 @@
+{
+  "script": "tcp_rcv_wnd_shrink_allowed",
+  "corpus": "kernel",
+  "script_sha256": "8443500556e238fec35ae917adcce573a38fcc001318331f8c36d5379387202e",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.244,
+  "diagnostic": null,
+  "divergence": null
+}

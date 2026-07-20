@@ -1,0 +1,16 @@
+{
+  "script": "zerocopy/fastopen-client",
+  "corpus": "gtests",
+  "script_sha256": "e0fa374f4ba5713f7a131e94e808f2bd59e7b2884305af4502debc9d80eb7680",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 1.919,
+  "diagnostic": null,
+  "divergence": null
+}

@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/client/nonblocking-sendto",
+  "corpus": "gtests",
+  "script_sha256": "d72c1847f685d9ea14a7518c508c8b61c427d661c71c48bc506e9bbc81e29f36",
+  "leg": "linux",
+  "verdict": "L_ERROR",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.766,
+  "diagnostic": "nonblocking-sendto.pkt:95: error executing `sysctl -q net.ipv4.tcp_timestamps=1\n       sysctl -q net.ipv4.tcp_fastopen_cookies=0 net.ipv4.tcp_fastopen_cookies=10 &> /dev/null ||\\\n       ip tcp_metrics flush all &> /dev/null` command: non-zero status 2",
+  "divergence": null
+}

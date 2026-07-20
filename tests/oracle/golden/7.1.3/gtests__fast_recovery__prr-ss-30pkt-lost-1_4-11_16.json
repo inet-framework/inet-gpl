@@ -1,0 +1,16 @@
+{
+  "script": "fast_recovery/prr-ss-30pkt-lost-1_4-11_16",
+  "corpus": "gtests",
+  "script_sha256": "3d7ead84769b8f47283a9416e1165314a190480f7ab41aacc00094143f44edcd",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.222,
+  "diagnostic": null,
+  "divergence": null
+}

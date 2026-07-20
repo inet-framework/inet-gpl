@@ -1,0 +1,16 @@
+{
+  "script": "close/close-on-syn-sent",
+  "corpus": "gtests",
+  "script_sha256": "54c6393fbb4e6a751ebe46cd965d1a06d01ed6e359dde5d1f679e98406aca5f4",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.274,
+  "diagnostic": null,
+  "divergence": null
+}

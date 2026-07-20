@@ -1,0 +1,16 @@
+{
+  "script": "tcp_eor_no-coalesce-large",
+  "corpus": "kernel",
+  "script_sha256": "45cc6e55494646263a7de015bb49fb6ee07df896692c9e92e26ebd7da0da4191",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.201,
+  "diagnostic": null,
+  "divergence": null
+}

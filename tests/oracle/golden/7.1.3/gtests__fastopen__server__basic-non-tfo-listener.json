@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/server/basic-non-tfo-listener",
+  "corpus": "gtests",
+  "script_sha256": "66be2067e2310f2a561ebcadb01f8fa2f829d69ebe2ddb8c0def857c336ad8d8",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.848,
+  "diagnostic": null,
+  "divergence": null
+}

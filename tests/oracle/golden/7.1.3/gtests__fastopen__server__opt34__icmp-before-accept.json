@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/server/opt34/icmp-before-accept",
+  "corpus": "gtests",
+  "script_sha256": "d3a7d28da03f6e0ecc46b0a671bd72bf29024c75a0beec79f38faf93f57f6231",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.602,
+  "diagnostic": null,
+  "divergence": null
+}

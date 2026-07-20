@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/client/sendto-af-unspec",
+  "corpus": "gtests",
+  "script_sha256": "e8e11a3a412fd42f6f78f2087b445861b68a6060730019234f6e49ff4f7d56f6",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.157,
+  "diagnostic": null,
+  "divergence": null
+}

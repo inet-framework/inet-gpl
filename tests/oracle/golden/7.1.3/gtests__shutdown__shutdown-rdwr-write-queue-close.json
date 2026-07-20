@@ -1,0 +1,24 @@
+{
+  "script": "shutdown/shutdown-rdwr-write-queue-close",
+  "corpus": "gtests",
+  "script_sha256": "c781ed907b3dfce811ea5090a8ea14502f1778e400ea0f3c8ccb958d620f5802",
+  "leg": "linux",
+  "verdict": "L_FAIL",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.432,
+  "diagnostic": "live packet payload: expected 0 bytes vs actual 1000 bytes",
+  "divergence": {
+    "script_line": 36,
+    "message": "live packet payload: expected 0 bytes vs actual 1000 bytes",
+    "expected_packet": null,
+    "actual_packet": null,
+    "context_log": [
+      "shutdown-rdwr-write-queue-close.pkt:36: error handling packet: live packet payload: expected 0 bytes vs actual 1000 bytes"
+    ]
+  }
+}

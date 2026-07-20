@@ -1,0 +1,16 @@
+{
+  "script": "tcp_fastopen_server_reset-non-tfo-socket",
+  "corpus": "kernel",
+  "script_sha256": "dcd5405908f93992b6fbfd21db1d6b4eb03fc7c3e9e1d85cbdd4624b5d48fd61",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.2,
+  "diagnostic": null,
+  "divergence": null
+}

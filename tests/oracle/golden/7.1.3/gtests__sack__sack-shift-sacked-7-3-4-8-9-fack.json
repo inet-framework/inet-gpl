@@ -1,0 +1,16 @@
+{
+  "script": "sack/sack-shift-sacked-7-3-4-8-9-fack",
+  "corpus": "gtests",
+  "script_sha256": "2a03adf13ac63a8c2fdf6dfe53a2533bff60ed0ae4c194ca1c44dc4991270c5d",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.55,
+  "diagnostic": null,
+  "divergence": null
+}

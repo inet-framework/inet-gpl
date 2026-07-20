@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/client/poll",
+  "corpus": "gtests",
+  "script_sha256": "a6368a5b4748565a16892ffac8452569b589585b021a6399dc218a18668b9be0",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.688,
+  "diagnostic": null,
+  "divergence": null
+}

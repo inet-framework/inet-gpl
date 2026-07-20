@@ -1,0 +1,16 @@
+{
+  "script": "fastopen/client/blocking-sendto-errnos",
+  "corpus": "gtests",
+  "script_sha256": "fa712c01da74fcade40dc7142b15ef70c47d7c3c1f50a216707c124fe3e019bb",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 4.24,
+  "diagnostic": null,
+  "divergence": null
+}

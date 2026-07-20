@@ -1,0 +1,16 @@
+{
+  "script": "ioctl/ioctl-siocinq-fin",
+  "corpus": "gtests",
+  "script_sha256": "90bdce76abaae5514d6335ac6a917c68bcad7ac217b96f8fc05f5b8d8de039f0",
+  "leg": "linux",
+  "verdict": "L_PASS",
+  "runner": {
+    "kernel": "7.1.3",
+    "packetdrill": "/etc/profiles/per-user/rhornig/bin/packetdrill",
+    "inet_commit": null,
+    "inetgpl_commit": null
+  },
+  "duration_s": 0.553,
+  "diagnostic": null,
+  "divergence": null
+}
