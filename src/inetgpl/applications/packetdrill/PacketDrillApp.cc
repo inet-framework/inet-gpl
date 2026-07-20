@@ -1273,10 +1273,18 @@ std::string PacketDrillApp::formatTcpInfoSnapshot(TcpStatusInfo *status)
 
 void PacketDrillApp::executeCodeBlocks()
 {
-    char path[] = "/tmp/inetgpl_packetdrill_code_XXXXXX";
-    int fd = mkstemp(path);
+    // Honor $TMPDIR (fall back to /tmp): sandboxed/CI environments frequently
+    // make /tmp itself non-writable and expose a writable scratch dir via
+    // TMPDIR only. A hardcoded /tmp made every %{ }% script fail with "could
+    // not create temp file", masquerading as a divergence (e.g. all of
+    // slow_start, whose scripts assert tcp_info via inline code blocks).
+    const char *tmpdir = getenv("TMPDIR");
+    if (tmpdir == nullptr || tmpdir[0] == '\0')
+        tmpdir = "/tmp";
+    std::string path = std::string(tmpdir) + "/inetgpl_packetdrill_code_XXXXXX";
+    int fd = mkstemp(path.data());
     if (fd < 0)
-        throw cTerminationException("Packetdrill error: could not create temp file for %{ }% code execution");
+        throw cTerminationException("Packetdrill error: could not create temp file for %{ }% code execution (TMPDIR=%s)", tmpdir);
     FILE *file = fdopen(fd, "w");
     fwrite(codeBlockBuffer.data(), 1, codeBlockBuffer.size(), file);
     fclose(file);
@@ -1296,7 +1304,7 @@ void PacketDrillApp::executeCodeBlocks()
             output.append(buf, n);
     }
     int status = proc ? pclose(proc) : -1;
-    unlink(path);
+    unlink(path.c_str());
 
     if (!proc || !WIFEXITED(status) || WEXITSTATUS(status) != 0) {
         std::string message = "Packetdrill error: %{ }% assertion failed: " + output;
