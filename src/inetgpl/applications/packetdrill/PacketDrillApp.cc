@@ -33,6 +33,7 @@
 #include "inet/networklayer/ipv4/Ipv4Header_m.h"
 #include "inet/transportlayer/contract/sctp/SctpCommand_m.h"
 #include "inet/transportlayer/contract/tcp/TcpSendEorTag_m.h"
+#include "inet/transportlayer/contract/tcp/TcpSendMoreTag_m.h"
 #include "inet/transportlayer/contract/tcp/TcpZerocopyTag_m.h"
 #include "inet/transportlayer/sctp/SctpAssociation.h"
 #include "inet/transportlayer/udp/UdpHeader_m.h"
@@ -1508,6 +1509,8 @@ void PacketDrillApp::sendTcpPayloadWithFlags(int64_t numBytes, int flags)
         payload->addTagIfAbsent<TcpSendEorReq>();
     if ((flags & MSG_ZEROCOPY) && zerocopyEnabled)
         payload->addTagIfAbsent<TcpSendZerocopyReq>();
+    if (flags & MSG_MORE)
+        payload->addTagIfAbsent<TcpSendMoreReq>();
     tcpSocket.send(payload);
 }
 
@@ -1681,6 +1684,12 @@ int PacketDrillApp::setsockoptTcpLevel(int level, cQueue *args, char **error)
                 return STATUS_OK;
             case TCP_MAXSEG:
                 tcpSocket.setMaxSeg((int)optval);
+                return STATUS_OK;
+            case TCP_NODELAY:
+                tcpSocket.setNoDelay(optval != 0);
+                return STATUS_OK;
+            case TCP_CORK:
+                tcpSocket.setCork(optval != 0);
                 return STATUS_OK;
             case TCP_FASTOPEN_CONNECT:
                 // Consumed by syscallConnect: the next connect() on this

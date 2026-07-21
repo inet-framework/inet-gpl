@@ -123,6 +123,8 @@ struct int_symbol platform_symbols_table[] = {
     { SO_TIMESTAMPING,                  "SO_TIMESTAMPING"                 },
     { SO_ERROR,                         "SO_ERROR"                        },
     { TCP_MAXSEG,                       "TCP_MAXSEG"                      },
+    { TCP_NODELAY,                      "TCP_NODELAY"                     },
+    { TCP_CORK,                         "TCP_CORK"                        },
     { TCP_KEEPIDLE,                     "TCP_KEEPIDLE"                    },
     { TCP_SYNCNT,                       "TCP_SYNCNT"                      },
     { TCP_FASTOPEN,                     "TCP_FASTOPEN"                    },
