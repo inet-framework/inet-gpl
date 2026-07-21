@@ -88,6 +88,11 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     PacketDrill *pd = nullptr;
     bool msgArrived = false;
     bool recvFromSet = false;
+    // The peer's FIN occupies one sequence number, so Linux's TCP_INQ counts it:
+    // after all data is read, tcpi_inq (rcv_nxt - copied_seq) is 1 while the FIN
+    // is still pending the app's EOF read. Set when a PEER_CLOSED indication
+    // arrives, cleared once a read/recvmsg returns 0 (the app consumes the EOF).
+    bool peerFinPending = false;
     bool listenSet = false;
     bool acceptSet = false;
     bool establishedPending = false;

@@ -203,6 +203,7 @@ void PacketDrillApp::socketEstablished(TcpSocket *socket)
 
 void PacketDrillApp::socketPeerClosed(TcpSocket *socket)
 {
+    peerFinPending = true;
 }
 
 void PacketDrillApp::socketClosed(TcpSocket *socket)
@@ -2412,34 +2413,31 @@ int PacketDrillApp::syscallRecvMsg(PacketDrillEvent *event, struct syscall_spec 
     if (flags & MSG_ERRQUEUE)
         return verifyMsgErrQueue(exp->getMsghdr(), syscall, error);
 
-    if (msgArrived) {
-        cPacket *msg = (receivedPackets->pop());
+    // recvmsg reads the TCP byte stream like read() (Linux semantics): a queued
+    // message may be read partially (e.g. recvmsg(...)=2000 of 10000 queued), with
+    // the unread remainder reported to the app via a TCP_CM_INQ control message.
+    // Consume from the same stream buffer read()/recvfrom() use rather than
+    // requiring exactly one whole arrival message per call.
+    int64_t expected = syscall->result->getNum();
+    if (msgArrived || receivedPackets->getLength() > 0) {
+        if (availableAppBytes() >= expected) {
+            consumeAppBytes(expected);
+            msgArrived = (availableAppBytes() > 0);
+            recvFromSet = false;
+            // TCP_CM_INQ, if asserted, reports the bytes still queued after this read.
+            if (verifyMsgControlInq(exp->getMsghdr(), error) == STATUS_ERR)
+                throw cTerminationException("Packetdrill error: TCP_CM_INQ value mismatch");
+            return STATUS_OK;
+        }
+        // not enough delivered yet: defer, socketDataArrived() completes it (byte
+        // length only -- the msghdr, and any TCP_CM_INQ assert, is gone by then).
         msgArrived = false;
-        recvFromSet = false;
-        if (!(msg->getByteLength() == syscall->result->getNum())) {
-            delete msg;
-            throw cTerminationException("Packetdrill error: Wrong payload length");
-        }
-        PacketDrillInfo *info = (PacketDrillInfo *)msg->getContextPointer();
-        if (verifyTime(event->getTimeType(), event->getEventTime(), event->getEventTimeEnd(),
-                event->getEventOffset(), info->getLiveTime(), "inbound packet") == STATUS_ERR)
-        {
-            delete info;
-            delete msg;
-            return STATUS_ERR;
-        }
-        delete info;
-        delete msg;
-        if (verifyMsgControlInq(exp->getMsghdr(), error) == STATUS_ERR)
-            throw cTerminationException("Packetdrill error: TCP_CM_INQ value mismatch");
+        recvFromSet = true;
+        expectedMessageSize = expected;
+        return STATUS_OK;
     }
     else {
-        // Deferred/blocking case: satisfied later by socketDataArrived(),
-        // which -- like read()/recvfrom() -- only verifies the byte length,
-        // not msg_control. The script arg tree (and this msghdr with it) is
-        // destroyed by the caller once this call returns, so there is
-        // nothing safe to stash here for later re-verification.
-        expectedMessageSize = syscall->result->getNum();
+        expectedMessageSize = expected;
         recvFromSet = true;
     }
     return STATUS_OK;
@@ -2465,9 +2463,10 @@ int PacketDrillApp::verifyMsgControlInq(struct msghdr_expr *msgExpr, char **erro
         int32_t expectedInq;
         if (cmsg->cmsg_data->getS32(&expectedInq, error))
             return STATUS_ERR;
-        int64_t actualInq = 0;
-        for (cQueue::Iterator qit(*receivedPackets); !qit.end(); qit++)
-            actualInq += check_and_cast<cPacket *>(*qit)->getByteLength();
+        // Bytes still queued in the receive stream AFTER this recvmsg's read
+        // (the caller consumes first); availableAppBytes() accounts for a
+        // partially-read front message, unlike a raw sum of message lengths.
+        int64_t actualInq = availableAppBytes() + (peerFinPending ? 1 : 0);
         if (actualInq != expectedInq) {
             EV_INFO << "TCP_CM_INQ mismatch: expected " << expectedInq << " actual " << actualInq << endl;
             return STATUS_ERR;
