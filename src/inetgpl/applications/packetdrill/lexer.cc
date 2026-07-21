@@ -1431,6 +1431,13 @@ static int64_t hextol(const char *s) {
     return strtol(yytext + 2, NULL, 16);
 }
 
+// Raw text of the most recently lexed decimal INTEGER token. An all-digit TCP
+// Fast Open cookie / MD5 digest (e.g. "00000000") lexes as INTEGER, and its
+// value alone loses leading zeros and the digit count; the FO/MD5 grammar rules
+// use this to recover the literal. Safe under bison's 1-token lookahead: no
+// INTEGER is lexed between a cookie's INTEGER and its reduction in these scripts.
+char pd_last_int_text[64] = "";
+
 enum ifdef_os {
     FreeBSD_IFDEF = 1, Omnet_IFDEF
 };
@@ -2611,7 +2618,7 @@ yylval.floating = atof(yytext);   return MYFLOAT;
 case 157:
 YY_RULE_SETUP
 #line 404 "lexer.l"
-yylval.integer = atoll(yytext);  return INTEGER;
+yylval.integer = atoll(yytext);  strncpy(pd_last_int_text, yytext, sizeof(pd_last_int_text)-1); pd_last_int_text[sizeof(pd_last_int_text)-1] = '\0'; return INTEGER;
 	YY_BREAK
 case 158:
 YY_RULE_SETUP

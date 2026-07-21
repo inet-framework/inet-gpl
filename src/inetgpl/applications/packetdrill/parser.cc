@@ -4910,14 +4910,14 @@ yyreduce:
   case 246: /* opt_fastopen_cookie: INTEGER  */
 #line 1791 "parser.y"
           {
-    /* A purely-decimal-digit cookie (e.g. "1234123412341234") lexes as
-     * INTEGER, not MYWORD, since the lexer's digits-only rule wins over
-     * the generic word rule -- reconstruct the original digit string
-     * (fits safely in int64_t; hex_string_to_bytes() treats it as hex
-     * digit pairs, same as any other cookie value here). */
-    char buf[32];
-    snprintf(buf, sizeof(buf), "%" PRId64, (yyvsp[0].integer));
-    (yyval.string) = strdup(buf);
+    /* A purely-decimal-digit cookie (e.g. "1234123412341234" or "00000000")
+     * lexes as INTEGER, not MYWORD, since the lexer's digits-only rule wins over
+     * the generic word rule. Use the token's RAW text (pd_last_int_text) rather
+     * than reconstructing from the value: an all-zero / leading-zero cookie
+     * ("00000000") would otherwise collapse to "0" and fail hex_string_to_bytes()
+     * on the odd length. */
+    extern char pd_last_int_text[64];
+    (yyval.string) = strdup(pd_last_int_text);
 }
 #line 4923 "parser.cc"
     break;
