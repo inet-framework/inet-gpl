@@ -139,8 +139,12 @@ sysctl:
 
 option:
   --mss:
-    ini: "**.tcp.mss"
-    transform: int
+    ini: null
+    transform: ignore   # packetdrill's --mss sets the tun default/injection MSS, NOT the DUT's
+                        # ADVERTISED MSS -- leg L's DUT still advertises its MTU-derived 1460 with
+                        # --mss=1000 (its goldens prove it). Mapping it to **.tcp.mss made INET
+                        # advertise 1000 and mis-diverge on the SYN; the peer MSS that actually
+                        # drives snd_mss comes from the script's explicit `< S. <mss N>` literal.
   --mtu:
     ini: null
     transform: ignore   # INET's fixed L2 MTU isn't wired to a single tcp.* param; tracked as unmapped_knob
