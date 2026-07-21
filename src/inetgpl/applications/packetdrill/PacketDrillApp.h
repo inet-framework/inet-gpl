@@ -177,6 +177,7 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     struct TxTimestamp { int type; uint32_t key; simtime_t time; };
     struct PendingTxTs { uint32_t key; uint32_t lastByteSeq; };
     uint32_t txTsWriteSeq = 1; // relative seq of the next app byte to send (data seq 1 = first byte)
+    uint32_t txTsOptIdBase = 1; // relative seq where SOF_TIMESTAMPING_OPT_ID was enabled; key = lastByteSeq - this
     std::vector<PendingTxTs> pendingTxSchedSnd; // awaiting the segment carrying lastByteSeq
     std::vector<PendingTxTs> pendingTxAck;      // awaiting an ACK past lastByteSeq
     std::deque<TxTimestamp> txTimestampQueue;   // completed entries, FIFO, drained by recvmsg(MSG_ERRQUEUE)

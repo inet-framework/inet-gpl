@@ -1688,6 +1688,11 @@ int PacketDrillApp::setsockoptTcpLevel(int level, cQueue *args, char **error)
                 // corpus's timestamping scripts have no INET counterpart --
                 // recorded so recvmsg(MSG_ERRQUEUE) can report the honest gap.
                 timestampingFlags = (int)optval;
+                // OPT_ID keys count byte offsets from the point the option is
+                // enabled (Linux sk_tskey), not from connection start -- capture the
+                // current write position so mid-stream enablement keys correctly.
+                if (optval & SOF_TIMESTAMPING_OPT_ID)
+                    txTsOptIdBase = txTsWriteSeq;
                 tcpSocket.setTimestamping(optval != 0);
                 return STATUS_OK;
             default:
@@ -2620,7 +2625,7 @@ void PacketDrillApp::recordTxTimestampWrite(int64_t numBytes)
     bool txAck = timestampingFlags & SOF_TIMESTAMPING_TX_ACK;
     if (!(txSched || txSnd || txAck))
         return;
-    uint32_t key = lastByteSeq - 1;
+    uint32_t key = lastByteSeq - txTsOptIdBase;
     if (txSched || txSnd)
         pendingTxSchedSnd.push_back({ key, lastByteSeq });
     if (txAck)
