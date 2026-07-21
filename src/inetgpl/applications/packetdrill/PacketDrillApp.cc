@@ -1224,8 +1224,10 @@ std::string PacketDrillApp::formatTcpInfoSnapshot(TcpStatusInfo *status)
     if (status->getSrtt() >= 0)
         out << "tcpi_rtt = " << (int64_t)llround(status->getSrtt() * 1e6) << "\n";
     out << "tcpi_min_rtt = " << (int64_t)llround(status->getMinRtt() * 1e6) << "\n";
+    // tcpi_last_data_recv is in MILLISECONDS (Linux jiffies_to_msecs), unlike the
+    // microsecond tcpi_rtt/busy_time/rwnd_limited fields below.
     out << "tcpi_last_data_recv = "
-        << (int64_t)llround((simTime() - status->getLastDataRecvTime()).dbl() * 1e6) << "\n";
+        << (int64_t)llround((simTime() - status->getLastDataRecvTime()).dbl() * 1e3) << "\n";
 
     // Segment-count approximation from INET's byte counts -- Linux's
     // tcpi_unacked/sacked/delivered are segment counts, INET only tracks
