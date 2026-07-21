@@ -166,6 +166,20 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     int timestampingFlags = 0;
     bool fastopenConnectPending = false;
     std::deque<uint32_t> completedZerocopyIds;
+
+    // TX timestamping (SO_TIMESTAMPING with SOF_TIMESTAMPING_TX_* + OPT_ID): each
+    // write whose last byte is timestamped yields SCM_TSTAMP_SCHED/SND when the
+    // segment carrying that byte is transmitted, and SCM_TSTAMP_ACK when it is
+    // acknowledged; recvmsg(MSG_ERRQUEUE) drains them in send/ack order. ee_data =
+    // the byte key (OPT_ID: last-byte offset, 0-based). See recordTxTimestampSend()
+    // (driven by socketDataArrived(TunSocket)) and recordTxTimestampAck() (the
+    // inbound-ACK path), verified in verifyMsgErrQueue().
+    struct TxTimestamp { int type; uint32_t key; simtime_t time; };
+    struct PendingTxTs { uint32_t key; uint32_t lastByteSeq; };
+    uint32_t txTsWriteSeq = 1; // relative seq of the next app byte to send (data seq 1 = first byte)
+    std::vector<PendingTxTs> pendingTxSchedSnd; // awaiting the segment carrying lastByteSeq
+    std::vector<PendingTxTs> pendingTxAck;      // awaiting an ACK past lastByteSeq
+    std::deque<TxTimestamp> txTimestampQueue;   // completed entries, FIFO, drained by recvmsg(MSG_ERRQUEUE)
     std::set<int> closedTcpConnIds; // close() already sent for these connection ids (duplicate close is a no-op)
 
     // GSO aggregation for outbound comparison: leg L runs the real kernel
@@ -245,6 +259,11 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     int syscallRecvMsg(PacketDrillEvent *event, struct syscall_spec *syscall, cQueue *args, char **error);
 
     int verifyMsgErrQueue(struct msghdr_expr *msgExpr, struct syscall_spec *syscall, char **error);
+
+    // TX timestamping helpers (see the state block above).
+    void recordTxTimestampWrite(int64_t numBytes);
+    void recordTxTimestampSend(inet::Packet *packet);
+    void recordTxTimestampAck(uint32_t relAck);
 
     static int64_t tcpPayloadLength(inet::Packet *pkt);
 

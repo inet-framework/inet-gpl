@@ -18,6 +18,7 @@
 #include <sys/wait.h>
 #include <netinet/tcp.h>
 #include <linux/errqueue.h>
+#include <linux/net_tstamp.h> // SOF_TIMESTAMPING_TX_* flags for TX timestamping
 
 #include "inetgpl/applications/packetdrill/PacketDrillInfo_m.h"
 #include "inetgpl/applications/packetdrill/PacketDrillUtils.h"
@@ -358,6 +359,11 @@ void PacketDrillApp::socketDataArrived(TunSocket *socket, Packet *packet)
         delete packet;
         return;
     }
+    // TX timestamping: this is the single choke point for every real INET outbound
+    // segment (before GSO aggregation), so SCM_TSTAMP_SCHED/SND for a key byte are
+    // taken from the segment that actually carries it -- even when it lands in a
+    // later, cwnd-released segment rather than the one produced at write time.
+    recordTxTimestampSend(packet);
     if (aggExpectedOutbound != nullptr) {
         // an expected GSO super-segment is being matched by consecutive live
         // MSS-sized segments -- this packet continues (or completes) it
@@ -661,6 +667,12 @@ void PacketDrillApp::runEvent(PacketDrillEvent *event)
                     relSequenceIn = tcpHeader->getSequenceNo();
                 else
                     tcpHeader->setSequenceNo(tcpHeader->getSequenceNo() + relSequenceIn);
+                // TX timestamping: a non-SYN ACK's number here is still in the DUT's
+                // relative data space (script frame) -- exactly what pending TX-ACK
+                // keys are measured in -- so fire SCM_TSTAMP_ACK for any key this ACK
+                // covers BEFORE the number is rebased onto the live ISN below.
+                if (tcpHeader->getAckBit() && !tcpHeader->getSynBit())
+                    recordTxTimestampAck(tcpHeader->getAckNo());
                 // ack: script acks the DUT's data relative to the DUT's script
                 // ISN; on a SYN(-ACK) packet the script literal is absolute in
                 // the script's own frame, so the declared script ISN is
@@ -1513,6 +1525,10 @@ void PacketDrillApp::sendTcpPayloadWithFlags(int64_t numBytes, int flags)
         payload->addTagIfAbsent<TcpSendZerocopyReq>();
     if (flags & MSG_MORE)
         payload->addTagIfAbsent<TcpSendMoreReq>();
+    // TX timestamping (SO_TIMESTAMPING): register this write's last-byte key so its
+    // SCM_TSTAMP_SCHED/SND/ACK errqueue entries can be generated as the data is
+    // transmitted and acked (drained by recvmsg(MSG_ERRQUEUE)).
+    recordTxTimestampWrite(numBytes);
     tcpSocket.send(payload);
 }
 
@@ -2509,6 +2525,14 @@ int PacketDrillApp::verifyMsgErrQueue(struct msghdr_expr *msgExpr, struct syscal
     cQueue *cmsgList = msgExpr->msg_control->getList();
     if (!cmsgList)
         return STATUS_OK;
+    // A TX-timestamp recvmsg carries two cmsgs describing ONE errqueue entry:
+    // SCM_TIMESTAMPING holds the event time (scm_sec/scm_nsec) and IP_RECVERR/
+    // SO_EE_ORIGIN_TIMESTAMPING holds the type in ee_info and the byte key in
+    // ee_data. Collect both across the cmsg list, then drain one entry off
+    // txTimestampQueue. Zerocopy (SO_EE_ORIGIN_ZEROCOPY) is drained inline as before.
+    bool haveTsTime = false, haveTsErr = false;
+    double tsSec = 0, tsNsec = 0;
+    int32_t tsType = -1, tsKey = -1;
     for (cQueue::Iterator it(*cmsgList); !it.end(); it++) {
         auto *cmsgExpr = check_and_cast<PacketDrillExpression *>(*it);
         if (cmsgExpr->getType() != EXPR_CMSG)
@@ -2517,16 +2541,29 @@ int PacketDrillApp::verifyMsgErrQueue(struct msghdr_expr *msgExpr, struct syscal
         int32_t cmsgType;
         if (cmsg->cmsg_type->getS32(&cmsgType, error))
             continue;
-        if (cmsgType == SCM_TIMESTAMPING)
-            throw cTerminationException("Packetdrill error: TX timestamping (SCM_TIMESTAMPING) not modeled in INET");
+        if (cmsgType == SCM_TIMESTAMPING) {
+            if (cmsg->cmsg_data && cmsg->cmsg_data->getType() == EXPR_SCM_TIMESTAMPING) {
+                auto *ts = cmsg->cmsg_data->getScmTimestamping();
+                int32_t s = 0, ns = 0;
+                if (ts->scm_sec) ts->scm_sec->getS32(&s, error);
+                if (ts->scm_nsec) ts->scm_nsec->getS32(&ns, error);
+                tsSec = s; tsNsec = ns; haveTsTime = true;
+            }
+            continue;
+        }
         if (cmsgType != IP_RECVERR || !cmsg->cmsg_data || cmsg->cmsg_data->getType() != EXPR_SOCK_EXTENDED_ERR)
             continue;
         struct sock_extended_err_expr *ee = cmsg->cmsg_data->getSockExtendedErr();
         int32_t origin = -1;
         if (!ee->ee_origin || ee->ee_origin->getS32(&origin, error))
             continue;
-        if (origin == SO_EE_ORIGIN_TIMESTAMPING)
-            throw cTerminationException("Packetdrill error: TX timestamping (SO_EE_ORIGIN_TIMESTAMPING) not modeled in INET");
+        if (origin == SO_EE_ORIGIN_TIMESTAMPING) {
+            int32_t info = -1, data = -1;
+            if (ee->ee_info) ee->ee_info->getS32(&info, error);
+            if (ee->ee_data) ee->ee_data->getS32(&data, error);
+            tsType = info; tsKey = data; haveTsErr = true;
+            continue;
+        }
         if (origin != SO_EE_ORIGIN_ZEROCOPY)
             continue;
         int32_t lo = 0, hi = 0;
@@ -2542,7 +2579,102 @@ int PacketDrillApp::verifyMsgErrQueue(struct msghdr_expr *msgExpr, struct syscal
             completedZerocopyIds.pop_front();
         }
     }
+    if (haveTsErr) {
+        if (txTimestampQueue.empty())
+            throw cTerminationException("Packetdrill error: TX timestamp expected in error queue but none pending");
+        const TxTimestamp& e = txTimestampQueue.front();
+        if (e.type != tsType || (uint32_t)tsKey != e.key) {
+            EV_INFO << "TX timestamp mismatch: expected type=" << tsType << " key=" << tsKey
+                    << " actual type=" << e.type << " key=" << e.key << endl;
+            throw cTerminationException("Packetdrill error: TX timestamp type/key mismatch");
+        }
+        // Time (SCM_TIMESTAMPING) is checked leniently -- some corpus scripts
+        // (tcp_tx_timestamp_bug) explicitly disclaim precision; a couple of ms of
+        // tolerance covers scheduling granularity while still catching a wrong event.
+        if (haveTsTime) {
+            double expected = tsSec + tsNsec / 1e9;
+            double actual = e.time.dbl();
+            if (fabs(expected - actual) > 0.002) {
+                EV_INFO << "TX timestamp time mismatch: expected " << expected << "s actual " << actual << "s (key " << e.key << ")" << endl;
+                throw cTerminationException("Packetdrill error: TX timestamp time mismatch");
+            }
+        }
+        txTimestampQueue.pop_front();
+    }
     return STATUS_OK;
+}
+
+void PacketDrillApp::recordTxTimestampWrite(int64_t numBytes)
+{
+    // A write's LAST byte carries the OPT_ID timestamp key = its offset (0-based, so
+    // relative data seq - 1). Record it as pending SCHED/SND (stamped when the
+    // carrying segment is transmitted) and/or ACK (stamped when acknowledged), per
+    // the enabled SOF_TIMESTAMPING_TX_* flags. txTsWriteSeq advances for every send
+    // so the relative seq stays correct even for writes before timestamping is on.
+    if (numBytes <= 0)
+        return;
+    uint32_t lastByteSeq = txTsWriteSeq + (uint32_t)numBytes - 1;
+    txTsWriteSeq += (uint32_t)numBytes;
+    bool txSched = timestampingFlags & SOF_TIMESTAMPING_TX_SCHED;
+    bool txSnd = timestampingFlags & SOF_TIMESTAMPING_TX_SOFTWARE;
+    bool txAck = timestampingFlags & SOF_TIMESTAMPING_TX_ACK;
+    if (!(txSched || txSnd || txAck))
+        return;
+    uint32_t key = lastByteSeq - 1;
+    if (txSched || txSnd)
+        pendingTxSchedSnd.push_back({ key, lastByteSeq });
+    if (txAck)
+        pendingTxAck.push_back({ key, lastByteSeq });
+}
+
+void PacketDrillApp::recordTxTimestampSend(inet::Packet *packet)
+{
+    // Every INET outbound segment (socketDataArrived TunSocket): if its relative
+    // payload range covers a pending key's last byte, take the SCHED and SND stamps
+    // now -- Linux stamps both at transmission (tcp_write_xmit + software TX), so
+    // they share this instant. A retransmit re-covering the byte does not re-fire
+    // (the key was already removed on first transmission).
+    if (pendingTxSchedSnd.empty())
+        return;
+    auto ipHeader = packet->peekAtFront<Ipv4Header>();
+    if (ipHeader->getProtocolId() != IP_PROT_TCP)
+        return;
+    auto tcpHeader = packet->peekDataAt<TcpHeader>(ipHeader->getChunkLength());
+    int64_t payload = tcpPayloadLength(packet);
+    if (payload <= 0)
+        return;
+    uint32_t relStart = tcpHeader->getSequenceNo() - relSequenceOut;
+    uint32_t relEnd = relStart + (uint32_t)payload; // exclusive
+    simtime_t now = simTime() - simStartTime;
+    bool txSched = timestampingFlags & SOF_TIMESTAMPING_TX_SCHED;
+    bool txSnd = timestampingFlags & SOF_TIMESTAMPING_TX_SOFTWARE;
+    for (auto it = pendingTxSchedSnd.begin(); it != pendingTxSchedSnd.end(); ) {
+        if (seqGE(it->lastByteSeq, relStart) && seqLess(it->lastByteSeq, relEnd)) {
+            if (txSched) txTimestampQueue.push_back({ SCM_TSTAMP_SCHED, it->key, now });
+            if (txSnd) txTimestampQueue.push_back({ SCM_TSTAMP_SND, it->key, now });
+            it = pendingTxSchedSnd.erase(it);
+        }
+        else
+            ++it;
+    }
+}
+
+void PacketDrillApp::recordTxTimestampAck(uint32_t relAck)
+{
+    // An inbound ACK (relAck in the DUT's relative data space): any pending key
+    // whose last byte is now acknowledged (relAck past it) gets SCM_TSTAMP_ACK
+    // stamped at this ACK's arrival time.
+    if (pendingTxAck.empty())
+        return;
+    simtime_t now = simTime() - simStartTime;
+    for (auto it = pendingTxAck.begin(); it != pendingTxAck.end(); ) {
+        if (seqGE(relAck, it->lastByteSeq + 1)) {
+            txTimestampQueue.push_back({ SCM_TSTAMP_ACK, it->key, now });
+            it = pendingTxAck.erase(it);
+        }
+        else
+            ++it;
+    }
 }
 
 int PacketDrillApp::syscallEpollCreate(struct syscall_spec *syscall, cQueue *args, char **error)
