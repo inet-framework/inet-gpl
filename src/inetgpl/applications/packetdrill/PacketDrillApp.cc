@@ -1216,6 +1216,7 @@ std::string PacketDrillApp::formatTcpInfoSnapshot(TcpStatusInfo *status)
     out << "tcpi_reordering = " << status->getReordering() << "\n";
     if (status->getSnd_mss() > 0)
         out << "tcpi_snd_mss = " << status->getSnd_mss() << "\n";
+        out << "tcpi_advmss = " << status->getAdvmss() << "\n";
     out << "tcpi_snd_wscale = " << status->getSndWndScale() << "\n";
 
     if (status->getSrtt() >= 0)
@@ -1676,6 +1677,9 @@ int PacketDrillApp::setsockoptTcpLevel(int level, cQueue *args, char **error)
         switch (optname) {
             case TCP_NOTSENT_LOWAT:
                 tcpSocket.setNotsentLowat((int)optval);
+                return STATUS_OK;
+            case TCP_MAXSEG:
+                tcpSocket.setMaxSeg((int)optval);
                 return STATUS_OK;
             case TCP_FASTOPEN_CONNECT:
                 // Consumed by syscallConnect: the next connect() on this
