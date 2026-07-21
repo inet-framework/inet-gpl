@@ -364,6 +364,22 @@ void PacketDrillApp::socketDataArrived(TunSocket *socket, Packet *packet)
     // taken from the segment that actually carries it -- even when it lands in a
     // later, cwnd-released segment rather than the one produced at write time.
     recordTxTimestampSend(packet);
+    // Track the DUT's latest outbound TS value so an injected inbound segment can
+    // echo it as TSecr (peerTS). Without this peerTS stayed 0, every injected ACK
+    // echoed ecr=0, and the DUT's TS-based RTT measurement mapped to send-time 0 --
+    // blowing SRTT up to the absolute sim time on any TS-enabled connection.
+    {
+        auto ipH = packet->peekAtFront<Ipv4Header>();
+        if (ipH->getProtocolId() == IP_PROT_TCP) {
+            auto tcpH = packet->peekDataAt<TcpHeader>(ipH->getChunkLength());
+            for (unsigned int i = 0; i < tcpH->getHeaderOptionArraySize(); i++) {
+                if (auto *tsOpt = dynamic_cast<const TcpOptionTimestamp *>(tcpH->getHeaderOption(i))) {
+                    peerTS = tsOpt->getSenderTimestamp();
+                    break;
+                }
+            }
+        }
+    }
     if (aggExpectedOutbound != nullptr) {
         // an expected GSO super-segment is being matched by consecutive live
         // MSS-sized segments -- this packet continues (or completes) it
