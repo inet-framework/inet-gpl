@@ -1298,6 +1298,8 @@ std::string PacketDrillApp::formatTcpInfoSnapshot(TcpStatusInfo *status)
     out << "tcpi_bytes_received = " << status->getBytesReceived() << "\n";
     out << "tcpi_delivered_ce = " << status->getDeliveredCePkts() << "\n";
     out << "tcpi_delivered_ce_bytes = " << status->getDeliveredCeBytes() << "\n";
+    out << "tcpi_delivered_e0_bytes = " << status->getDeliveredE0Bytes() << "\n";
+    out << "tcpi_delivered_e1_bytes = " << status->getDeliveredE1Bytes() << "\n";
     out << "tcpi_busy_time = " << (int64_t)llround(status->getBusyTime() * 1e6) << "\n";
     out << "tcpi_rwnd_limited = " << (int64_t)llround(status->getRwndLimited() * 1e6) << "\n";
 
