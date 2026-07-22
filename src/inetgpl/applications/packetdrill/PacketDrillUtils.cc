@@ -118,6 +118,7 @@ struct int_symbol platform_symbols_table[] = {
     { SO_REUSEADDR,                     "SO_REUSEADDR"                    },
     { SO_KEEPALIVE,                     "SO_KEEPALIVE"                    },
     { SO_SNDBUF,                        "SO_SNDBUF"                       },
+    { SO_RCVBUF,                        "SO_RCVBUF"                       },
     { SO_MARK,                          "SO_MARK"                         },
     { SO_ZEROCOPY,                      "SO_ZEROCOPY"                     },
     { SO_TIMESTAMPING,                  "SO_TIMESTAMPING"                 },

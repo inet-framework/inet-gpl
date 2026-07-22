@@ -1711,6 +1711,29 @@ int PacketDrillApp::setsockoptTcpLevel(int level, cQueue *args, char **error)
                     txTsOptIdBase = txTsWriteSeq;
                 tcpSocket.setTimestamping(optval != 0);
                 return STATUS_OK;
+            case SO_RCVBUF: {
+                // Model SO_RCVBUF's effect on the advertised receive window and
+                // the SYN/SYN-ACK window-scale shift. Linux: sk_rcvbuf = 2*optval,
+                // the offered window = tcp_win_from_space(sk_rcvbuf) (default
+                // scaling_ratio halves it, so = optval), quantized DOWN to a whole
+                // advertised MSS. INET reproduces this exactly if we set
+                // advertisedWindow to that quantized value and let windowScalingFactor
+                // auto-select (-1): configureStateVariables' shift loop then derives
+                // the same wscale, and rcv_wnd is capped to 65535 on the SYN-ACK just
+                // as Linux advertises min(rcv_wnd, 65535) unscaled. Without this INET
+                // advertises its fixed base wscale (from base.ini) and every
+                // SO_RCVBUF script diverges at the SYN-ACK. Must land before the
+                // connection is configured -- the rcv scripts set it pre-listen.
+                const int ADVMSS = 1460; // IPv4 advertised MSS; the rcv corpus is all IPv4
+                long advWnd = ((long)optval / ADVMSS) * ADVMSS; // rounddown to a whole advmss
+                if (advWnd < ADVMSS)
+                    advWnd = ADVMSS;
+                if (cModule *tcpModule = getParentModule()->getSubmodule("tcp")) {
+                    tcpModule->par("advertisedWindow").setIntValue(advWnd);
+                    tcpModule->par("windowScalingFactor").setIntValue(-1);
+                }
+                return STATUS_OK;
+            }
             default:
                 EV_INFO << "setsockopt(SOL_SOCKET, " << optname << ") not modeled, ignored\n";
                 return STATUS_OK;
