@@ -245,7 +245,53 @@ void PacketDrillApp::socketClosed(TcpSocket *socket)
 
 void PacketDrillApp::socketFailure(TcpSocket *socket, int code)
 {
+    connErrorSeen = true; // poll() on a reset/failed socket reports POLLIN|POLLERR|POLLHUP
+    checkDeferredPollNow();
     delete socketMap.removeSocket(socket);
+}
+
+void PacketDrillApp::socketZerocopyCompletion(TcpSocket *socket, unsigned int zerocopyId)
+{
+    // MSG_ZEROCOPY completion: collect ids in delivery order;
+    // recvmsg(MSG_ERRQUEUE) drains them against the script's asserted
+    // ee_info..ee_data range (verifyMsgErrQueue). Each arrival is also an
+    // epoll wakeup: EPOLLERR reports once per new-arrival batch.
+    completedZerocopyIds.push_back(zerocopyId);
+    epollErrEdgePending = true;
+}
+
+void PacketDrillApp::socketStatusArrived(TcpSocket *socket, TcpStatusInfo *status)
+{
+    if (!codeEventPending)
+        return;
+    codeEventPending = false;
+    codeBlockBuffer += formatTcpInfoSnapshot(status);
+    codeBlockBuffer += pendingCodeText;
+    codeBlockBuffer += "\n";
+    pendingCodeText = nullptr;
+    if (!eventTimer->isScheduled() && eventCounter < numEvents - 1) {
+        eventCounter++;
+        scheduleEvent();
+    }
+    // If this STATUS reply completed the script's LAST event (a %{ }% code
+    // block), no further event timer fires to run the handleTimer() completion
+    // check -- so run the buffered assertions and mark completion here too.
+    // Without this, a script ending on a %{ }% block never sets scriptComplete
+    // and its post-script timer traffic (an RTO retransmit of data the script
+    // stopped ACKing) leaks through as a spurious "wrong time" divergence.
+    // !eventTimer->isScheduled(): the LAST event may be merely SCHEDULED, not
+    // yet run (its outbound expectation is not registered in outboundPackets
+    // until the timer fires) -- marking completion then swallows the DUT's
+    // final reply as "post-script traffic" and the expectation stalls forever
+    // (the stall detector exposed ~100 scripts whose close/FIN tails were
+    // silently cut short this way).
+    else if (eventCounter >= numEvents - 1 && !codeEventPending && outboundPackets->getLength() == 0
+             && !eventTimer->isScheduled()) {
+        if (!codeBlockBuffer.empty())
+            executeCodeBlocks();
+        closeAllSockets();
+        scriptComplete = true;
+    }
 }
 
 // SctpSocket:
@@ -1243,13 +1289,269 @@ void PacketDrillApp::runSystemCallEvent(PacketDrillEvent *event, struct syscall_
     args->clear();
     delete args;
     delete syscall->arguments;
-    free(syscall);
     if (result == STATUS_ERR) {
+        // note: report before free(syscall) -- name points into it
         EV_ERROR << event->getLineNumber() << ": runtime error in " << syscall->name << " call: " << error << endl;
         closeAllSockets();
         free(error);
     }
+    free(syscall);
     return;
+}
+
+void PacketDrillApp::runCodeEvent(PacketDrillEvent *event)
+{
+    // Snapshot capture happens now, at this event's scheduled simulated time;
+    // the accumulated Python text (this block's and every other block's) only
+    // actually runs once, at the very end of the script -- see
+    // executeCodeBlocks(). requestStatus() is async; socketStatusArrived()
+    // does the rest once the TcpStatusInfo reply arrives.
+    pendingCodeText = event->getCode()->text;
+    codeEventPending = true;
+    // Defer the STATUS request by an infinitesimal delay so an inbound packet at
+    // this same simulated instant (the very common "< ... ack N" immediately
+    // followed by "+0 %{ assert ... }%") finishes propagating up the stack and
+    // updating TCP state before the snapshot is taken -- see statusRequestTimer.
+    rescheduleAfter(SimTime(1, SIMTIME_NS), statusRequestTimer);
+}
+
+std::string PacketDrillApp::formatTcpInfoSnapshot(TcpStatusInfo *status)
+{
+    // Linux's tcp_info connection-state values (net/tcp_states.h) are a
+    // plain kernel-ABI enum, not exposed as preprocessor macros the way
+    // TCPI_OPT_*/SOL_TCP are -- hardcoded here, they are long-stable ABI.
+    static const std::map<int, int> stateMap = {
+        { TCP_S_CLOSED, 7 },       // TCP_CLOSE
+        { TCP_S_LISTEN, 10 },      // TCP_LISTEN
+        { TCP_S_SYN_SENT, 2 },     // TCP_SYN_SENT
+        { TCP_S_SYN_RCVD, 3 },     // TCP_SYN_RECV
+        { TCP_S_ESTABLISHED, 1 },  // TCP_ESTABLISHED
+        { TCP_S_CLOSE_WAIT, 8 },   // TCP_CLOSE_WAIT
+        { TCP_S_LAST_ACK, 9 },     // TCP_LAST_ACK
+        { TCP_S_FIN_WAIT_1, 4 },   // TCP_FIN_WAIT1
+        { TCP_S_FIN_WAIT_2, 5 },   // TCP_FIN_WAIT2
+        { TCP_S_CLOSING, 11 },     // TCP_CLOSING
+        { TCP_S_TIME_WAIT, 6 },    // TCP_TIME_WAIT
+    };
+
+    std::ostringstream out;
+
+    // Symbolic constants: emitted unconditionally (cheap, harmless to
+    // repeat every block) so a script comparing against one of these
+    // doesn't spuriously NameError on the constant itself even when the
+    // paired tcpi_* variable isn't emitted (sentinel-guarded fields below).
+    out << "TCP_ESTABLISHED = 1\nTCP_SYN_SENT = 2\nTCP_SYN_RECV = 3\n"
+           "TCP_FIN_WAIT1 = 4\nTCP_FIN_WAIT2 = 5\nTCP_TIME_WAIT = 6\n"
+           "TCP_CLOSE = 7\nTCP_CLOSE_WAIT = 8\nTCP_LAST_ACK = 9\n"
+           "TCP_LISTEN = 10\nTCP_CLOSING = 11\n"
+           "TCP_CA_Open = 0\nTCP_CA_Disorder = 1\nTCP_CA_CWR = 2\n"
+           "TCP_CA_Recovery = 3\nTCP_CA_Loss = 4\n";
+    out << "TCPI_OPT_TIMESTAMPS = " << TCPI_OPT_TIMESTAMPS << "\n"
+        << "TCPI_OPT_SACK = " << TCPI_OPT_SACK << "\n"
+        << "TCPI_OPT_WSCALE = " << TCPI_OPT_WSCALE << "\n"
+        << "TCPI_OPT_ECN = " << TCPI_OPT_ECN << "\n"
+        << "TCPI_OPT_ECN_SEEN = " << TCPI_OPT_ECN_SEEN << "\n"
+        << "TCPI_OPT_SYN_DATA = " << TCPI_OPT_SYN_DATA << "\n";
+
+    auto stateIt = stateMap.find(status->getState());
+    if (stateIt != stateMap.end())
+        out << "tcpi_state = " << stateIt->second << "\n";
+
+    // Linux reports tcpi_snd_cwnd / tcpi_snd_ssthresh in MSS units (segments);
+    // INET tracks both in bytes, accumulated in EFFECTIVE-MSS-sized steps (the
+    // size segments are actually cut to). Divide by that and round to nearest:
+    // PRR's byte arithmetic lands mid-segment (cwnd = pipe + sndcnt = 6801
+    // where Linux's packet math says 7), and flooring by the raw snd_mss
+    // (1012) had already lost a whole segment to the 12-byte TS overhead
+    // (client-ack-dropped-then-recovery asserts snd_cwnd == 7 there).
+    double mssUnit = status->getSndEffMss() > 0 ? status->getSndEffMss()
+                   : (status->getSnd_mss() > 0 ? status->getSnd_mss() : 1);
+    if (status->getCwnd() != UINT_MAX)
+        out << "tcpi_snd_cwnd = " << (uint32_t)llround(status->getCwnd() / mssUnit) << "\n";
+    // The "no ssthresh yet" sentinel differs between the two stacks: INET uses
+    // UINT_MAX, Linux TCP_INFINITE_SSTHRESH (0x7fffffff), and it is the Linux value
+    // that getsockopt reports and that the corpus compares against -- the cubic
+    // hystart scripts define TCP_INFINITE_SSTHRESH themselves and assert equality
+    // with it all through slow start. Report it verbatim rather than dividing it
+    // into MSS units: it stands for "no limit", not for a window size. Reporting it
+    // unconditionally also matters because a %{ }% block sees the whole snapshot as
+    // its variable namespace -- a suppressed field is not a missing value there but
+    // an undefined NAME, which fails the assertion with a Python traceback instead
+    // of a comparison.
+    out << "tcpi_snd_ssthresh = "
+        << (status->getSsthresh() == UINT_MAX ? 0x7fffffffu
+                                              : (uint32_t)llround(status->getSsthresh() / mssUnit))
+        << "\n";
+    out << "tcpi_reordering = " << status->getReordering() << "\n";
+    if (status->getSnd_mss() > 0)
+        // Linux's tcpi_snd_mss is tcp_current_mss(): the DATA space after
+        // header options (1448 with timestamps on a 1460 path), not the raw
+        // negotiated MSS -- report INET's snd_effmss.
+        out << "tcpi_snd_mss = " << (status->getSndEffMss() > 0 ? status->getSndEffMss() : status->getSnd_mss()) << "\n";
+    // tcpi_rcv_mss is Linux's receiver-side MSS ESTIMATE (icsk_ack.rcv_mss),
+    // learned from the sizes of arriving segments -- the harness injected
+    // every one of them, so the largest injected payload IS the ground truth
+    // (536 = Linux's pre-data initial estimate).
+    {
+        uint32_t rcvMssEst = maxInjectedPayload > 0 ? maxInjectedPayload : 536;
+        // Linux tcp_measure_rcv_mss() caps the estimate at the NEGOTIATED
+        // mss (tp->mss_cache): a 9000B GRO super-segment on an mss-1000
+        // connection reports 1000
+        if (status->getSnd_mss() > 0 && rcvMssEst > status->getSnd_mss())
+            rcvMssEst = status->getSnd_mss();
+        out << "tcpi_rcv_mss = " << rcvMssEst << "\n";
+    }
+        out << "tcpi_advmss = " << status->getAdvmss() << "\n";
+    out << "tcpi_snd_wscale = " << status->getSndWndScale() << "\n";
+
+    if (status->getSrtt() >= 0)
+        out << "tcpi_rtt = " << (int64_t)llround(status->getSrtt() * 1e6) << "\n";
+    out << "tcpi_min_rtt = " << (int64_t)llround(status->getMinRtt() * 1e6) << "\n";
+    // tcpi_last_data_recv is in MILLISECONDS (Linux jiffies_to_msecs), unlike the
+    // microsecond tcpi_rtt/busy_time/rwnd_limited fields below.
+    out << "tcpi_last_data_recv = "
+        << (int64_t)llround((simTime() - status->getLastDataRecvTime()).dbl() * 1e3) << "\n";
+
+    // Segment-count approximation from INET's byte counts -- Linux's
+    // tcpi_unacked/sacked/delivered are segment counts, INET only tracks
+    // bytes. Lossy when segments are unequal size; documented in the plan.
+    if (status->getSnd_mss() > 0) {
+        double mss = status->getSnd_mss();
+        // Linux tcpi_unacked is tp->packets_out -- the SEQUENCE-RANGE packet
+        // count between snd_una and the high-water mark, NOT the cwnd pipe
+        // (sent - lost + retrans): a lost-marked-and-retransmitted range must
+        // not be double-counted (syn-data-partial-or-over-ack asserts
+        // unacked==2 for the 1320-byte fallback rexmit). Rounded UP like the
+        // other segment counts: a 6000-byte range is 5 packets, not 4.
+        uint64_t rangeB = (uint64_t)(status->getSnd_max() - status->getSnd_una());
+        uint64_t mssU = (uint64_t)status->getSnd_mss();
+        out << "tcpi_unacked = " << (uint32_t)((rangeB + mssU - 1) / mssU) << "\n";
+        out << "tcpi_sacked = " << (uint32_t)llround(status->getSackedBytes() / mss) << "\n";
+        // Linux tp->delivered counts PACKETS, and the acked SYN/SYN-ACK is the
+        // first of them (tcp_clean_rtx_queue counts the SYN skb): +1 once the
+        // connection is past its own handshake segment -- but NOT in SYN_RCVD,
+        // where a TFO server's SYN-ACK is still unacknowledged
+        // (fastopen server/simple3 asserts delivered==0 right after accept()).
+        // Data packets are approximated by rounding bytes UP: 2000 delivered
+        // bytes were two skbs (1460+540), not one (simple3's delivered==3).
+        int fsmState = status->getState();
+        uint32_t handshakeDelivered =
+            (fsmState != inet::tcp::TCP_S_INIT && fsmState != inet::tcp::TCP_S_LISTEN
+             && fsmState != inet::tcp::TCP_S_SYN_SENT && fsmState != inet::tcp::TCP_S_SYN_RCVD) ? 1 : 0;
+        // deliveredBytes is a SEQUENCE-space counter (snd_una advance), so the
+        // acked SYN/SYN-ACK contributes one phantom byte to it -- the very
+        // segment handshakeDelivered already stands for. Counting it again as
+        // data rounds a byte up to a whole packet: a server whose SYN-ACK was
+        // just acked but which has delivered no data reported 2 rather than 1
+        // (fastopen server/simple1, and simple3's second assertion).
+        uint64_t deliveredBytes = (uint64_t)status->getDeliveredBytes();
+        uint64_t dataBytes = deliveredBytes > handshakeDelivered
+                             ? deliveredBytes - handshakeDelivered : 0;
+        uint64_t mssB = (uint64_t)status->getSnd_mss();
+        out << "tcpi_delivered = "
+            << (handshakeDelivered + (uint32_t)((dataBytes + mssB - 1) / mssB)) << "\n";
+    }
+
+    uint32_t options = 0;
+    if (status->getTsEnabled())
+        options |= TCPI_OPT_TIMESTAMPS;
+    if (status->getSackEnabled())
+        options |= TCPI_OPT_SACK;
+    if (status->getWsEnabled())
+        options |= TCPI_OPT_WSCALE;
+    if (status->getEctEnabled())
+        options |= TCPI_OPT_ECN;
+    if (status->getSynDataAccepted())
+        options |= TCPI_OPT_SYN_DATA;
+    // Tombstone completion: a STATUS that landed after the PCB was torn down
+    // (RST/hard ICMP) reports TCP_S_CLOSED with sentinel fields -- Linux keeps
+    // the socket and its history bits until close(), so complete
+    // TCPI_OPT_SYN_DATA from the wire-truth shadow (see PacketDrillApp.h).
+    if (status->getState() == inet::tcp::TCP_S_CLOSED && status->getCwnd() == UINT_MAX && tfoSynDataAckedShadow)
+        options |= TCPI_OPT_SYN_DATA;
+    out << "tcpi_options = " << options << "\n";
+
+    // Fields surfaced by INET's TcpStatusInfo extension (caState/backoff/
+    // lost/probes/bytesReceived/deliveredCe*/busyTime/rwndLimited). UINT_MAX
+    // sentinels ("no meaning for this flavour / SACK off") leave the tcpi_*
+    // name undefined so a script asserting on it gets an honest NameError
+    // divergence instead of a fabricated value. tcpi_notsent_bytes stays
+    // unemitted -- INET has no source for it. tcpi_sndbuf_limited is real
+    // since the writer-blocked chrono (TcpSetWriterBlockedCommand) landed.
+    out << "tcpi_ca_state = " << status->getCaState() << "\n";
+    if (status->getBackoff() != UINT_MAX)
+        out << "tcpi_backoff = " << status->getBackoff() << "\n";
+    if (status->getLost() != UINT_MAX)
+        out << "tcpi_lost = " << status->getLost() << "\n";
+    if (status->getRetrans() != UINT_MAX)
+        out << "tcpi_retrans = " << status->getRetrans() << "\n";
+    if (status->getProbes() != UINT_MAX)
+        out << "tcpi_probes = " << status->getProbes() << "\n";
+    out << "tcpi_bytes_received = " << status->getBytesReceived() << "\n";
+    // Linux getsockopt(SO_MEMINFO): the live sk_rcvbuf, possibly grown by
+    // tcp_clamp_window under OOO pressure (ooo-before-and-after-accept
+    // asserts the embryonic value staying put and the post-accept growth).
+    if (status->getSkRcvbuf() > 0)
+        out << "SK_MEMINFO_RCVBUF = " << status->getSkRcvbuf() << "\n";
+    out << "tcpi_delivered_ce = " << status->getDeliveredCePkts() << "\n";
+    out << "tcpi_delivered_ce_bytes = " << status->getDeliveredCeBytes() << "\n";
+    out << "tcpi_delivered_e0_bytes = " << status->getDeliveredE0Bytes() << "\n";
+    out << "tcpi_delivered_e1_bytes = " << status->getDeliveredE1Bytes() << "\n";
+    out << "tcpi_busy_time = " << (int64_t)llround(status->getBusyTime() * 1e6) << "\n";
+    out << "tcpi_rwnd_limited = " << (int64_t)llround(status->getRwndLimited() * 1e6) << "\n";
+    out << "tcpi_sndbuf_limited = " << (int64_t)llround(status->getSndbufLimited() * 1e6) << "\n";
+
+    return out.str();
+}
+
+void PacketDrillApp::executeCodeBlocks()
+{
+    // Honor $TMPDIR (fall back to /tmp): sandboxed/CI environments frequently
+    // make /tmp itself non-writable and expose a writable scratch dir via
+    // TMPDIR only. A hardcoded /tmp made every %{ }% script fail with "could
+    // not create temp file", masquerading as a divergence (e.g. all of
+    // slow_start, whose scripts assert tcp_info via inline code blocks).
+    const char *tmpdir = getenv("TMPDIR");
+    if (tmpdir == nullptr || tmpdir[0] == '\0')
+        tmpdir = "/tmp";
+    std::string path = std::string(tmpdir) + "/inetgpl_packetdrill_code_XXXXXX";
+    int fd = mkstemp(path.data());
+    if (fd < 0)
+        // NB: the ctor formats printf-style -- the literal %{ }% must have its
+        // percents doubled or they are parsed as bogus conversions (UB).
+        throw cTerminationException("Packetdrill error: could not create temp file for %%{ }%% code execution (TMPDIR=%s)", tmpdir);
+    FILE *file = fdopen(fd, "w");
+    fwrite(codeBlockBuffer.data(), 1, codeBlockBuffer.size(), file);
+    fclose(file);
+
+    // Real python3, matching upstream packetdrill's own dependency -- not an
+    // embedded interpreter. See the plan doc for why (no CPython C-API usage
+    // in the real upstream implementation either, and the corpus's %{ }%
+    // blocks use only assert/simple variable assignment/print, nothing that
+    // would justify a constrained in-process evaluator).
+    std::string command = std::string("python3 ") + path + " 2>&1";
+    FILE *proc = popen(command.c_str(), "r");
+    std::string output;
+    if (proc) {
+        char buf[512];
+        size_t n;
+        while ((n = fread(buf, 1, sizeof(buf), proc)) > 0)
+            output.append(buf, n);
+    }
+    int status = proc ? pclose(proc) : -1;
+    if (getenv("PD_KEEP_CODE") == nullptr)
+        unlink(path.c_str());
+    else
+        EV_INFO << "PD_KEEP_CODE: kept " << path << "\n";
+
+    if (!proc || !WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+        std::string message = "Packetdrill error: %{ }% assertion failed: " + output;
+        throw cTerminationException("%s", message.c_str());
+    }
+    // Consumed -- the buffer holds the whole script's accumulated blocks and is
+    // run once at completion. Clearing it keeps the three "if (!codeBlockBuffer
+    // .empty()) executeCodeBlocks()" completion sites single-shot.
+    codeBlockBuffer.clear();
 }
 
 int PacketDrillApp::syscallSocket(struct syscall_spec *syscall, cQueue *args, char **error)
