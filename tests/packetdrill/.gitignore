@@ -1,0 +1,6 @@
+# Regenerable run artifacts -- re-created by suite.py, not checked in.
+# linux-results.csv IS checked in (the Linux run's results are the reference).
+out/
+build/
+__pycache__/
+*.pyc

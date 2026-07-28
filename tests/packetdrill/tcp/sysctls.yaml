@@ -1,0 +1,232 @@
+# sysctl / --option <-> INET Tcp.ned parameter mapping for the INET run's
+# preprocessor. Parameter names verified against
+# src/inet/transportlayer/tcp/Tcp.ned (the INET commit the suite runs against).
+#
+# Semantics:
+#   sysctl:   known kernel sysctl -> ini override, with a value transform.
+#             `enum` transforms carry a `values` map; a script value not present
+#             in `values` is recorded as an unmapped_knob but does NOT block the
+#             run unless the entry also sets `required: true` below.
+#   option:   in-script `--flag[=value]` lines (packetdrill script options, not
+#             sysctls) -> ini override.
+#   ignore:   knobs we've deliberately decided not to model (buffer autotuning,
+#             pacing ratios, pure-timing retry counts, pacing, notsent_lowat...).
+#             Recorded as "known, intentionally unmapped" -- never surfaces as an
+#             unmapped_knob and never blocks.
+#   required: sysctl/option names where an *unrecognized* value should block the
+#             run (INET_UNSUPPORTED_CONFIG) rather than silently proceed with INET's
+#             own default. Kept minimal (empty) by design: most gaps are more
+#             informative as an observed DIVERGENCE (with a kernel_source_hint)
+#             than as a pre-run block. `tcp_congestion_control=cubic` maps to
+#             INET's TcpCubic; the remaining
+#             unmapped algorithms (bbr etc.) are recorded in `unmapped_knobs`
+#             so the comparator can flag "possibly CC-attributable" on any
+#             resulting DIVERGENCE without blocking scripts where the CC
+#             algorithm never actually gets exercised.
+#   The sysctls a script's defaults.sh sets come from scripts.yaml's defaults
+#             block, the one source for both runs; this file only translates.
+
+sysctl:
+  net.ipv4.tcp_sack:
+    ini: "**.tcp.sackSupport"
+    transform: bool
+  net.ipv4.tcp_window_scaling:
+    ini: "**.tcp.windowScalingSupport"
+    transform: bool
+  net.ipv4.tcp_timestamps:
+    ini: "**.tcp.timestampSupport"
+    transform: bool
+  net.ipv4.tcp_ecn:
+    # Kernel 7.x AccECN-era semantics (verified against net/ipv4 source +
+    # the scripts' own script expectations, e.g. tcp_accecn_ecn3.pkt "tcp_ecn=4
+    # uses RFC3168 ECN for SYN", tcp_accecn_serverside_only.pkt tcp_ecn=5
+    # accepting SEWA without requesting): 0=off, 1=request+accept classic,
+    # 2=accept-only classic, 3=request+accept AccECN, 4=request classic /
+    # accept AccECN (INET has no exact mode; rfc3168 matches the client-side
+    # request behavior every script that uses 4 asserts), 5=accept-only AccECN.
+    # Maps to tcpEcnMode (which supersedes ecnWillingness; INET errors if
+    # both are set, so this fully replaces the old bool mapping).
+    ini: "**.tcp.tcpEcnMode"
+    transform: enum
+    values:
+      "0": '"off"'
+      "1": '"rfc3168"'
+      "2": '"passive"'
+      "3": '"accecn"'
+      "4": '"rfc3168"'
+      "5": '"accecn-passive"'
+  net.ipv4.tcp_ecn_option:
+    # AccECN option (kinds 172/174): kernel 0=off, 1=minimal, 2=full. INET's
+    # accEcnOptionEnabled is a bool (G6); 0 -> false, 1/2 -> true. The
+    # kernel's tcp_ecn_option_beacon (per-RTT beacon frequency) has a
+    # different unit than INET's accEcnOptionBeaconAcks (per-ACK) and is left
+    # unmapped/recorded rather than mis-translated.
+    ini: "**.tcp.accEcnOptionEnabled"
+    transform: bool
+  net.ipv4.tcp_mtu_probing:
+    # RFC 4821 packetized PMTU discovery. INET's mtuProbing takes the same values,
+    # but only >1 ("probe from the start of every connection") has a counterpart --
+    # 1 arms the search on black-hole detection, which INET has no detector for and
+    # therefore treats as off.
+    ini: "**.tcp.mtuProbing"
+    transform: int
+  net.ipv4.tcp_base_mss:
+    ini: "**.tcp.baseMss"
+    transform: int
+  net.ipv4.tcp_notsent_lowat:
+    # TCP_NOTSENT_LOWAT: INET's notsentLowat is @unit(B) and
+    # uses -1 = disabled where Linux uses UINT_MAX.
+    ini: "**.tcp.notsentLowat"
+    transform: int
+    suffix: "B"
+    special:
+      "4294967295": "-1"
+  net.ipv4.tcp_fastopen:
+    # Bit 0 = client enabled, bit 1 = server enabled (man 7 tcp TCP_FASTOPEN); the
+    # Linux set's defaults give 0x3 (both on).
+    transform: bitmask
+    bits:
+      "0x1": "**.tcp.fastopenClientEnabled"
+      # TFO_CLIENT_NO_COOKIE: client sends SYN+data with no cookie at all
+      "0x4": "**.tcp.fastopenClientNoCookieRequired"
+      # Bit 1 (TFO_SERVER_ENABLE) means server Fast Open is *available*, but a
+      # plain listener still has to opt in via setsockopt(TCP_FASTOPEN); only the
+      # WO_SOCKOPT bits make a listener accept TFO without that opt-in. INET does
+      # not model the per-listener setsockopt, so map "accept TFO data on any
+      # listener" to bit 0x400 (TFO_SERVER_WO_SOCKOPT2). Otherwise a non-TFO
+      # listener under tcp_fastopen=2 (fastopen/server/basic-non-tfo-listener)
+      # would wrongly accept the SYN data. fastopenExpOptionEnabled (can PARSE
+      # the kind-254 legacy form) rides bit 1, since parsing is harmless even
+      # when the listener won't accept -- Linux has no separate toggle for it.
+      "0x2": "**.tcp.fastopenExpOptionEnabled"
+      "0x400": "**.tcp.fastopenServerEnabled"
+      # Bit 9 (0x200, TFO_SERVER_COOKIE_NOT_REQD): accept SYN data carrying no
+      # cookie option at all. The scripts' basic-cookie-not-reqd / zerocopy
+      # fastopen-server tests set 0x202/0x207 plus a per-listener
+      # setsockopt(TCP_FASTOPEN) (which suite.py's script scan translates to
+      # fastopenServerEnabled), so this bit only needs to carry the
+      # cookie-not-required half.
+      "0x200": "**.tcp.fastopenAcceptWithoutCookie"
+  net.ipv4.tcp_fastopen_key:
+    # Server-role TFO cookie key. INET reproduces Linux's SipHash-2-4 cookie
+    # derivation exactly when this is set (fastopen/server/simple1-3 pin the
+    # key->cookie vectors), so the scripts' explicit-cookie assertions match.
+    ini: "**.tcp.fastopenKey"
+    transform: string
+  net.ipv4.tcp_rto_max_ms:
+    # RTO ceiling. INET's maxRexmitTimeout caps both the data-RTO backoff and
+    # (since the tcp_rto_synack_rto_max fix) the SYN/SYN-ACK retransmit backoff.
+    # NED @unit(s) accepts the ms-suffixed value directly.
+    ini: "**.tcp.maxRexmitTimeout"
+    transform: int
+    suffix: "ms"
+  net.ipv4.tcp_frto:
+    # F-RTO spurious-RTO detection (RFC 5682). Kernel: 0=off, 1=basic, 2=SACK-
+    # enhanced when possible (the default, what defaults.sh pins). INET
+    # implements the SACK-enhanced variant behind a single bool.
+    ini: "**.tcp.frtoEnabled"
+    transform: bool
+  net.ipv4.tcp_shrink_window:
+    # window may genuinely SHRINK (right edge moves down) following true
+    # buffer occupancy; INET models the __tcp_select_window shrink branch
+    # with skb-truesize accounting (rcv_wnd_shrink_allowed).
+    ini: "**.tcp.windowShrinkAllowed"
+    transform: bool
+  net.ipv4.tcp_syncookies:
+    # 0/1 (off / on-under-synflood) are behaviorally identical for the scripts
+    # (no synflood is ever simulated); 2 = ALWAYS send cookies, which quantizes
+    # the rebuilt connection's peer MSS to the IPv4 msstab (syncookies_ip4_9k
+    # asserts tcpi_snd_mss 1448 against an advertised 8960).
+    ini: "**.tcp.syncookiesAlways"
+    transform: enum
+    values:
+      "0": "false"
+      "1": "false"
+      "2": "true"
+  net.ipv4.tcp_congestion_control:
+    ini: "**.tcp.tcpAlgorithmClass"
+    transform: enum
+    values:
+      # values are quoted: command-line --key=value goes through OMNeT++'s ini
+      # expression parser, where an unquoted word is a parameter reference,
+      # not a string (caught live the first time an enum value was actually
+      # emitted -- previously cubic was unmapped so this never fired)
+      reno: '"TcpReno"'
+      newreno: '"TcpNewReno"'
+      vegas: '"TcpVegas"'
+      westwood: '"TcpWestwood"'
+      dctcp: '"DcTcp"'
+      cubic: '"TcpCubic"'
+      none: '"TcpNoCongestionControl"'
+      # bbr, bic, htcp, illinois, highspeed,
+      # scalable, lp, veno, yeah, hybla: no INET flavour exists. Deliberately
+      # absent from `values` -> recorded as unmapped_knob; NOT set in ini
+      # (INET keeps its own default TcpReno), and NOT blocking (required below
+      # covers only the case where the script demands strict emulation of one
+      # of these and would be actively misleading run with Reno silently
+      # substituted -- see `required` list; currently none, kept as an escape
+      # hatch for a future finding that some script's assertions are Reno-vs-X
+      # sensitive enough to warrant hard-blocking).
+
+option:
+  --mss:
+    ini: null
+    transform: ignore   # packetdrill's --mss sets the tun default/injection MSS, NOT the DUT's
+                        # ADVERTISED MSS -- the Linux run's DUT still advertises its MTU-derived 1460 with
+                        # --mss=1000 (its Linux results prove it). Mapping it to **.tcp.mss made INET
+                        # advertise 1000 and mis-diverge on the SYN; the peer MSS that actually
+                        # drives snd_mss comes from the script's explicit `< S. <mss N>` literal.
+  --mtu:
+    ini: null
+    transform: ignore   # INET's fixed L2 MTU isn't wired to a single tcp.* param; tracked as unmapped_knob
+  # Addressing/timing options already fixed by the suite itself
+  # (LINUX_FLAGS in tcp.py for the Linux run; the sim network's static addresses for
+  # the INET run). A script setting these to the same values we already use is a
+  # no-op; recorded as unmapped rather than silently dropped so a script that
+  # ever needs a genuinely different address is still visible in the report.
+  # local_ip/remote_ip are honored: the tun host's addresses are plain module
+  # parameters (PacketDrillApp assigns the tun interface's address itself, and
+  # the routing file's default route covers any remote). simple1-3 pin the TFO
+  # cookie's SipHash INPUT (the address pair), so running them on the default
+  # addresses can never produce the asserted cookie.
+  --remote_ip:
+    ini: "**.pdhost.tunApp[0].remoteAddress"
+    quoted: true
+  --local_ip:
+    ini: "**.pdhost.tunApp[0].localAddress"
+    quoted: true
+  --ip_version: {ini: null, transform: ignore}
+  --gateway_ip: {ini: null, transform: ignore}
+  --netmask_ip: {ini: null, transform: ignore}
+  # Timing-tolerance options: handled uniformly via suite.py's
+  # --tolerance-usecs (the Linux run) and **.pdapp.latency (the INET run), not per-script.
+  --tolerance_usecs: {ini: null, transform: ignore}
+  --tcp_ts_tick_usecs: {ini: null, transform: ignore}
+  --strict_segments: {ini: null, transform: ignore}
+
+ignore:
+  # Buffer autotuning: INET has no receive-window autotuning at all (fixed
+  # advertisedWindow); tcp_rmem/tcp_wmem are Linux's autotuning bounds and have
+  # no faithful static translation. Every script sets these via
+  # defaults.sh -- if this were "required" it would blanket-block ~all scripts,
+  # hiding the more precise DIVERGENCE/MATCH signal. Left as a known, tracked gap.
+  - net.ipv4.tcp_rmem
+  - net.ipv4.tcp_wmem
+  # Retry counts / timers that only matter for scripts specifically exercising
+  # SYN retransmission counts or FRTO, which are either already dialect-gapped
+  # or out of tier-1 scope; not worth per-script mapping yet.
+  - net.ipv4.tcp_syn_retries
+  - net.ipv4.tcp_synack_retries
+  - net.ipv4.tcp_dsack
+  - net.ipv4.tcp_fack
+  - net.ipv4.tcp_reordering
+  - net.ipv4.tcp_slow_start_after_idle
+  - net.ipv4.tcp_early_retrans
+  - net.ipv4.tcp_recovery
+  - net.ipv4.tcp_tso_win_divisor
+  - net.ipv4.tcp_pacing_ss_ratio
+  - net.ipv4.tcp_pacing_ca_ratio
+  - net.ipv4.tcp_metrics    # `ip tcp_metrics flush all` in defaults.sh -- no sysctl, no ini equivalent
+  - net.ipv4.tcp_min_rtt_wlen
+
+required: []   # see note in `sysctl.net.ipv4.tcp_congestion_control` above

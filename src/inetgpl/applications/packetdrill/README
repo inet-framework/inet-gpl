@@ -13,46 +13,22 @@ controlling the transport protocol, and verify the sending of packets, all
 at specified times. The ported version provides a simple and powerful
 method of testing transport protocols implemented in INET.
 
-Current tests for UDP and TCP
-=============================
-For packetdrill based tests for the current UDP and TCP implementation
-see the 'tests/packetdrill' directory.
+Tests
+=====
+The packetdrill suite in 'tests/packetdrill' runs the TCP scripts of
+'tests/protocol/tcp' with this app and on the Linux kernel, and compares
+the results. See 'tests/packetdrill/README.md'.
 
 Usage
 =====
-As the scripts are embedded in the INET test suite, their specification 
-follows the same rules as other module tests. The packetdrill tests always 
-consist of a script, a .ned file, a routing file and a configuration file 
-like the following:
-
-%description:
-SUT is server. It accepts a connection.
-The peer closes the connection.
-%#----------------------------------------------
-%inifile: omnetpp.ini
-[General]
-network = PacketDrillTcp
-**.scriptFile="../../lib/openPassive.pkt"
-**.pdhost.numTcpTunApps = 1
-**.hasTun = true
-**.startTime = 2s
-**.pdhost.routingFile = "../../lib/pdhost.mrt"
-**.pdhost.numPcapRecorders=1
-**.pdhost.pcapRecorder[0].pcapFile="openPassive.pcap"
-**.pdhost.pcapRecorder[0].moduleNamePatterns="tun"
-**.pdhost.pcapRecorder[0].sendingSignalNames="packetSentToUpper"
-**.pdhost.pcapRecorder[0].receivingSignalNames="packetReceivedFromUpper"
-**.pdapp.dataTransferMode = "bytecount"
-**.tcp.mss = 1460
-**.tcp.sackSupport = true
-**.tcp.windowScalingSupport = true
-**.tcp.windowScalingFactor = 6
-**.tcp.advertisedWindow = 29200
-**.tcp.useDataNotification = true
-%#----------------------------------------------
-%not-contains: test.out
-Packetdrill error:
-%#----------------------------------------------
+The app runs one script in one simulation. It is part of PacketDrillHost
+(inetgpl.node.packetdrill), which connects the app to a tun interface of
+the host, and the parameter 'scriptFile' names the script. The packetdrill
+suite holds a complete configuration: the network in
+'tests/packetdrill/ned/PacketDrillNetwork.ned', the settings for every
+protocol in 'tests/packetdrill/ini/base.ini', and the TCP settings in
+'tests/packetdrill/tcp/tcp.ini'. The command 'make inet FILTER=<regex>'
+in 'tests/packetdrill' runs the matching scripts with them.
 
 Packetdrill script example
 ==========================
@@ -87,9 +63,13 @@ Here is a packetdrill script for TCP fast retransmit:
 Limitations
 ===========
 - Remote mode is unsupported
-- Python snippets, shell code and command line arguments are unsupported
-- Blocking system calls are unsupported
-- The getsockopt() method is unsupported
+- Shell code runs only in part: of a timed command, the app applies the
+  sysctl assignments that it knows, 'ip tcp_metrics flush' and
+  'ip route change ... mtu N'. The packetdrill suite takes the settings
+  of the untimed preamble before the run.
+- Command line options in a script are unsupported. The packetdrill suite
+  translates the options that INET can model into parameters.
+- getsockopt() accepts the call, but does not read the value back
 - Explicit address handling is unsupported
 - IPv6 is unsupported
 
