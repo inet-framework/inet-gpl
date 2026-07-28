@@ -25,10 +25,10 @@ cp -pPR lib work/
 opp_test gen $OPT -v $TESTFILES || exit 1
 
 echo
-(cd work; opp_makemake -f --deep -lINET$DBG_SUFFIX -L../../../../src -P . --no-deep-includes -I../../../../src; $MAKE) || exit 1
+(cd work; opp_makemake -f --deep -lINET$DBG_SUFFIX -lINETGPL$DBG_SUFFIX -L$INET_ROOT/src -L$INETGPL_ROOT/src -P . -I$INET_ROOT/src -I$INETGPL_ROOT/src; $MAKE) || exit 1
 
 echo
-PATH=$PATH:../../../src opp_test run $OPT -v -p work$DBG_SUFFIX $TESTFILES -a "--check-signals=false -lINET " || exit 1
+NEDPATH=$INET_ROOT/src opp_test run $OPT -v -p work$DBG_SUFFIX $TESTFILES -a "--check-signals=false" || exit 1
 
 echo
 echo Results can be found in ./work

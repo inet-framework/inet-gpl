@@ -5,7 +5,7 @@
 //
 //
 
-import inet.node.packetdrill.PacketDrillHost;
+import inetgpl.node.packetdrill.PacketDrillHost;
 
 network PacketDrillTcp
 {

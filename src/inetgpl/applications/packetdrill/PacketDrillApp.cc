@@ -82,6 +82,7 @@ void PacketDrillApp::initialize(int stage)
         auto idat = networkInterface->getProtocolDataForUpdate<Ipv4InterfaceData>();
         idat->setIPAddress(localAddress.toIpv4());
         tunSocket.setOutputGate(gate("socketOut"));
+        tunSocket.setCallback(this);
         tunSocket.open(networkInterface->getInterfaceId());
         tunInterfaceId = networkInterface->getInterfaceId();
         tunSocketId = tunSocket.getSocketId();
@@ -323,6 +324,19 @@ void PacketDrillApp::handleMessageWhenUp(cMessage *msg)
         if (!msg->arrivedOn("socketIn"))
             throw cRuntimeError("Message arrived on unknown gate %s", msg->getArrivalGate()->getFullName());
 
+        // tunSocket must be checked before socketMap: PacketDrillApp funnels
+        // TCP/UDP/SCTP/tun messages through the same "socketIn" gate, but
+        // socketMap only holds TCP connection sockets, and
+        // TcpSocket::belongsToSocket() unconditionally does
+        // check_and_cast<Indication*>(msg) -- fatal on a raw tun data Packet.
+        // Since a TCP connection is normally active whenever the tun app is
+        // also receiving real (non-injected) traffic, socketMap.findSocketFor()
+        // would otherwise crash on every such packet instead of ever reaching
+        // the tunSocket branch below.
+        if (tunSocket.belongsToSocket(msg)) {
+            tunSocket.processMessage(msg);
+            return;
+        }
         ISocket *socket = socketMap.findSocketFor(msg);
         if (socket) {
             socket->processMessage(msg);
@@ -343,10 +357,6 @@ void PacketDrillApp::handleMessageWhenUp(cMessage *msg)
         }
         else if (sctpSocket.belongsToSocket(msg)) {
             sctpSocket.processMessage(msg);
-        }
-        else if (tunSocket.belongsToSocket(msg)) {
-            tunSocket.processMessage(msg);
-            std::cout << __func__ << ":" << __LINE__ << endl;
         }
     }
 }
@@ -587,7 +597,12 @@ void PacketDrillApp::handleTimer(cMessage *msg)
         case MSGKIND_EVENT: {
             PacketDrillEvent *event = (PacketDrillEvent *)msg->getContextPointer();
             runEvent(event);
-            if ((socketOptionsArrived_ && !recvFromSet && outboundPackets->getLength() == 0) &&
+            // socketOptionsArrived_ is only ever set by the SCTP-specific
+            // socketOptionsArrived() callback (SctpSocket::CallbackInterface).
+            // For TCP/UDP scripts it never fires, so gating advancement on it
+            // unconditionally stalled every non-SCTP script after its first
+            // event. Only require it for SCTP.
+            if (((protocol != IP_PROT_SCTP || socketOptionsArrived_) && !recvFromSet && outboundPackets->getLength() == 0) &&
                 (!eventTimer->isScheduled() && eventCounter < numEvents - 1))
             {
                 eventCounter++;
@@ -606,6 +621,16 @@ void PacketDrillApp::handleTimer(cMessage *msg)
 
 void PacketDrillApp::closeAllSockets()
 {
+    // This function unconditionally builds and sends an SCTP ABORT chunk --
+    // meaningful only for SCTP. Called generically (script finished / syscall
+    // error) regardless of protocol; for TCP/UDP it was sending a stray SCTP
+    // packet at the very end of every script, which the peer/stack answers
+    // with an ICMP protocol-unreachable, which PacketDrillApp then compares
+    // against whatever the script's next expectation was -- turning every
+    // otherwise-correct TCP script into a spurious "Datagrams are not the
+    // same" failure right at the end.
+    if (protocol != IP_PROT_SCTP)
+        return;
     Packet *pk = new Packet("IPCleanup");
     SctpAbortChunk *abortChunk = new SctpAbortChunk("Abort");
     abortChunk->setSctpChunkType(ABORT);
@@ -944,6 +969,12 @@ int PacketDrillApp::syscallConnect(struct syscall_spec *syscall, cQueue *args, c
 
         case IP_PROT_TCP:
             tcpSocket.connect(remoteAddress, remotePort);
+            // tcpConnId is otherwise never assigned (stays at its -1 default),
+            // so later syscalls (close, read, ...) tag their SocketReq with -1,
+            // which Tcp interprets as "create a new connection" instead of
+            // referencing this one. TcpSocket assigns connId synchronously in
+            // connect(), so it is valid to read back immediately.
+            tcpConnId = tcpSocket.getSocketId();
             break;
         case IP_PROT_SCTP: {
             sctpSocket.setTunInterface(tunInterfaceId);

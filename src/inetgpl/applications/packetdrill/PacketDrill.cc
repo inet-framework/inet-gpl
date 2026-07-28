@@ -249,6 +249,7 @@ Packet *PacketDrill::buildTCPPacket(int address_family, enum direction_t directi
     } // if options present
     tcpHeader->setHeaderLength(TCP_MIN_HEADER_LENGTH + B(tcpHeader->getHeaderOptionArrayLength()));
     tcpHeader->setChunkLength(TCP_MIN_HEADER_LENGTH + B(tcpHeader->getHeaderOptionArrayLength()));
+    tcpHeader->setChecksumMode(app->getCrcMode());
     packet->insertAtFront(tcpHeader);
 
     auto ipHeader = PacketDrill::makeIpv4Header(IP_PROT_TCP, direction, app->getLocalAddress(),
