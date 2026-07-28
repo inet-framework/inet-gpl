@@ -65,9 +65,26 @@ static char *option(const char *s) {
 /* Copy the string inside a quoted string. */
 static char *quoted(const char *s) {
     const int delim_len = 1;
-    char *str = (char *)malloc (strlen(s) - 2*delim_len);
-    strncpy(str, s + delim_len, strlen(s) - 2*delim_len);
+    size_t len = strlen(s) - 2*delim_len;
+    char *str = (char *)malloc(len + 1); // + NUL: the old malloc(len) left the copy unterminated
+    strncpy(str, s + delim_len, len);
+    str[len] = '\0';
     return str;
+}
+
+/* Strip the leading "%{" and trailing "}%" delimiters from a %{ ... }%
+ * code block, then trim any leading/trailing spaces/tabs (but not
+ * newlines, which are meaningful in the enclosed Python source). */
+static char *extract_code_text(const char *raw) {
+    const int delim_len = 2;
+    size_t len = strlen(raw);
+    const char *start = raw + delim_len;
+    const char *end = raw + len - delim_len;  /* one past the last content char */
+    while (start < end && (*start == ' ' || *start == '\t'))
+        start++;
+    while (end > start && (*(end - 1) == ' ' || *(end - 1) == '\t'))
+        end--;
+    return strndup(start, end - start);
 }
 
 
@@ -75,6 +92,13 @@ static char *quoted(const char *s) {
 static int64_t hextol(const char *s) {
     return strtol(yytext + 2, NULL, 16);
 }
+
+// Raw text of the most recently lexed decimal INTEGER token. An all-digit TCP
+// Fast Open cookie / MD5 digest (e.g. "00000000") lexes as INTEGER, and its
+// value alone loses leading zeros and the digit count; the FO/MD5 grammar rules
+// use this to recover the literal. Safe under bison's 1-token lookahead: no
+// INTEGER is lexed between a cookie's INTEGER and its reduction in these scripts.
+char pd_last_int_text[64] = "";
 
 enum ifdef_os {
     FreeBSD_IFDEF = 1, Omnet_IFDEF
@@ -245,6 +269,37 @@ htons               return _HTONS_;
 htonl               return _HTONL_;
 win                 return WIN;
 wscale              return WSCALE;
+urg                 return URG;
+md5                 return MD5;
+FOEXP               return FOEXP;
+FO                  return FO;
+ECN                 return ACCECN;
+e0b                 return ACCECN_E0B;
+e1b                 return ACCECN_E1B;
+ceb                 return ACCECN_CEB;
+msg_name            return MSG_NAME;
+msg_iov             return MSG_IOV;
+msg_flags           return MSG_FLAGS;
+msg_control         return MSG_CONTROL;
+cmsg_level          return CMSG_LEVEL;
+cmsg_type           return CMSG_TYPE;
+cmsg_data           return CMSG_DATA;
+events              return EVENTS;
+fd                  return FD;
+ptr                 return PTR;
+u32                 return U32;
+u64                 return U64;
+ee_errno            return EE_ERRNO;
+ee_origin           return EE_ORIGIN;
+ee_type             return EE_TYPE;
+ee_code             return EE_CODE;
+ee_info             return EE_INFO;
+ee_data             return EE_DATA;
+scm_sec             return SCM_SEC;
+scm_nsec            return SCM_NSEC;
+revents             return REVENTS;
+icmp                return ICMP;
+mtu                 return MTU;
 sctp                return MYSCTP;
 CHUNK               return CHUNK;
 DATA                return MYDATA;
@@ -353,11 +408,12 @@ result              return RESULT;
 [.][.][.]           return ELLIPSIS;
 --[a-zA-Z0-9_]+     yylval.string = option(yytext); return OPTION;
 [-]?[0-9]*[.][0-9]+ yylval.floating = atof(yytext);   return MYFLOAT;
-[-]?[0-9]+          yylval.integer = atoll(yytext);  return INTEGER;
+[-]?[0-9]+          yylval.integer = atoll(yytext);  strncpy(pd_last_int_text, yytext, sizeof(pd_last_int_text)-1); pd_last_int_text[sizeof(pd_last_int_text)-1] = '\0'; return INTEGER;
 0x[0-9a-fA-F]+      yylval.integer = hextol(yytext); return HEX_INTEGER;
 [a-zA-Z0-9_]+       yylval.string = strdup(yytext); return MYWORD;
 \"(\\.|[^"])*\"     yylval.string = quoted(yytext); return MYSTRING;
 \`(\\.|[^`])*\`     yylval.string = quoted(yytext); return BACK_QUOTED;
+{code}              yylval.string = extract_code_text(yytext); return CODE;
 [^ \t\n]            return (int) yytext[0];
 [ \t\n]+            /* ignore whitespace */;
 {cpp_comment}       /* ignore C++-style comment */;

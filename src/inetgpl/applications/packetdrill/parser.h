@@ -1,4 +1,4 @@
-/* A Bison parser, made by GNU Bison 3.7.6.  */
+/* A Bison parser, made by GNU Bison 3.8.2.  */
 
 /* Bison interface for Yacc-like parsers in C
 
@@ -73,128 +73,160 @@ extern int yydebug;
     TCPSACK = 274,                 /* TCPSACK  */
     VAL = 275,                     /* VAL  */
     SACKOK = 276,                  /* SACKOK  */
-    OPTION = 277,                  /* OPTION  */
-    IPV4_TYPE = 278,               /* IPV4_TYPE  */
-    IPV6_TYPE = 279,               /* IPV6_TYPE  */
-    INET_ADDR = 280,               /* INET_ADDR  */
-    SPP_ASSOC_ID = 281,            /* SPP_ASSOC_ID  */
-    SPP_ADDRESS = 282,             /* SPP_ADDRESS  */
-    SPP_HBINTERVAL = 283,          /* SPP_HBINTERVAL  */
-    SPP_PATHMAXRXT = 284,          /* SPP_PATHMAXRXT  */
-    SPP_PATHMTU = 285,             /* SPP_PATHMTU  */
-    SPP_FLAGS = 286,               /* SPP_FLAGS  */
-    SPP_IPV6_FLOWLABEL_ = 287,     /* SPP_IPV6_FLOWLABEL_  */
-    SPP_DSCP_ = 288,               /* SPP_DSCP_  */
-    SINFO_STREAM = 289,            /* SINFO_STREAM  */
-    SINFO_SSN = 290,               /* SINFO_SSN  */
-    SINFO_FLAGS = 291,             /* SINFO_FLAGS  */
-    SINFO_PPID = 292,              /* SINFO_PPID  */
-    SINFO_CONTEXT = 293,           /* SINFO_CONTEXT  */
-    SINFO_ASSOC_ID = 294,          /* SINFO_ASSOC_ID  */
-    SINFO_TIMETOLIVE = 295,        /* SINFO_TIMETOLIVE  */
-    SINFO_TSN = 296,               /* SINFO_TSN  */
-    SINFO_CUMTSN = 297,            /* SINFO_CUMTSN  */
-    SINFO_PR_VALUE = 298,          /* SINFO_PR_VALUE  */
-    CHUNK = 299,                   /* CHUNK  */
-    MYDATA = 300,                  /* MYDATA  */
-    MYINIT = 301,                  /* MYINIT  */
-    MYINIT_ACK = 302,              /* MYINIT_ACK  */
-    MYHEARTBEAT = 303,             /* MYHEARTBEAT  */
-    MYHEARTBEAT_ACK = 304,         /* MYHEARTBEAT_ACK  */
-    MYABORT = 305,                 /* MYABORT  */
-    MYSHUTDOWN = 306,              /* MYSHUTDOWN  */
-    MYSHUTDOWN_ACK = 307,          /* MYSHUTDOWN_ACK  */
-    MYERROR = 308,                 /* MYERROR  */
-    MYCOOKIE_ECHO = 309,           /* MYCOOKIE_ECHO  */
-    MYCOOKIE_ACK = 310,            /* MYCOOKIE_ACK  */
-    MYSHUTDOWN_COMPLETE = 311,     /* MYSHUTDOWN_COMPLETE  */
-    PAD = 312,                     /* PAD  */
-    ERROR = 313,                   /* ERROR  */
-    HEARTBEAT_INFORMATION = 314,   /* HEARTBEAT_INFORMATION  */
-    CAUSE_INFO = 315,              /* CAUSE_INFO  */
-    MYSACK = 316,                  /* MYSACK  */
-    STATE_COOKIE = 317,            /* STATE_COOKIE  */
-    PARAMETER = 318,               /* PARAMETER  */
-    MYSCTP = 319,                  /* MYSCTP  */
-    TYPE = 320,                    /* TYPE  */
-    FLAGS = 321,                   /* FLAGS  */
-    LEN = 322,                     /* LEN  */
-    MYSUPPORTED_EXTENSIONS = 323,  /* MYSUPPORTED_EXTENSIONS  */
-    MYSUPPORTED_ADDRESS_TYPES = 324, /* MYSUPPORTED_ADDRESS_TYPES  */
-    TYPES = 325,                   /* TYPES  */
-    CWR = 326,                     /* CWR  */
-    ECNE = 327,                    /* ECNE  */
-    TAG = 328,                     /* TAG  */
-    A_RWND = 329,                  /* A_RWND  */
-    OS = 330,                      /* OS  */
-    IS = 331,                      /* IS  */
-    TSN = 332,                     /* TSN  */
-    MYSID = 333,                   /* MYSID  */
-    SSN = 334,                     /* SSN  */
-    PPID = 335,                    /* PPID  */
-    CUM_TSN = 336,                 /* CUM_TSN  */
-    GAPS = 337,                    /* GAPS  */
-    DUPS = 338,                    /* DUPS  */
-    MID = 339,                     /* MID  */
-    FSN = 340,                     /* FSN  */
-    SRTO_ASSOC_ID = 341,           /* SRTO_ASSOC_ID  */
-    SRTO_INITIAL = 342,            /* SRTO_INITIAL  */
-    SRTO_MAX = 343,                /* SRTO_MAX  */
-    SRTO_MIN = 344,                /* SRTO_MIN  */
-    SINIT_NUM_OSTREAMS = 345,      /* SINIT_NUM_OSTREAMS  */
-    SINIT_MAX_INSTREAMS = 346,     /* SINIT_MAX_INSTREAMS  */
-    SINIT_MAX_ATTEMPTS = 347,      /* SINIT_MAX_ATTEMPTS  */
-    SINIT_MAX_INIT_TIMEO = 348,    /* SINIT_MAX_INIT_TIMEO  */
-    MYSACK_DELAY = 349,            /* MYSACK_DELAY  */
-    SACK_FREQ = 350,               /* SACK_FREQ  */
-    ASSOC_VALUE = 351,             /* ASSOC_VALUE  */
-    ASSOC_ID = 352,                /* ASSOC_ID  */
-    SACK_ASSOC_ID = 353,           /* SACK_ASSOC_ID  */
-    RECONFIG = 354,                /* RECONFIG  */
-    OUTGOING_SSN_RESET = 355,      /* OUTGOING_SSN_RESET  */
-    REQ_SN = 356,                  /* REQ_SN  */
-    RESP_SN = 357,                 /* RESP_SN  */
-    LAST_TSN = 358,                /* LAST_TSN  */
-    SIDS = 359,                    /* SIDS  */
-    INCOMING_SSN_RESET = 360,      /* INCOMING_SSN_RESET  */
-    RECONFIG_RESPONSE = 361,       /* RECONFIG_RESPONSE  */
-    RESULT = 362,                  /* RESULT  */
-    SENDER_NEXT_TSN = 363,         /* SENDER_NEXT_TSN  */
-    RECEIVER_NEXT_TSN = 364,       /* RECEIVER_NEXT_TSN  */
-    SSN_TSN_RESET = 365,           /* SSN_TSN_RESET  */
-    ADD_INCOMING_STREAMS = 366,    /* ADD_INCOMING_STREAMS  */
-    NUMBER_OF_NEW_STREAMS = 367,   /* NUMBER_OF_NEW_STREAMS  */
-    ADD_OUTGOING_STREAMS = 368,    /* ADD_OUTGOING_STREAMS  */
-    RECONFIG_REQUEST_GENERIC = 369, /* RECONFIG_REQUEST_GENERIC  */
-    SRS_ASSOC_ID = 370,            /* SRS_ASSOC_ID  */
-    SRS_FLAGS = 371,               /* SRS_FLAGS  */
-    SRS_NUMBER_STREAMS = 372,      /* SRS_NUMBER_STREAMS  */
-    SRS_STREAM_LIST = 373,         /* SRS_STREAM_LIST  */
-    SSTAT_ASSOC_ID = 374,          /* SSTAT_ASSOC_ID  */
-    SSTAT_STATE = 375,             /* SSTAT_STATE  */
-    SSTAT_RWND = 376,              /* SSTAT_RWND  */
-    SSTAT_UNACKDATA = 377,         /* SSTAT_UNACKDATA  */
-    SSTAT_PENDDATA = 378,          /* SSTAT_PENDDATA  */
-    SSTAT_INSTRMS = 379,           /* SSTAT_INSTRMS  */
-    SSTAT_OUTSTRMS = 380,          /* SSTAT_OUTSTRMS  */
-    SSTAT_FRAGMENTATION_POINT = 381, /* SSTAT_FRAGMENTATION_POINT  */
-    SSTAT_PRIMARY = 382,           /* SSTAT_PRIMARY  */
-    SASOC_ASOCMAXRXT = 383,        /* SASOC_ASOCMAXRXT  */
-    SASOC_ASSOC_ID = 384,          /* SASOC_ASSOC_ID  */
-    SASOC_NUMBER_PEER_DESTINATIONS = 385, /* SASOC_NUMBER_PEER_DESTINATIONS  */
-    SASOC_PEER_RWND = 386,         /* SASOC_PEER_RWND  */
-    SASOC_LOCAL_RWND = 387,        /* SASOC_LOCAL_RWND  */
-    SASOC_COOKIE_LIFE = 388,       /* SASOC_COOKIE_LIFE  */
-    SAS_ASSOC_ID = 389,            /* SAS_ASSOC_ID  */
-    SAS_INSTRMS = 390,             /* SAS_INSTRMS  */
-    SAS_OUTSTRMS = 391,            /* SAS_OUTSTRMS  */
-    MYINVALID_STREAM_IDENTIFIER = 392, /* MYINVALID_STREAM_IDENTIFIER  */
-    ISID = 393,                    /* ISID  */
-    MYFLOAT = 394,                 /* MYFLOAT  */
-    INTEGER = 395,                 /* INTEGER  */
-    HEX_INTEGER = 396,             /* HEX_INTEGER  */
-    MYWORD = 397,                  /* MYWORD  */
-    MYSTRING = 398                 /* MYSTRING  */
+    URG = 277,                     /* URG  */
+    MD5 = 278,                     /* MD5  */
+    FO = 279,                      /* FO  */
+    FOEXP = 280,                   /* FOEXP  */
+    ACCECN = 281,                  /* ACCECN  */
+    ACCECN_E0B = 282,              /* ACCECN_E0B  */
+    ACCECN_E1B = 283,              /* ACCECN_E1B  */
+    ACCECN_CEB = 284,              /* ACCECN_CEB  */
+    MSG_NAME = 285,                /* MSG_NAME  */
+    MSG_IOV = 286,                 /* MSG_IOV  */
+    MSG_FLAGS = 287,               /* MSG_FLAGS  */
+    MSG_CONTROL = 288,             /* MSG_CONTROL  */
+    CMSG_LEVEL = 289,              /* CMSG_LEVEL  */
+    CMSG_TYPE = 290,               /* CMSG_TYPE  */
+    CMSG_DATA = 291,               /* CMSG_DATA  */
+    EVENTS = 292,                  /* EVENTS  */
+    FD = 293,                      /* FD  */
+    PTR = 294,                     /* PTR  */
+    U32 = 295,                     /* U32  */
+    U64 = 296,                     /* U64  */
+    EE_ERRNO = 297,                /* EE_ERRNO  */
+    EE_ORIGIN = 298,               /* EE_ORIGIN  */
+    EE_TYPE = 299,                 /* EE_TYPE  */
+    EE_CODE = 300,                 /* EE_CODE  */
+    EE_INFO = 301,                 /* EE_INFO  */
+    EE_DATA = 302,                 /* EE_DATA  */
+    SCM_SEC = 303,                 /* SCM_SEC  */
+    SCM_NSEC = 304,                /* SCM_NSEC  */
+    REVENTS = 305,                 /* REVENTS  */
+    ICMP = 306,                    /* ICMP  */
+    MTU = 307,                     /* MTU  */
+    OPTION = 308,                  /* OPTION  */
+    IPV4_TYPE = 309,               /* IPV4_TYPE  */
+    IPV6_TYPE = 310,               /* IPV6_TYPE  */
+    INET_ADDR = 311,               /* INET_ADDR  */
+    SPP_ASSOC_ID = 312,            /* SPP_ASSOC_ID  */
+    SPP_ADDRESS = 313,             /* SPP_ADDRESS  */
+    SPP_HBINTERVAL = 314,          /* SPP_HBINTERVAL  */
+    SPP_PATHMAXRXT = 315,          /* SPP_PATHMAXRXT  */
+    SPP_PATHMTU = 316,             /* SPP_PATHMTU  */
+    SPP_FLAGS = 317,               /* SPP_FLAGS  */
+    SPP_IPV6_FLOWLABEL_ = 318,     /* SPP_IPV6_FLOWLABEL_  */
+    SPP_DSCP_ = 319,               /* SPP_DSCP_  */
+    SINFO_STREAM = 320,            /* SINFO_STREAM  */
+    SINFO_SSN = 321,               /* SINFO_SSN  */
+    SINFO_FLAGS = 322,             /* SINFO_FLAGS  */
+    SINFO_PPID = 323,              /* SINFO_PPID  */
+    SINFO_CONTEXT = 324,           /* SINFO_CONTEXT  */
+    SINFO_ASSOC_ID = 325,          /* SINFO_ASSOC_ID  */
+    SINFO_TIMETOLIVE = 326,        /* SINFO_TIMETOLIVE  */
+    SINFO_TSN = 327,               /* SINFO_TSN  */
+    SINFO_CUMTSN = 328,            /* SINFO_CUMTSN  */
+    SINFO_PR_VALUE = 329,          /* SINFO_PR_VALUE  */
+    CHUNK = 330,                   /* CHUNK  */
+    MYDATA = 331,                  /* MYDATA  */
+    MYINIT = 332,                  /* MYINIT  */
+    MYINIT_ACK = 333,              /* MYINIT_ACK  */
+    MYHEARTBEAT = 334,             /* MYHEARTBEAT  */
+    MYHEARTBEAT_ACK = 335,         /* MYHEARTBEAT_ACK  */
+    MYABORT = 336,                 /* MYABORT  */
+    MYSHUTDOWN = 337,              /* MYSHUTDOWN  */
+    MYSHUTDOWN_ACK = 338,          /* MYSHUTDOWN_ACK  */
+    MYERROR = 339,                 /* MYERROR  */
+    MYCOOKIE_ECHO = 340,           /* MYCOOKIE_ECHO  */
+    MYCOOKIE_ACK = 341,            /* MYCOOKIE_ACK  */
+    MYSHUTDOWN_COMPLETE = 342,     /* MYSHUTDOWN_COMPLETE  */
+    PAD = 343,                     /* PAD  */
+    ERROR = 344,                   /* ERROR  */
+    HEARTBEAT_INFORMATION = 345,   /* HEARTBEAT_INFORMATION  */
+    CAUSE_INFO = 346,              /* CAUSE_INFO  */
+    MYSACK = 347,                  /* MYSACK  */
+    STATE_COOKIE = 348,            /* STATE_COOKIE  */
+    PARAMETER = 349,               /* PARAMETER  */
+    MYSCTP = 350,                  /* MYSCTP  */
+    TYPE = 351,                    /* TYPE  */
+    FLAGS = 352,                   /* FLAGS  */
+    LEN = 353,                     /* LEN  */
+    MYSUPPORTED_EXTENSIONS = 354,  /* MYSUPPORTED_EXTENSIONS  */
+    MYSUPPORTED_ADDRESS_TYPES = 355, /* MYSUPPORTED_ADDRESS_TYPES  */
+    TYPES = 356,                   /* TYPES  */
+    CWR = 357,                     /* CWR  */
+    ECNE = 358,                    /* ECNE  */
+    TAG = 359,                     /* TAG  */
+    A_RWND = 360,                  /* A_RWND  */
+    OS = 361,                      /* OS  */
+    IS = 362,                      /* IS  */
+    TSN = 363,                     /* TSN  */
+    MYSID = 364,                   /* MYSID  */
+    SSN = 365,                     /* SSN  */
+    PPID = 366,                    /* PPID  */
+    CUM_TSN = 367,                 /* CUM_TSN  */
+    GAPS = 368,                    /* GAPS  */
+    DUPS = 369,                    /* DUPS  */
+    MID = 370,                     /* MID  */
+    FSN = 371,                     /* FSN  */
+    SRTO_ASSOC_ID = 372,           /* SRTO_ASSOC_ID  */
+    SRTO_INITIAL = 373,            /* SRTO_INITIAL  */
+    SRTO_MAX = 374,                /* SRTO_MAX  */
+    SRTO_MIN = 375,                /* SRTO_MIN  */
+    SINIT_NUM_OSTREAMS = 376,      /* SINIT_NUM_OSTREAMS  */
+    SINIT_MAX_INSTREAMS = 377,     /* SINIT_MAX_INSTREAMS  */
+    SINIT_MAX_ATTEMPTS = 378,      /* SINIT_MAX_ATTEMPTS  */
+    SINIT_MAX_INIT_TIMEO = 379,    /* SINIT_MAX_INIT_TIMEO  */
+    MYSACK_DELAY = 380,            /* MYSACK_DELAY  */
+    SACK_FREQ = 381,               /* SACK_FREQ  */
+    ASSOC_VALUE = 382,             /* ASSOC_VALUE  */
+    ASSOC_ID = 383,                /* ASSOC_ID  */
+    SACK_ASSOC_ID = 384,           /* SACK_ASSOC_ID  */
+    RECONFIG = 385,                /* RECONFIG  */
+    OUTGOING_SSN_RESET = 386,      /* OUTGOING_SSN_RESET  */
+    REQ_SN = 387,                  /* REQ_SN  */
+    RESP_SN = 388,                 /* RESP_SN  */
+    LAST_TSN = 389,                /* LAST_TSN  */
+    SIDS = 390,                    /* SIDS  */
+    INCOMING_SSN_RESET = 391,      /* INCOMING_SSN_RESET  */
+    RECONFIG_RESPONSE = 392,       /* RECONFIG_RESPONSE  */
+    RESULT = 393,                  /* RESULT  */
+    SENDER_NEXT_TSN = 394,         /* SENDER_NEXT_TSN  */
+    RECEIVER_NEXT_TSN = 395,       /* RECEIVER_NEXT_TSN  */
+    SSN_TSN_RESET = 396,           /* SSN_TSN_RESET  */
+    ADD_INCOMING_STREAMS = 397,    /* ADD_INCOMING_STREAMS  */
+    NUMBER_OF_NEW_STREAMS = 398,   /* NUMBER_OF_NEW_STREAMS  */
+    ADD_OUTGOING_STREAMS = 399,    /* ADD_OUTGOING_STREAMS  */
+    RECONFIG_REQUEST_GENERIC = 400, /* RECONFIG_REQUEST_GENERIC  */
+    SRS_ASSOC_ID = 401,            /* SRS_ASSOC_ID  */
+    SRS_FLAGS = 402,               /* SRS_FLAGS  */
+    SRS_NUMBER_STREAMS = 403,      /* SRS_NUMBER_STREAMS  */
+    SRS_STREAM_LIST = 404,         /* SRS_STREAM_LIST  */
+    SSTAT_ASSOC_ID = 405,          /* SSTAT_ASSOC_ID  */
+    SSTAT_STATE = 406,             /* SSTAT_STATE  */
+    SSTAT_RWND = 407,              /* SSTAT_RWND  */
+    SSTAT_UNACKDATA = 408,         /* SSTAT_UNACKDATA  */
+    SSTAT_PENDDATA = 409,          /* SSTAT_PENDDATA  */
+    SSTAT_INSTRMS = 410,           /* SSTAT_INSTRMS  */
+    SSTAT_OUTSTRMS = 411,          /* SSTAT_OUTSTRMS  */
+    SSTAT_FRAGMENTATION_POINT = 412, /* SSTAT_FRAGMENTATION_POINT  */
+    SSTAT_PRIMARY = 413,           /* SSTAT_PRIMARY  */
+    SASOC_ASOCMAXRXT = 414,        /* SASOC_ASOCMAXRXT  */
+    SASOC_ASSOC_ID = 415,          /* SASOC_ASSOC_ID  */
+    SASOC_NUMBER_PEER_DESTINATIONS = 416, /* SASOC_NUMBER_PEER_DESTINATIONS  */
+    SASOC_PEER_RWND = 417,         /* SASOC_PEER_RWND  */
+    SASOC_LOCAL_RWND = 418,        /* SASOC_LOCAL_RWND  */
+    SASOC_COOKIE_LIFE = 419,       /* SASOC_COOKIE_LIFE  */
+    SAS_ASSOC_ID = 420,            /* SAS_ASSOC_ID  */
+    SAS_INSTRMS = 421,             /* SAS_INSTRMS  */
+    SAS_OUTSTRMS = 422,            /* SAS_OUTSTRMS  */
+    MYINVALID_STREAM_IDENTIFIER = 423, /* MYINVALID_STREAM_IDENTIFIER  */
+    ISID = 424,                    /* ISID  */
+    MYFLOAT = 425,                 /* MYFLOAT  */
+    INTEGER = 426,                 /* INTEGER  */
+    HEX_INTEGER = 427,             /* HEX_INTEGER  */
+    MYWORD = 428,                  /* MYWORD  */
+    MYSTRING = 429,                /* MYSTRING  */
+    CODE = 430                     /* CODE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -203,7 +235,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 211 "parser.y"
+#line 300 "parser.y"
 
     int64_t integer;
     double floating;
@@ -223,6 +255,7 @@ union YYSTYPE
     PacketDrillPacket *packet;
     struct syscall_spec *syscall;
     struct command_spec *command;
+    struct code_spec *code;
     PacketDrillStruct *sack_block;
     PacketDrillStruct *cause_item;
     PacketDrillExpression *expression;
@@ -242,7 +275,7 @@ union YYSTYPE
     uint8_t byte;
     PacketDrillSctpChunk *sctp_chunk;
 
-#line 246 "parser.h"
+#line 279 "parser.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -267,6 +300,8 @@ struct YYLTYPE
 
 extern YYSTYPE yylval;
 extern YYLTYPE yylloc;
+
 int yyparse (void);
+
 
 #endif /* !YY_YY_PARSER_H_INCLUDED  */

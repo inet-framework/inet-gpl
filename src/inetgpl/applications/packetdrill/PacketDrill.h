@@ -34,10 +34,15 @@ class INETGPL_API PacketDrill
     static Packet *buildTCPPacket(int address_family, enum direction_t direction,
                                   const char *flags, uint32_t startSequence,
                                   uint16_t tcpPayloadBytes, uint32_t ackSequence,
-                                  int32_t window, cQueue *tcpOptions, char **error);
+                                  int32_t window, uint16_t urgentPointer,
+                                  cQueue *tcpOptions, int ecnCodepoint, char **error);
 
     static Packet *buildSCTPPacket(int address_family, enum direction_t direction,
                                    cQueue *chunks);
+
+    static Packet *buildICMPPacket(int address_family, enum direction_t direction,
+                                   int icmpType, int icmpCode, int32_t mtu, uint32_t echoedStartSequence,
+                                   uint16_t echoedPayloadBytes, char **error);
 
     static PacketDrillSctpChunk *buildDataChunk(int64_t flgs, int64_t len, int64_t tsn, int64_t sid, int64_t ssn, int64_t ppid);
 

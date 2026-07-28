@@ -12,7 +12,28 @@
 #include "omnetpp/platdep/sockets.h"
 #if !defined(_WIN32) && !defined(__WIN32__) && !defined(WIN32) && !defined(__CYGWIN__) && !defined(_WIN64)
  #include <sys/socket.h>
+ #include <netinet/tcp.h>
 #endif
+
+/* Kernel uapi values not guaranteed to be exposed by every libc's headers
+ * (netinet/tcp.h lags linux/tcp.h; SO_ZEROCOPY needs glibc >= 2.27). Values
+ * are the x86-64 Linux ABI constants. */
+#ifndef SO_ZEROCOPY
+#define SO_ZEROCOPY 60
+#endif
+#ifndef TCP_FASTOPEN
+#define TCP_FASTOPEN 23
+#endif
+#ifndef TCP_FASTOPEN_CONNECT
+#define TCP_FASTOPEN_CONNECT 30
+#endif
+#ifndef TCP_FASTOPEN_KEY
+#define TCP_FASTOPEN_KEY 33
+#endif
+#ifndef TCP_NOTSENT_LOWAT
+#define TCP_NOTSENT_LOWAT 25
+#endif
+
 #include "inet/transportlayer/sctp/SctpAssociation.h"
 #include "inet/transportlayer/sctp/SctpHeader.h"
 
@@ -52,6 +73,36 @@ struct int_symbol
 #define TCPOPT_TIMESTAMP          8
 #define TCPOLEN_TIMESTAMP         10
 #define TCPOPT_EXP                254    /* Experimental */
+#define TCPOPT_MD5SIG             19     /* RFC 2385 */
+#define TCPOLEN_MD5_BASE          2
+#define TCP_MD5_DIGEST_LEN        16
+
+#define TCPOPT_FASTOPEN           34     /* RFC 7413 */
+#define TCPOLEN_FASTOPEN_BASE     2
+#define TCPOLEN_EXP_FASTOPEN_BASE 4      /* 1-byte kind, 1-byte length, 2-byte magic */
+#define TCPOPT_FASTOPEN_MAGIC     0xF989 /* RFC 6994 experimental-option magic, TFO variant */
+/* Wire-format bound only (upstream packetdrill: MAX_TCP_OPTION_BYTES minus the
+ * option header), NOT RFC 7413's 4-16 byte validity range: the parser must be
+ * able to CONSTRUCT protocol-violating cookies for negative tests (e.g.
+ * fastopen/client/valid-cookie-format sends a deliberate 18-byte cookie that
+ * the SUT's TCP stack -- not the harness -- is supposed to refuse to cache).
+ * Cookie validity is TCP-stack business, checked where cookies are cached. */
+#define MAX_TCP_FAST_OPEN_COOKIE_BYTES 38
+
+/* AccECN (draft-ietf-tcpm-accurate-ecn) option kinds and field-presence bits. */
+#define TCPOPT_ACCECN0            172
+#define TCPOPT_ACCECN1            174
+#define TCPOLEN_ACCECN_BASE       2
+#define ACCECN_PRESENT_E0B        (1 << 0)
+#define ACCECN_PRESENT_E1B        (1 << 1)
+#define ACCECN_PRESENT_CEB        (1 << 2)
+
+/* RFC 3168 ECN codepoints, as carried in the low 2 bits of the IP ToS byte
+ * (packet-line bracket syntax, e.g. "> [ect0] P. 1:1001(1000) ack 1"). */
+#define IP_ECN_NOT_ECT            0
+#define IP_ECN_ECT1               1
+#define IP_ECN_ECT0               2
+#define IP_ECN_CE                 3
 
 #define SCTP_DATA_CHUNK_TYPE                0x00
 #define SCTP_INIT_CHUNK_TYPE                0x01
@@ -203,6 +254,8 @@ static inline bool is_valid_u16(int64_t x) { return (x >= 0) && (x <= USHRT_MAX)
 
 static inline bool is_valid_u32(int64_t x) { return (x >= 0) && (x <= UINT_MAX); };
 
+static inline bool is_valid_u24(int64_t x) { return (x >= 0) && (x <= 0xFFFFFF); };
+
 #define ADDR_STR_LEN              66
 #define TUN_DRIVER_DEFAULT_MTU    1500    /* default MTU for tun device */
 
@@ -212,6 +265,7 @@ enum event_t {
     PACKET_EVENT,
     SYSCALL_EVENT,
     COMMAND_EVENT,
+    CODE_EVENT,
     NUM_EVENT_TYPES,
 };
 
@@ -247,6 +301,13 @@ enum expression_t {
     EXPR_SCTP_STATUS,
     EXPR_SCTP_ASSOCPARAMS, /* struct sctp_assocparams for SCTP_ASSOCINFO */
     EXPR_SCTP_ADD_STREAMS,
+    EXPR_MSGHDR,   /* struct msghdr_expr for sendmsg/recvmsg */
+    EXPR_CMSG,     /* struct cmsg_expr for msg_control entries */
+    EXPR_IOVEC,    /* struct iovec_expr for msg_iov entries */
+    EXPR_EPOLLEV,  /* struct epollev_expr for epoll_ctl/epoll_wait */
+    EXPR_SOCK_EXTENDED_ERR, /* struct sock_extended_err_expr for cmsg_data of IP_RECVERR */
+    EXPR_SCM_TIMESTAMPING, /* struct scm_timestamping_expr for cmsg_data of SO_TIMESTAMPING */
+    EXPR_POLLFD,   /* struct pollfd_expr for poll() */
 
     NUM_EXPR_TYPES,
 };
@@ -295,6 +356,12 @@ struct syscall_spec
 struct command_spec
 {
     const char *command_line; /* executed with /bin/sh */
+};
+
+/* A %{ ... }% inline Python-assertion code block */
+struct code_spec
+{
+    const char *text; /* raw Python source of a %{ }% block */
 };
 
 /* The public, top-level call to parse a test script. It first parses the
@@ -436,6 +503,70 @@ struct sctp_add_streams_expr
     PacketDrillExpression *sas_outstrms;
 };
 
+/* Parse tree for a msghdr struct in a sendmsg/recvmsg syscall. */
+struct msghdr_expr
+{
+    PacketDrillExpression *msg_iov;      /* EXPR_LIST of EXPR_IOVEC */
+    PacketDrillExpression *msg_iovlen;   /* integer count */
+    PacketDrillExpression *msg_flags;    /* integer/word expression */
+    PacketDrillExpression *msg_control;  /* EXPR_LIST of EXPR_CMSG, possibly empty */
+};
+
+/* Parse tree for a cmsghdr struct entry in a msghdr's msg_control list. */
+struct cmsg_expr
+{
+    PacketDrillExpression *cmsg_level;
+    PacketDrillExpression *cmsg_type;
+    PacketDrillExpression *cmsg_data;
+};
+
+/* Parse tree for an iovec struct entry in a msghdr's msg_iov list. */
+struct iovec_expr
+{
+    PacketDrillExpression *iov_len;   /* iov_base is always ELLIPSIS in this dialect, not stored */
+};
+
+/* Parse tree for an epoll_event struct in an epoll_ctl/epoll_wait syscall. */
+struct epollev_expr
+{
+    PacketDrillExpression *events;
+    PacketDrillExpression *fd;    /* nullptr if this event used ptr/u32/u64 instead */
+    PacketDrillExpression *ptr;   /* nullptr if unused */
+    PacketDrillExpression *u32;   /* nullptr if unused */
+    PacketDrillExpression *u64;   /* nullptr if unused */
+};
+
+/* Parse tree for a struct pollfd in a poll() syscall. */
+struct pollfd_expr
+{
+    PacketDrillExpression *fd;
+    PacketDrillExpression *events;
+    PacketDrillExpression *revents;  /* defaults to integer 0 if omitted */
+};
+
+/* Parse tree for a struct sock_extended_err (delivered via MSG_ERRQUEUE, e.g. IP_RECVERR). */
+struct sock_extended_err_expr
+{
+    PacketDrillExpression *ee_errno;
+    PacketDrillExpression *ee_origin;
+    PacketDrillExpression *ee_type;
+    PacketDrillExpression *ee_code;
+    PacketDrillExpression *ee_info;
+    PacketDrillExpression *ee_data;
+};
+
+/* Parse tree for a struct scm_timestamping (delivered via SO_TIMESTAMPING cmsg).
+ * Upstream packetdrill stores an array of 3 timeval slots (ts[0..2], one per
+ * timestamp type SO_TIMESTAMPING can report), but the real corpus scripts
+ * targeted by this dialect only ever specify a single scm_sec/scm_nsec pair
+ * per cmsg_data, so a flat 2-field struct is used here instead of unused
+ * array infrastructure. */
+struct scm_timestamping_expr
+{
+    PacketDrillExpression *scm_sec;
+    PacketDrillExpression *scm_nsec;
+};
+
 class INETGPL_API PacketDrillConfig
 {
   public:
@@ -495,6 +626,7 @@ class INETGPL_API PacketDrillEvent : public cObject
         PacketDrillPacket *packet;
         struct syscall_spec *syscall;
         struct command_spec *command;
+        struct code_spec *code;
     } eventKind; /* pointer to the event */
 
   public:
@@ -521,6 +653,8 @@ class INETGPL_API PacketDrillEvent : public cObject
     struct syscall_spec *getSyscall() { return eventKind.syscall; };
     void setCommand(struct command_spec *command) { eventKind.command = command; }
     struct command_spec *getCommand() { return eventKind.command; };
+    void setCode(struct code_spec *code) { eventKind.code = code; }
+    struct code_spec *getCode() { return eventKind.code; };
 };
 
 class INETGPL_API PacketDrillExpression : public cObject
@@ -546,6 +680,13 @@ class INETGPL_API PacketDrillExpression : public cObject
         struct sctp_add_streams_expr *sctp_addstreams;
         struct sctp_status_expr *sctp_status;
         L3Address *ip_address;
+        struct msghdr_expr *msghdr;
+        struct cmsg_expr *cmsg;
+        struct iovec_expr *iovec;
+        struct epollev_expr *epollev;
+        struct sock_extended_err_expr *sockExtendedErr;
+        struct scm_timestamping_expr *scmTimestamping;
+        struct pollfd_expr *pollfd;
     } value;
     cQueue *list;
     const char *format; /* the printf format for printing the value */
@@ -584,6 +725,20 @@ class INETGPL_API PacketDrillExpression : public cObject
     struct sctp_status_expr *getStatus() { return value.sctp_status; };
     void setAddStreams(struct sctp_add_streams_expr *exp) { value.sctp_addstreams = exp; }
     struct sctp_add_streams_expr *getAddStreams() { return value.sctp_addstreams; };
+    void setMsghdr(struct msghdr_expr *exp) { value.msghdr = exp; }
+    struct msghdr_expr *getMsghdr() { return value.msghdr; };
+    void setCmsg(struct cmsg_expr *exp) { value.cmsg = exp; }
+    struct cmsg_expr *getCmsg() { return value.cmsg; };
+    void setIovec(struct iovec_expr *exp) { value.iovec = exp; }
+    struct iovec_expr *getIovec() { return value.iovec; };
+    void setEpollev(struct epollev_expr *exp) { value.epollev = exp; }
+    struct epollev_expr *getEpollev() { return value.epollev; };
+    void setSockExtendedErr(struct sock_extended_err_expr *exp) { value.sockExtendedErr = exp; }
+    struct sock_extended_err_expr *getSockExtendedErr() { return value.sockExtendedErr; }
+    void setScmTimestamping(struct scm_timestamping_expr *exp) { value.scmTimestamping = exp; }
+    struct scm_timestamping_expr *getScmTimestamping() { return value.scmTimestamping; }
+    void setPollfd(struct pollfd_expr *exp) { value.pollfd = exp; }
+    struct pollfd_expr *getPollfd() { return value.pollfd; }
 
     int unescapeCstringExpression(const char *input_string, char **error);
     int getS32(int32_t *value, char **error);
@@ -691,6 +846,15 @@ class INETGPL_API PacketDrillTcpOption : public cObject
     cQueue *blockList;
     uint8_t windowScale;
     uint16_t blockCount;
+    ByteVector md5Digest;
+    ByteVector fastOpenCookie;
+    bool fastOpenExperimental;
+    struct {
+        uint8_t present; /* ACCECN_PRESENT_* bitmask */
+        uint32_t e0b;
+        uint32_t e1b;
+        uint32_t ceb;
+    } accEcn;
 
   public:
     uint16_t getKind() { return kind; };
@@ -708,6 +872,23 @@ class INETGPL_API PacketDrillTcpOption : public cObject
     void setBlockList(cQueue *bList) { blockList = bList; }
     uint16_t getBlockCount() { return blockCount; };
     void increaseBlockCount() { blockCount++; };
+    const ByteVector& getMd5Digest() { return md5Digest; };
+    void setMd5Digest(const ByteVector& digest) { md5Digest = digest; }
+    const ByteVector& getFastOpenCookie() { return fastOpenCookie; };
+    void setFastOpenCookie(const ByteVector& cookie) { fastOpenCookie = cookie; }
+    bool getFastOpenExperimental() { return fastOpenExperimental; };
+    void setFastOpenExperimental(bool exp) { fastOpenExperimental = exp; }
+    void setAccEcnFields(uint8_t present, uint32_t e0b, uint32_t e1b, uint32_t ceb)
+    {
+        accEcn.present = present;
+        accEcn.e0b = e0b;
+        accEcn.e1b = e1b;
+        accEcn.ceb = ceb;
+    }
+    uint8_t getAccEcnPresent() { return accEcn.present; };
+    uint32_t getAccEcnE0b() { return accEcn.e0b; };
+    uint32_t getAccEcnE1b() { return accEcn.e1b; };
+    uint32_t getAccEcnCeb() { return accEcn.ceb; };
 };
 
 class INETGPL_API PacketDrillSctpChunk : public cObject

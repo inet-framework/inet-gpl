@@ -18,6 +18,7 @@
 #include "inet/common/packet/chunk/ByteCountChunk.h"
 #include "inet/networklayer/common/L3AddressTag_m.h"
 #include "inet/networklayer/common/L3Tools.h"
+#include "inet/networklayer/ipv4/IcmpHeader_m.h"
 #include "inet/networklayer/ipv4/Ipv4Header_m.h"
 #include "inet/transportlayer/common/L4Tools.h"
 #include "inet/transportlayer/contract/sctp/SctpCommand_m.h"
@@ -117,6 +118,64 @@ Packet *PacketDrill::buildUDPPacket(int address_family, enum direction_t directi
     return packet;
 }
 
+Packet *PacketDrill::buildICMPPacket(int address_family, enum direction_t direction,
+                                     int icmpType, int icmpCode, int32_t mtu, uint32_t echoedStartSequence,
+                                     uint16_t echoedPayloadBytes, char **error)
+{
+    PacketDrillApp *app = PacketDrill::pdapp;
+    Packet *packet = new Packet("Inject ICMP");
+
+    // Quoted (echoed) inner TCP header: the original outbound segment this
+    // ICMP error is reporting on. Only src/dst ports and the sequence
+    // number are meaningful for INET's ICMP-to-connection matching
+    // (Tcp::processIcmpv4Error(), which peeks the quoted TCP header with
+    // Chunk::PF_ALLOW_INCOMPLETE) -- a minimal header is sufficient, and
+    // matches RFC 792's "first 8 bytes of the original datagram" quote.
+    auto innerTcpHeader = makeShared<TcpHeader>();
+    innerTcpHeader->setSrcPort(app->getLocalPort());
+    innerTcpHeader->setDestPort(app->getRemotePort());
+    innerTcpHeader->setSequenceNo(echoedStartSequence);
+    innerTcpHeader->setHeaderLength(TCP_MIN_HEADER_LENGTH);
+    innerTcpHeader->setChunkLength(TCP_MIN_HEADER_LENGTH);
+    packet->insertAtFront(innerTcpHeader);
+
+    // Quoted (echoed) inner IP header: the original outbound packet's own
+    // header, addressed local->remote like any real DIRECTION_OUTBOUND
+    // packet -- this is what triggered the router's ICMP response.
+    auto innerIpHeader = PacketDrill::makeIpv4Header(IP_PROT_TCP, DIRECTION_OUTBOUND,
+            app->getLocalAddress(), app->getRemoteAddress());
+    innerIpHeader->setTotalLengthField(innerIpHeader->getTotalLengthField() + packet->getDataLength());
+    PacketDrill::setIpv4HeaderCrc(innerIpHeader);
+    packet->insertAtFront(innerIpHeader);
+
+    // Outer ICMP header. A "fragmentation needed" (PMTUD) unreachable
+    // carries an extra MTU field, modeled by INET as the IcmpPtb subtype.
+    if (mtu >= 0) {
+        auto icmpHeader = makeShared<IcmpPtb>();
+        icmpHeader->setMtu(mtu);
+        icmpHeader->setChecksumMode(app->getCrcMode());
+        packet->insertAtFront(icmpHeader);
+    }
+    else {
+        auto icmpHeader = makeShared<IcmpHeader>();
+        icmpHeader->setType(static_cast<IcmpType>(icmpType));
+        icmpHeader->setCode(icmpCode);
+        icmpHeader->setChecksumMode(app->getCrcMode());
+        packet->insertAtFront(icmpHeader);
+    }
+
+    // Outer IP header: the ICMP packet itself, arriving from the network
+    // (an intermediate router), addressed remote->local like any other
+    // DIRECTION_INBOUND packet in this framework.
+    auto ipHeader = PacketDrill::makeIpv4Header(IP_PROT_ICMP, direction,
+            app->getLocalAddress(), app->getRemoteAddress());
+    ipHeader->setTotalLengthField(ipHeader->getTotalLengthField() + packet->getDataLength());
+    PacketDrill::setIpv4HeaderCrc(ipHeader);
+    packet->insertAtFront(ipHeader);
+
+    return packet;
+}
+
 TcpOption *setOptionValues(PacketDrillTcpOption *opt)
 {
     unsigned char length = opt->getLength();
@@ -154,7 +213,7 @@ TcpOption *setOptionValues(PacketDrillTcpOption *opt)
                 option->setLength(length);
                 option->setSackItemArraySize(length / 8);
                 unsigned int count = 0;
-                for (int i = 0; i < 2 * opt->getBlockList()->getLength(); i += 2) {
+                for (int i = 0; i < opt->getBlockList()->getLength(); i++) {
                     SackItem si;
                     PacketDrillStruct *pds = check_and_cast<PacketDrillStruct *>(opt->getBlockList()->get(i));
                     si.setStart(pds->getValue1());
@@ -173,6 +232,86 @@ TcpOption *setOptionValues(PacketDrillTcpOption *opt)
                 return option;
             }
             break;
+        case TCPOPT_MD5SIG: {
+            // INET has no typed MD5-signature option (RFC 2385 is not
+            // implemented) -- carry the digest as raw bytes.
+            auto *option = new TcpOptionUnknown();
+            option->setKind(static_cast<TcpOptionNumbers>(TCPOPT_MD5SIG));
+            option->setLength(length);
+            const ByteVector& digest = opt->getMd5Digest();
+            option->setBytesArraySize(digest.size());
+            for (size_t i = 0; i < digest.size(); i++)
+                option->setBytes(i, digest[i]);
+            return option;
+        }
+        case TCPOPT_FASTOPEN: {
+            // RFC 7413 kind 34 -- INET has a typed TcpOptionTcpFastOpen
+            // (INET #1155); build one, not a raw TcpOptionUnknown,
+            // so INET's option dispatch (which switches on getKind() and
+            // check_and_casts to this type) doesn't crash on a well-formed
+            // script-injected packet.
+            auto *option = new TcpOptionTcpFastOpen();
+            option->setLength(length);
+            const ByteVector& cookie = opt->getFastOpenCookie();
+            option->setCookieArraySize(cookie.size());
+            for (size_t i = 0; i < cookie.size(); i++)
+                option->setCookie(i, cookie[i]);
+            return option;
+        }
+        case TCPOPT_EXP: {
+            // Experimental option (RFC 6994); the fork only ever builds this
+            // for Fast Open experimental (FOEXP, RFC 7413 Appendix A: kind 254 +
+            // 0xF989 magic + cookie). Build INET's typed TcpOptionTcpFastOpenExp
+            // (not a raw TcpOptionUnknown) so its option dispatch -- which
+            // dynamic_casts to this type -- recognizes an injected packet's
+            // experimental cookie instead of dropping it as unknown, exactly as
+            // the kind-34 and AccECN cases above build their typed options.
+            auto *option = new TcpOptionTcpFastOpenExp();
+            option->setLength(length);
+            option->setExpId(TCPOPT_FASTOPEN_MAGIC);
+            const ByteVector& cookie = opt->getFastOpenCookie();
+            option->setCookieArraySize(cookie.size());
+            for (size_t i = 0; i < cookie.size(); i++)
+                option->setCookie(i, cookie[i]);
+            return option;
+        }
+        case TCPOPT_ACCECN0:
+        case TCPOPT_ACCECN1: {
+            // Full 3-field form (159 of the corpus's 162 uses): build INET's
+            // typed TcpOptionAccEcn (INET #1155) so inbound injected
+            // packets serialize with the correct kind-dependent field order
+            // and outbound comparison can check e0b/e1b/ceb by name.
+            constexpr uint32_t all = ACCECN_PRESENT_E0B | ACCECN_PRESENT_E1B | ACCECN_PRESENT_CEB;
+            if (opt->getAccEcnPresent() == all) {
+                auto *option = new TcpOptionAccEcn();
+                option->setKind(static_cast<TcpOptionNumbers>(opt->getKind()));
+                option->setLength(length);
+                option->setEct0Bytes(opt->getAccEcnE0b());
+                option->setEct1Bytes(opt->getAccEcnE1b());
+                option->setCeBytes(opt->getAccEcnCeb());
+                return option;
+            }
+            // Partial forms (a minority of scripts): INET always emits the
+            // full 11-byte option, so these can only ever be a genuine
+            // length-mismatch DIVERGENCE -- keep them as raw bytes.
+            auto *option = new TcpOptionUnknown();
+            option->setKind(static_cast<TcpOptionNumbers>(opt->getKind()));
+            option->setLength(length);
+            std::vector<uint32_t> fields;
+            if (opt->getAccEcnPresent() & ACCECN_PRESENT_E0B)
+                fields.push_back(opt->getAccEcnE0b());
+            if (opt->getAccEcnPresent() & ACCECN_PRESENT_E1B)
+                fields.push_back(opt->getAccEcnE1b());
+            if (opt->getAccEcnPresent() & ACCECN_PRESENT_CEB)
+                fields.push_back(opt->getAccEcnCeb());
+            option->setBytesArraySize(fields.size() * 3);
+            for (size_t i = 0; i < fields.size(); i++) {
+                option->setBytes(i * 3 + 0, (fields[i] >> 16) & 0xff);
+                option->setBytes(i * 3 + 1, (fields[i] >> 8) & 0xff);
+                option->setBytes(i * 3 + 2, fields[i] & 0xff);
+            }
+            return option;
+        }
         default:
             EV_INFO << "TCP option is not supported (yet).";
             break;
@@ -189,7 +328,8 @@ TcpOption *setOptionValues(PacketDrillTcpOption *opt)
 
 Packet *PacketDrill::buildTCPPacket(int address_family, enum direction_t direction, const char *flags,
                                     uint32_t startSequence, uint16_t tcpPayloadBytes, uint32_t ackSequence,
-                                    int32_t window, cQueue *tcpOptions, char **error)
+                                    int32_t window, uint16_t urgentPointer, cQueue *tcpOptions,
+                                    int ecnCodepoint, char **error)
 {
     Packet *packet = new Packet("TCPInject");
     PacketDrillApp *app = PacketDrill::pdapp;
@@ -221,7 +361,40 @@ Packet *PacketDrill::buildTCPPacket(int address_family, enum direction_t directi
     tcpHeader->setRstBit(strchr(flags, 'R'));
     tcpHeader->setPshBit(strchr(flags, 'P'));
     tcpHeader->setAckBit(strchr(flags, '.'));
-    tcpHeader->setUrgBit(0);
+    tcpHeader->setUrgBit(strchr(flags, 'U'));
+    // ECN / AccECN flag letters (packetdrill notation): E=ECE, W=CWR, A=AE.
+    // Without these, an injected AccECN-request SYN ("SEWA") reaches INET looking
+    // like a plain SYN, so the stack never negotiates ECN/AccECN. Digits from the
+    // numeric ACE notation (".5", "P.6") never collide with these letters. On an
+    // outbound expectation the same three bits are what compareTcpHeader asserts
+    // against the live segment, so the decoding below defines both what gets
+    // injected inbound and what is required outbound.
+    tcpHeader->setEceBit(strchr(flags, 'E'));
+    tcpHeader->setCwrBit(strchr(flags, 'W'));
+    tcpHeader->setAeBit(strchr(flags, 'A'));
+    // AccECN ACE field on a non-SYN segment (packetdrill's numeric notation):
+    // post-handshake, the 3-bit Accurate ECN echo counter rides the AE/CWR/ECE
+    // bits. INET reads them to derive the peer's CE-packet count, so an injected
+    // ".5" ACK must arrive with AE/CWR/ECE = 101, not 000 -- otherwise INET
+    // decodes a bogus counter delta (receivedAce 0 vs the intended 5) and
+    // fabricates CE marks; on an OUTBOUND expectation the same three bits are
+    // what compareTcpHeader asserts, so a missed digit turns "ACE must be 5"
+    // into "ACE must be 0". The digit is searched for anywhere in the flag
+    // string, not just after the '.': the corpus writes it on both sides of the
+    // ACK dot ("P.5" and "P5.", "F.5" and "F5."), and the grammar hands both
+    // forms through as a plain string. Flag letters are never digits, so no
+    // other field can be picked up here. SYN packets never use the numeric form
+    // (they carry the SEWA letters), so this cannot collide with the
+    // negotiation bits.
+    for (const char *p = flags; *p; p++) {
+        if (isdigit((unsigned char)*p)) {
+            int ace = *p - '0';
+            tcpHeader->setAeBit((ace & 4) != 0);
+            tcpHeader->setCwrBit((ace & 2) != 0);
+            tcpHeader->setEceBit((ace & 1) != 0);
+            break;
+        }
+    }
     if (tcpHeader->getSynBit() && !tcpHeader->getAckBit())
         packet->setName("Inject SYN");
     else if (tcpHeader->getSynBit() && tcpHeader->getAckBit())
@@ -234,7 +407,7 @@ Packet *PacketDrill::buildTCPPacket(int address_family, enum direction_t directi
         packet->setName("Inject FIN");
 
     tcpHeader->setWindow(window);
-    tcpHeader->setUrgentPointer(0);
+    tcpHeader->setUrgentPointer(urgentPointer);
     // Checksum (header checksum): modelled by cMessage::hasBitError()
 
     if (tcpOptions && tcpOptions->getLength() > 0) { // options present?
@@ -254,6 +427,18 @@ Packet *PacketDrill::buildTCPPacket(int address_family, enum direction_t directi
 
     auto ipHeader = PacketDrill::makeIpv4Header(IP_PROT_TCP, direction, app->getLocalAddress(),
             app->getRemoteAddress());
+    if (ecnCodepoint >= 0) {
+        ipHeader->setEcn(ecnCodepoint);
+    }
+    else if (direction == DIRECTION_OUTBOUND) {
+        // No [ecn] bracket on an OUTBOUND expectation = upstream packetdrill's
+        // TOS_CHECK_NONE: the ToS byte must not be checked at all (a bare
+        // "> F. ..." line under AccECN legitimately goes out ECT-marked).
+        // Carried as an impossible all-ones DSCP sentinel that compareDatagram
+        // recognizes; never used for inbound injections (it would go on the
+        // wire).
+        ipHeader->setDscp(0x3f);
+    }
     ipHeader->setTotalLengthField(ipHeader->getTotalLengthField() + packet->getDataLength());
     PacketDrill::setIpv4HeaderCrc(ipHeader);
     packet->insertAtFront(ipHeader);
@@ -1709,6 +1894,147 @@ int PacketDrill::evaluate(PacketDrillExpression *in, PacketDrillExpression *out,
             break;
         }
 
+        case EXPR_MSGHDR: {
+            struct msghdr_expr *src = in->getMsghdr();
+            struct msghdr_expr *dst = (struct msghdr_expr *)malloc(sizeof(struct msghdr_expr));
+            dst->msg_iov = new PacketDrillExpression(src->msg_iov->getType());
+            dst->msg_iovlen = new PacketDrillExpression(src->msg_iovlen->getType());
+            dst->msg_flags = new PacketDrillExpression(src->msg_flags->getType());
+            dst->msg_control = new PacketDrillExpression(src->msg_control->getType());
+            if (evaluate(src->msg_iov, dst->msg_iov, error) ||
+                evaluate(src->msg_iovlen, dst->msg_iovlen, error) ||
+                evaluate(src->msg_flags, dst->msg_flags, error) ||
+                evaluate(src->msg_control, dst->msg_control, error))
+            {
+                delete dst->msg_iov;
+                delete dst->msg_iovlen;
+                delete dst->msg_flags;
+                delete dst->msg_control;
+                free(dst);
+                return STATUS_ERR;
+            }
+            out->setMsghdr(dst);
+            break;
+        }
+
+        case EXPR_CMSG: {
+            struct cmsg_expr *src = in->getCmsg();
+            struct cmsg_expr *dst = (struct cmsg_expr *)malloc(sizeof(struct cmsg_expr));
+            dst->cmsg_level = new PacketDrillExpression(src->cmsg_level->getType());
+            dst->cmsg_type = new PacketDrillExpression(src->cmsg_type->getType());
+            dst->cmsg_data = new PacketDrillExpression(src->cmsg_data->getType());
+            if (evaluate(src->cmsg_level, dst->cmsg_level, error) ||
+                evaluate(src->cmsg_type, dst->cmsg_type, error) ||
+                evaluate(src->cmsg_data, dst->cmsg_data, error))
+            {
+                delete dst->cmsg_level;
+                delete dst->cmsg_type;
+                delete dst->cmsg_data;
+                free(dst);
+                return STATUS_ERR;
+            }
+            out->setCmsg(dst);
+            break;
+        }
+
+        case EXPR_IOVEC: {
+            struct iovec_expr *src = in->getIovec();
+            struct iovec_expr *dst = (struct iovec_expr *)malloc(sizeof(struct iovec_expr));
+            dst->iov_len = new PacketDrillExpression(src->iov_len->getType());
+            if (evaluate(src->iov_len, dst->iov_len, error)) {
+                delete dst->iov_len;
+                free(dst);
+                return STATUS_ERR;
+            }
+            out->setIovec(dst);
+            break;
+        }
+
+        case EXPR_EPOLLEV: {
+            struct epollev_expr *src = in->getEpollev();
+            struct epollev_expr *dst = (struct epollev_expr *)malloc(sizeof(struct epollev_expr));
+            dst->fd = dst->ptr = dst->u32 = dst->u64 = nullptr;
+            dst->events = new PacketDrillExpression(src->events->getType());
+            if (evaluate(src->events, dst->events, error)) {
+                delete dst->events;
+                free(dst);
+                return STATUS_ERR;
+            }
+            PacketDrillExpression **srcField = src->fd ? &src->fd : src->ptr ? &src->ptr : src->u32 ? &src->u32 : &src->u64;
+            PacketDrillExpression **dstField = src->fd ? &dst->fd : src->ptr ? &dst->ptr : src->u32 ? &dst->u32 : &dst->u64;
+            *dstField = new PacketDrillExpression((*srcField)->getType());
+            if (evaluate(*srcField, *dstField, error)) {
+                delete dst->events;
+                delete *dstField;
+                free(dst);
+                return STATUS_ERR;
+            }
+            out->setEpollev(dst);
+            break;
+        }
+
+        case EXPR_SOCK_EXTENDED_ERR: {
+            struct sock_extended_err_expr *src = in->getSockExtendedErr();
+            struct sock_extended_err_expr *dst = (struct sock_extended_err_expr *)malloc(sizeof(struct sock_extended_err_expr));
+            dst->ee_errno = new PacketDrillExpression(src->ee_errno->getType());
+            dst->ee_origin = new PacketDrillExpression(src->ee_origin->getType());
+            dst->ee_type = new PacketDrillExpression(src->ee_type->getType());
+            dst->ee_code = new PacketDrillExpression(src->ee_code->getType());
+            dst->ee_info = new PacketDrillExpression(src->ee_info->getType());
+            dst->ee_data = new PacketDrillExpression(src->ee_data->getType());
+            if (evaluate(src->ee_errno, dst->ee_errno, error) ||
+                evaluate(src->ee_origin, dst->ee_origin, error) ||
+                evaluate(src->ee_type, dst->ee_type, error) ||
+                evaluate(src->ee_code, dst->ee_code, error) ||
+                evaluate(src->ee_info, dst->ee_info, error) ||
+                evaluate(src->ee_data, dst->ee_data, error))
+            {
+                delete dst->ee_errno; delete dst->ee_origin; delete dst->ee_type;
+                delete dst->ee_code; delete dst->ee_info; delete dst->ee_data;
+                free(dst);
+                return STATUS_ERR;
+            }
+            out->setSockExtendedErr(dst);
+            break;
+        }
+
+        case EXPR_SCM_TIMESTAMPING: {
+            struct scm_timestamping_expr *src = in->getScmTimestamping();
+            struct scm_timestamping_expr *dst = (struct scm_timestamping_expr *)malloc(sizeof(struct scm_timestamping_expr));
+            dst->scm_sec = new PacketDrillExpression(src->scm_sec->getType());
+            dst->scm_nsec = new PacketDrillExpression(src->scm_nsec->getType());
+            if (evaluate(src->scm_sec, dst->scm_sec, error) ||
+                evaluate(src->scm_nsec, dst->scm_nsec, error))
+            {
+                delete dst->scm_sec;
+                delete dst->scm_nsec;
+                free(dst);
+                return STATUS_ERR;
+            }
+            out->setScmTimestamping(dst);
+            break;
+        }
+
+        case EXPR_POLLFD: {
+            struct pollfd_expr *src = in->getPollfd();
+            struct pollfd_expr *dst = (struct pollfd_expr *)malloc(sizeof(struct pollfd_expr));
+            dst->fd = new PacketDrillExpression(src->fd->getType());
+            dst->events = new PacketDrillExpression(src->events->getType());
+            dst->revents = new PacketDrillExpression(src->revents->getType());
+            if (evaluate(src->fd, dst->fd, error) ||
+                evaluate(src->events, dst->events, error) ||
+                evaluate(src->revents, dst->revents, error))
+            {
+                delete dst->fd;
+                delete dst->events;
+                delete dst->revents;
+                free(dst);
+                return STATUS_ERR;
+            }
+            out->setPollfd(dst);
+            break;
+        }
+
         case EXPR_STRING:
             if (out->unescapeCstringExpression(in->getString(), error))
                 return STATUS_ERR;
@@ -1716,7 +2042,7 @@ int PacketDrill::evaluate(PacketDrillExpression *in, PacketDrillExpression *out,
 
         case EXPR_BINARY:
             if (evaluate_binary_expression(in, out, error)) {
-                printf("Error in EXPR_BINARY\n");
+                return STATUS_ERR;
             }
             break;
 
@@ -1797,6 +2123,12 @@ int PacketDrill::evaluateListExpression(PacketDrillExpression *in, PacketDrillEx
     assert(out->getType() == EXPR_LIST);
 
     out->setList(new cQueue("listExpression"));
+    // An empty array ('[]', or the implicit empty opt_cmsg alternative)
+    // parses with a null list rather than an empty cQueue -- nothing to
+    // evaluate, and evaluateExpressionList()'s cQueue::Iterator would
+    // dereference the null pointer.
+    if (!in->getList())
+        return STATUS_OK;
     return evaluateExpressionList(in->getList(), out->getList(), error);
 }
 

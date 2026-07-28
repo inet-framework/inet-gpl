@@ -58,6 +58,8 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>
+#include <math.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
@@ -201,6 +203,93 @@ static PacketDrillExpression *new_integer_expression(int64_t num, const char *fo
     return NULL;
 }*/
 
+/* Hex-decode a contiguous hex-digit string (e.g. an MD5 digest or a TCP Fast
+ * Open cookie, lexed as a plain MYWORD) into a byte vector. Errors out via
+ * semantic_error() on an odd-length or non-hex-digit string. */
+static ByteVector hex_string_to_bytes(const char *hex)
+{
+    size_t len = strlen(hex);
+    if ((len % 2) != 0) {
+        semantic_error("hex string must have an even number of digits");
+    }
+    ByteVector bytes;
+    bytes.reserve(len / 2);
+    for (size_t i = 0; i < len; i += 2) {
+        if (!isxdigit((unsigned char)hex[i]) || !isxdigit((unsigned char)hex[i + 1])) {
+            semantic_error("hex string contains a non-hex-digit character");
+        }
+        char byteStr[3] = { hex[i], hex[i + 1], '\0' };
+        bytes.push_back((uint8_t)strtoul(byteStr, NULL, 16));
+    }
+    return bytes;
+}
+
+/* Decode a TCP Fast Open cookie token from a script. A token is either a
+ * literal hex string (e.g. "01234567aabbccdd") or one of the corpus's symbolic
+ * cookie names: TFO_COOKIE ("some valid server-issued cookie") or
+ * TFO_COOKIE_ZERO ("an all-zero cookie"). Upstream packetdrill binds TFO_COOKIE
+ * to the deterministic cookie the kernel derives from the fixed tcp_fastopen_key;
+ * INET's TFO server instead accepts any cookie under lenient validation (the
+ * INET run's default, Tcp::fastopenLenientCookieValidation), so a symbol only needs
+ * to expand to a well-formed fixed cookie of the canonical 8-byte length. Any
+ * token carrying a non-hex-digit character is treated as symbolic; pure hex
+ * literals decode as before. */
+static ByteVector cookie_token_to_bytes(const char *tok)
+{
+    bool symbolic = false;
+    for (const char *p = tok; *p != '\0'; p++) {
+        if (!isxdigit((unsigned char)*p)) { symbolic = true; break; }
+    }
+    if (symbolic) {
+        // The Linux run binds these (real packetdrill -D defines) to the
+        // cookies Linux derives with SipHash-2-4 from the canonical peer/local
+        // address pair (192.0.2.1 -> 192.168.0.1) under defaults.sh's key
+        // (TFO_COOKIE) and the all-zero key (TFO_COOKIE_ZERO). INET reproduces
+        // the same derivation (Tcp::generateFastOpenCookie with fastopenKey),
+        // so the same literals hold in the INET run.
+        if (!strcmp(tok, "TFO_COOKIE_ZERO"))
+            return ByteVector{ 0xb7, 0xc1, 0x23, 0x50, 0xa9, 0x0d, 0xc8, 0xf5 };
+        return ByteVector{ 0x30, 0x21, 0xb9, 0xd8, 0x89, 0x01, 0x7e, 0xeb };
+    }
+    return hex_string_to_bytes(tok);
+}
+
+/* ICMP type/code words -> real ICMP wire values (RFC 792 / Linux <netinet/ip_icmp.h>
+ * naming). Deliberately small and explicit rather than routed through the
+ * general symbol table, since these are packet-line keywords, not
+ * expression-context symbols. */
+static int icmp_type_from_word(const char *word)
+{
+    if (!strcmp(word, "unreachable"))
+        return 3; /* ICMP_DESTINATION_UNREACHABLE */
+    semantic_error("unknown icmp type");
+    return -1;
+}
+
+static int icmp_code_from_word(const char *word)
+{
+    if (!word)
+        return 0; /* ICMP_DU_NETWORK_UNREACHABLE: default when no code word given */
+    if (!strcmp(word, "net_unreachable"))
+        return 0;
+    if (!strcmp(word, "host_unreachable"))
+        return 1;
+    if (!strcmp(word, "protocol_unreachable"))
+        return 2;
+    if (!strcmp(word, "port_unreachable"))
+        return 3;
+    if (!strcmp(word, "frag_needed"))
+        return 4;
+    if (!strcmp(word, "CODE"))
+        return 1; /* the scripts' packetdrill -D define: suite.py passes
+                     -D CODE=host_unreachable to the Linux run; the harness has no -D
+                     substitution pass, so resolve the bareword here -- same
+                     pattern as the TFO_COOKIE special-case in
+                     cookie_token_to_bytes(). */
+    semantic_error("unknown icmp code");
+    return -1;
+}
+
 %}
 
 %locations
@@ -227,6 +316,7 @@ static PacketDrillExpression *new_integer_expression(int64_t num, const char *fo
     PacketDrillPacket *packet;
     struct syscall_spec *syscall;
     struct command_spec *command;
+    struct code_spec *code;
     PacketDrillStruct *sack_block;
     PacketDrillStruct *cause_item;
     PacketDrillExpression *expression;
@@ -254,6 +344,14 @@ static PacketDrillExpression *new_integer_expression(int64_t num, const char *fo
 %token ELLIPSIS
 %token <reserved> UDP _HTONS_ _HTONL_ BACK_QUOTED SA_FAMILY SIN_PORT SIN_ADDR
 %token <reserved> ACK WIN WSCALE MSS NOP TIMESTAMP ECR EOL TCPSACK VAL SACKOK
+%token <reserved> URG MD5 FO FOEXP
+%token <reserved> ACCECN ACCECN_E0B ACCECN_E1B ACCECN_CEB
+%token <reserved> MSG_NAME MSG_IOV MSG_FLAGS MSG_CONTROL CMSG_LEVEL CMSG_TYPE CMSG_DATA
+%token <reserved> EVENTS FD PTR U32 U64
+%token <reserved> EE_ERRNO EE_ORIGIN EE_TYPE EE_CODE EE_INFO EE_DATA
+%token <reserved> SCM_SEC SCM_NSEC
+%token <reserved> REVENTS
+%token <reserved> ICMP MTU
 %token <reserved> OPTION IPV4_TYPE IPV6_TYPE INET_ADDR
 %token <reserved> SPP_ASSOC_ID SPP_ADDRESS SPP_HBINTERVAL SPP_PATHMAXRXT SPP_PATHMTU
 %token <reserved> SPP_FLAGS SPP_IPV6_FLOWLABEL_ SPP_DSCP_
@@ -285,14 +383,19 @@ static PacketDrillExpression *new_integer_expression(int64_t num, const char *fo
 %token <floating> MYFLOAT
 %token <integer> INTEGER HEX_INTEGER
 %token <string> MYWORD MYSTRING
+%token <string> CODE
 %type <direction> direction
 %type <event> event events event_time action
 %type <option> option options opt_options
 %type <time_usecs> time opt_end_time
-%type <packet> packet_spec tcp_packet_spec udp_packet_spec sctp_packet_spec
+%type <packet> packet_spec tcp_packet_spec udp_packet_spec sctp_packet_spec icmp_packet_spec
 %type <packet> packet_prefix
+%type <string> icmp_type opt_icmp_code
+%type <tcp_sequence_info> opt_icmp_echoed
+%type <integer> opt_icmp_mtu
 %type <syscall> syscall_spec
 %type <command> command_spec
+%type <code> code_spec
 %type <string> option_flag option_value flags
 %type <tcp_sequence_info> seq
 %type <tcp_options> opt_tcp_options tcp_option_list
@@ -301,6 +404,11 @@ static PacketDrillExpression *new_integer_expression(int64_t num, const char *fo
 %type <sack_block> sack_block gap dup
 %type <window> opt_window
 %type <sequence_number> opt_ack
+%type <port> opt_urg_ptr
+%type <window> opt_ip_info ip_ecn
+%type <string> opt_fastopen_cookie
+%type <sequence_number> accecn_val
+%type <tcp_option> accecn_option
 %type <string> script
 %type <string> function_name
 %type <sack_block_list> sack_block_list opt_gaps gap_list dup_list opt_dups
@@ -321,6 +429,8 @@ static PacketDrillExpression *new_integer_expression(int64_t num, const char *fo
 %type <expression> sctp_status sstat_state sstat_rwnd sstat_unackdata sstat_penddata
 %type <expression> sstat_instrms sstat_outstrms sstat_fragmentation_point sstat_primary
 %type <expression> sctp_add_streams
+%type <expression> msghdr cmsg_expr iovec epollev opt_cmsg sock_extended_err scm_timestamping
+%type <expression> pollfd opt_revents
 %type <errno_info> opt_errno
 %type <integer> opt_flags opt_len opt_data_flags opt_abort_flags chunk_type
 %type <integer> opt_shutdown_complete_flags opt_tag opt_a_rwnd opt_os opt_is
@@ -498,12 +608,23 @@ action
     $$ = new PacketDrillEvent(COMMAND_EVENT);
     $$->setCommand($1);
 }
+| code_spec {
+    $$ = new PacketDrillEvent(CODE_EVENT);
+    $$->setCode($1);
+}
 ;
 
 command_spec
 : BACK_QUOTED       {
     $$ = (struct command_spec *)calloc(1, sizeof(struct command_spec));
     $$->command_line = $1;
+}
+;
+
+code_spec
+: CODE       {
+    $$ = (struct code_spec *)calloc(1, sizeof(struct code_spec));
+    $$->text = $1;
 }
 ;
 
@@ -517,24 +638,96 @@ packet_spec
 | sctp_packet_spec {
     $$ = $1;
 }
+| icmp_packet_spec {
+    $$ = $1;
+}
 ;
 
-tcp_packet_spec
-: packet_prefix flags seq opt_ack opt_window opt_tcp_options {
+icmp_packet_spec
+: packet_prefix ICMP icmp_type opt_icmp_code opt_icmp_mtu opt_icmp_echoed {
     char *error = NULL;
     PacketDrillPacket *outer = $1, *inner = NULL;
     enum direction_t direction = outer->getDirection();
 
-    if (($6 == NULL) && (direction != DIRECTION_OUTBOUND)) {
-        yylineno = @6.first_line;
+    int icmpType = icmp_type_from_word($3);
+    int icmpCode = icmp_code_from_word($4);
+    free($3);
+    free($4);
+
+    Packet *pkt = PacketDrill::buildICMPPacket(in_config->getWireProtocol(), direction,
+                                                icmpType, icmpCode, $5,
+                                                $6.start_sequence, $6.payload_bytes, &error);
+    if (pkt == NULL) {
+        semantic_error(error);
+        free(error);
+    }
+
+    inner = new PacketDrillPacket();
+    inner->setInetPacket(pkt);
+    inner->setDirection(direction);
+
+    $$ = inner;
+}
+;
+
+icmp_type
+: MYWORD {
+    $$ = $1;
+}
+;
+
+opt_icmp_code
+:        {
+    $$ = NULL;
+}
+| MYWORD {
+    $$ = $1;
+}
+;
+
+/* Present for "fragmentation needed" (PMTUD) ICMP unreachables, e.g.
+ * "icmp unreachable frag_needed mtu 800". */
+opt_icmp_mtu
+:            {
+    $$ = -1;
+}
+| MTU INTEGER {
+    if (!is_valid_u16($2)) {
+        semantic_error("icmp mtu out of range");
+    }
+    $$ = $2;
+}
+;
+
+/* The TCP segment "echoed" inside the ICMP error payload -- reuses the
+ * same seq-range notation as a real TCP packet line ("[start:end(len)]"),
+ * per upstream google/packetdrill's opt_icmp_echoed. */
+opt_icmp_echoed
+:            {
+    $$.start_sequence = 0;
+    $$.payload_bytes = 0;
+}
+| '[' seq ']' {
+    $$ = $2;
+}
+;
+
+tcp_packet_spec
+: packet_prefix opt_ip_info flags seq opt_ack opt_window opt_urg_ptr opt_tcp_options {
+    char *error = NULL;
+    PacketDrillPacket *outer = $1, *inner = NULL;
+    enum direction_t direction = outer->getDirection();
+
+    if (($8 == NULL) && (direction != DIRECTION_OUTBOUND)) {
+        yylineno = @8.first_line;
         printf("<...> for TCP options can only be used with outbound packets");
     }
     Packet *pkt = PacketDrill::buildTCPPacket(in_config->getWireProtocol(), direction,
-                                               $2,
-                                               $3.start_sequence, $3.payload_bytes,
-                                               $4, $5, $6, &error);
+                                               $3,
+                                               $4.start_sequence, $4.payload_bytes,
+                                               $5, $6, $7, $8, $2, &error);
 
-    free($2);
+    free($3);
 
     inner = new PacketDrillPacket();
     inner->setInetPacket(pkt);
@@ -1366,6 +1559,36 @@ direction
 }
 ;
 
+/* IP-level info on a packet line, e.g. "> [ect0] P. 1:1001(1000) ack 1".
+ * Scoped to the ECN codepoint only (upstream packetdrill's opt_ip_info also
+ * covers TTL/flow-label/GRE-flags/MPLS-stack-bottom; none of those constructs
+ * appear in this fork's TCP corpus, so they are intentionally not ported). */
+opt_ip_info
+: {
+    $$ = -1; /* no ECN codepoint specified -- do not override the IP header's ECN bits */
+}
+| '[' ip_ecn ']' {
+    $$ = $2;
+}
+;
+
+ip_ecn
+: MYWORD {
+    if (!strcmp($1, "noecn")) {
+        $$ = IP_ECN_NOT_ECT;
+    } else if (!strcmp($1, "ect0")) {
+        $$ = IP_ECN_ECT0;
+    } else if (!strcmp($1, "ect1")) {
+        $$ = IP_ECN_ECT1;
+    } else if (!strcmp($1, "ce")) {
+        $$ = IP_ECN_CE;
+    } else {
+        semantic_error("bad ECN codepoint, expected one of: noecn, ect0, ect1, ce");
+    }
+    free($1);
+}
+;
+
 flags
 : MYWORD {
     $$ = $1;
@@ -1376,6 +1599,31 @@ flags
 | MYWORD '.' {
     asprintf(&($$), "%s.", $1);
     free($1);
+}
+| MYFLOAT {
+    /* AccECN Accurate ECN Echo (ACE) field notation: ".5" etc, borrowed
+     * lexically from a float token but really "ACK flag + ACE value" --
+     * matches upstream's ack_and_ace shape (parser.y, google/packetdrill).
+     * Stored as the literal flags string; not decoded into real AccECN
+     * header bits here (INET has no AccECN implementation to decode into --
+     * these scripts land as an honest DIVERGENCE once they parse and run).
+     * Reconstruct the original ".<digit>" text (not "%g", which prints
+     * 0.0 as bare "0" with no '.' at all -- that would silently drop the
+     * ACK flag downstream, since buildTCPPacket() detects ACK via
+     * strchr(flags, '.'); ".0" is in fact the single most common ACE
+     * suffix in the real corpus). ACE is always a single decimal digit
+     * (0-7) in the corpus, so round to the nearest tenth. */
+    char buf[8];
+    int digit = (int)lround($1 * 10.0);
+    snprintf(buf, sizeof(buf), ".%d", digit);
+    $$ = strdup(buf);
+}
+| MYWORD MYFLOAT {
+    char buf[40];
+    int digit = (int)lround($2 * 10.0);
+    snprintf(buf, sizeof(buf), "%s.%d", $1, digit);
+    free($1);
+    $$ = strdup(buf);
 }
 | '-' {
     $$ = strdup("");
@@ -1421,6 +1669,18 @@ opt_window
 | WIN INTEGER {
     if (!is_valid_u16($2)) {
         semantic_error("TCP window value out of range");
+    }
+    $$ = $2;
+}
+;
+
+opt_urg_ptr
+: {
+    $$ = 0;
+}
+| URG INTEGER {
+    if (!is_valid_u16($2)) {
+        semantic_error("urg_ptr value out of range");
     }
     $$ = $2;
 }
@@ -1492,6 +1752,100 @@ tcp_option
     ecr = $5;
     $$->setVal(val);
     $$->setEcr(ecr);
+}
+| MD5 MYWORD {
+    ByteVector digest = hex_string_to_bytes($2);
+    free($2);
+    if (digest.size() > TCP_MD5_DIGEST_LEN) {
+        semantic_error("md5 digest too long");
+    }
+    $$ = new PacketDrillTcpOption(TCPOPT_MD5SIG, TCPOLEN_MD5_BASE + digest.size());
+    $$->setMd5Digest(digest);
+}
+| FO opt_fastopen_cookie {
+    ByteVector cookie = cookie_token_to_bytes($2);
+    free($2);
+    if (cookie.size() > MAX_TCP_FAST_OPEN_COOKIE_BYTES) {
+        semantic_error("fast open cookie too long");
+    }
+    $$ = new PacketDrillTcpOption(TCPOPT_FASTOPEN, TCPOLEN_FASTOPEN_BASE + cookie.size());
+    $$->setFastOpenCookie(cookie);
+    $$->setFastOpenExperimental(false);
+}
+| FOEXP opt_fastopen_cookie {
+    ByteVector cookie = cookie_token_to_bytes($2);
+    free($2);
+    if (cookie.size() > MAX_TCP_FAST_OPEN_COOKIE_BYTES) {
+        semantic_error("fast open experimental cookie too long");
+    }
+    $$ = new PacketDrillTcpOption(TCPOPT_EXP, TCPOLEN_EXP_FASTOPEN_BASE + cookie.size());
+    $$->setFastOpenCookie(cookie);
+    $$->setFastOpenExperimental(true);
+}
+| accecn_option {
+    $$ = $1;
+}
+;
+
+opt_fastopen_cookie
+: {
+    $$ = strdup("");
+}
+| MYWORD {
+    $$ = $1;
+}
+| INTEGER {
+    /* A purely-decimal-digit cookie (e.g. "1234123412341234" or "00000000")
+     * lexes as INTEGER, not MYWORD, since the lexer's digits-only rule wins over
+     * the generic word rule. Use the token's RAW text (pd_last_int_text) rather
+     * than reconstructing from the value: an all-zero / leading-zero cookie
+     * ("00000000") would otherwise collapse to "0" and fail hex_string_to_bytes()
+     * on the odd length. */
+    extern char pd_last_int_text[64];
+    $$ = strdup(pd_last_int_text);
+}
+;
+
+/* AccECN (draft-ietf-tcpm-accurate-ecn) option: up to 3 24-bit byte-counter
+ * fields (e0b/e1b/ceb) in script-author-chosen order, e.g.
+ * "ECN e1b 1 ceb 0 e0b 1". Whichever of e0b/e1b appears FIRST selects the
+ * option kind (TCPOPT_ACCECN0 vs TCPOPT_ACCECN1), matching real corpus usage
+ * (kernel/tcp_accecn_*.pkt). INET has no AccECN implementation, so this
+ * exists purely so these scripts parse and their real divergence from Linux
+ * becomes visible instead of being masked by a dialect gap. */
+accecn_val
+: INTEGER {
+    if (!is_valid_u24($1)) {
+        semantic_error("AccECN field value out of range (must fit in 24 bits)");
+    }
+    $$ = $1;
+}
+;
+
+accecn_option
+: ACCECN ACCECN_E0B accecn_val {
+    $$ = new PacketDrillTcpOption(TCPOPT_ACCECN0, TCPOLEN_ACCECN_BASE + 3);
+    $$->setAccEcnFields(ACCECN_PRESENT_E0B, $3, 0, 0);
+}
+| ACCECN ACCECN_E0B accecn_val ACCECN_CEB accecn_val {
+    $$ = new PacketDrillTcpOption(TCPOPT_ACCECN0, TCPOLEN_ACCECN_BASE + 6);
+    $$->setAccEcnFields(ACCECN_PRESENT_E0B | ACCECN_PRESENT_CEB, $3, 0, $5);
+}
+| ACCECN ACCECN_E0B accecn_val ACCECN_CEB accecn_val ACCECN_E1B accecn_val {
+    $$ = new PacketDrillTcpOption(TCPOPT_ACCECN0, TCPOLEN_ACCECN_BASE + 9);
+    $$->setAccEcnFields(ACCECN_PRESENT_E0B | ACCECN_PRESENT_CEB | ACCECN_PRESENT_E1B, $3, $7, $5);
+}
+| ACCECN ACCECN_E1B accecn_val {
+    $$ = new PacketDrillTcpOption(TCPOPT_ACCECN1, TCPOLEN_ACCECN_BASE + 3);
+    $$->setAccEcnFields(ACCECN_PRESENT_E1B, 0, $3, 0);
+}
+| ACCECN ACCECN_E1B accecn_val ACCECN_CEB accecn_val {
+    $$ = new PacketDrillTcpOption(TCPOPT_ACCECN1, TCPOLEN_ACCECN_BASE + 6);
+    $$->setAccEcnFields(ACCECN_PRESENT_E1B | ACCECN_PRESENT_CEB, 0, $3, $5);
+}
+| ACCECN ACCECN_E1B accecn_val ACCECN_CEB accecn_val ACCECN_E0B accecn_val {
+    $$ = new PacketDrillTcpOption(TCPOPT_ACCECN1, TCPOLEN_ACCECN_BASE + 9);
+    $$->setAccEcnFields(ACCECN_PRESENT_E1B | ACCECN_PRESENT_CEB | ACCECN_PRESENT_E0B, $7, $3, $5);
 }
 ;
 
@@ -1692,6 +2046,27 @@ expression
 | sctp_add_streams  {
     $$ = $1;
 }
+| msghdr            {
+    $$ = $1;
+}
+| epollev           {
+    $$ = $1;
+}
+| cmsg_expr         {
+    $$ = $1;
+}
+| iovec             {
+    $$ = $1;
+}
+| sock_extended_err {
+    $$ = $1;
+}
+| scm_timestamping  {
+    $$ = $1;
+}
+| pollfd {
+    $$ = $1;
+}
 ;
 
 
@@ -1727,6 +2102,125 @@ array
 | '[' expression_list ']' {
     $$ = new PacketDrillExpression(EXPR_LIST);
     $$->setList($2);
+}
+;
+
+msghdr
+: '{' MSG_NAME '(' ELLIPSIS ')' '=' ELLIPSIS ','
+      MSG_IOV '(' decimal_integer ')' '=' array ','
+      MSG_FLAGS '=' expression
+      opt_cmsg '}' {
+    $$ = new PacketDrillExpression(EXPR_MSGHDR);
+    struct msghdr_expr *msg_expr = (struct msghdr_expr *) malloc(sizeof(struct msghdr_expr));
+    msg_expr->msg_iov = $14;
+    msg_expr->msg_iovlen = $11;
+    msg_expr->msg_flags = $18;
+    msg_expr->msg_control = $19;
+    $$->setMsghdr(msg_expr);
+}
+;
+
+opt_cmsg
+:                               { $$ = new PacketDrillExpression(EXPR_LIST); $$->setList(NULL); }
+| ',' MSG_CONTROL '=' array     { $$ = $4; }
+;
+
+cmsg_expr
+: '{' CMSG_LEVEL '=' expression ','
+      CMSG_TYPE '=' expression ','
+      CMSG_DATA '=' expression '}' {
+    $$ = new PacketDrillExpression(EXPR_CMSG);
+    struct cmsg_expr *cmsg = (struct cmsg_expr *) malloc(sizeof(struct cmsg_expr));
+    cmsg->cmsg_level = $4;
+    cmsg->cmsg_type = $8;
+    cmsg->cmsg_data = $12;
+    $$->setCmsg(cmsg);
+}
+;
+
+sock_extended_err
+: '{' EE_ERRNO '=' expression ','
+      EE_ORIGIN '=' expression ','
+      EE_TYPE '=' expression ','
+      EE_CODE '=' expression ','
+      EE_INFO '=' expression ','
+      EE_DATA '=' expression '}' {
+    $$ = new PacketDrillExpression(EXPR_SOCK_EXTENDED_ERR);
+    struct sock_extended_err_expr *ee = (struct sock_extended_err_expr *) malloc(sizeof(struct sock_extended_err_expr));
+    ee->ee_errno = $4;
+    ee->ee_origin = $8;
+    ee->ee_type = $12;
+    ee->ee_code = $16;
+    ee->ee_info = $20;
+    ee->ee_data = $24;
+    $$->setSockExtendedErr(ee);
+}
+;
+
+scm_timestamping
+: '{' SCM_SEC '=' expression ','
+      SCM_NSEC '=' expression '}' {
+    $$ = new PacketDrillExpression(EXPR_SCM_TIMESTAMPING);
+    struct scm_timestamping_expr *ts = (struct scm_timestamping_expr *) malloc(sizeof(struct scm_timestamping_expr));
+    ts->scm_sec = $4;
+    ts->scm_nsec = $8;
+    $$->setScmTimestamping(ts);
+}
+;
+
+iovec
+: '{' ELLIPSIS ',' decimal_integer '}' {
+    $$ = new PacketDrillExpression(EXPR_IOVEC);
+    struct iovec_expr *iov = (struct iovec_expr *) malloc(sizeof(struct iovec_expr));
+    iov->iov_len = $4;
+    $$->setIovec(iov);
+}
+;
+
+epollev
+: '{' EVENTS '=' expression ',' FD '=' expression '}' {
+    $$ = new PacketDrillExpression(EXPR_EPOLLEV);
+    struct epollev_expr *ev = (struct epollev_expr *) malloc(sizeof(struct epollev_expr));
+    ev->events = $4; ev->fd = $8; ev->ptr = NULL; ev->u32 = NULL; ev->u64 = NULL;
+    $$->setEpollev(ev);
+}
+| '{' EVENTS '=' expression ',' PTR '=' expression '}' {
+    $$ = new PacketDrillExpression(EXPR_EPOLLEV);
+    struct epollev_expr *ev = (struct epollev_expr *) malloc(sizeof(struct epollev_expr));
+    ev->events = $4; ev->fd = NULL; ev->ptr = $8; ev->u32 = NULL; ev->u64 = NULL;
+    $$->setEpollev(ev);
+}
+| '{' EVENTS '=' expression ',' U32 '=' expression '}' {
+    $$ = new PacketDrillExpression(EXPR_EPOLLEV);
+    struct epollev_expr *ev = (struct epollev_expr *) malloc(sizeof(struct epollev_expr));
+    ev->events = $4; ev->fd = NULL; ev->ptr = NULL; ev->u32 = $8; ev->u64 = NULL;
+    $$->setEpollev(ev);
+}
+| '{' EVENTS '=' expression ',' U64 '=' expression '}' {
+    $$ = new PacketDrillExpression(EXPR_EPOLLEV);
+    struct epollev_expr *ev = (struct epollev_expr *) malloc(sizeof(struct epollev_expr));
+    ev->events = $4; ev->fd = NULL; ev->ptr = NULL; ev->u32 = NULL; ev->u64 = $8;
+    $$->setEpollev(ev);
+}
+;
+
+pollfd
+: '{' FD '=' expression ',' EVENTS '=' expression opt_revents '}' {
+    $$ = new PacketDrillExpression(EXPR_POLLFD);
+    struct pollfd_expr *pfd = (struct pollfd_expr *) malloc(sizeof(struct pollfd_expr));
+    pfd->fd = $4;
+    pfd->events = $8;
+    pfd->revents = $9;
+    $$->setPollfd(pfd);
+}
+;
+
+opt_revents
+:                             {
+    $$ = new_integer_expression(0, "%ld");
+}
+| ',' REVENTS '=' expression {
+    $$ = $4;
 }
 ;
 
@@ -2395,10 +2889,21 @@ word_list
 : MYWORD {
     $$ = $1;
 }
+| IS {
+    /* "is" is a reserved keyword elsewhere (IS '=' ...) but free-text
+     * errno notes like "(Operation is now in progress)" also use it as
+     * a plain word -- fold it back to text here since it never carries
+     * its own string value as a <reserved> token. */
+    $$ = strdup("is");
+}
 | word_list MYWORD {
     asprintf(&($$), "%s %s", $1, $2);
     free($1);
     free($2);
+}
+| word_list IS {
+    asprintf(&($$), "%s is", $1);
+    free($1);
 }
 ;
 

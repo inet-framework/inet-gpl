@@ -4,9 +4,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 
+#include <cctype>
 #include <fcntl.h>
 #if !defined(_WIN32) && !defined(__WIN32__) && !defined(WIN32) && !defined(__CYGWIN__) && !defined(_WIN64)
  #include <netinet/in.h>
+ #include <netinet/tcp.h>
+ #include <sys/epoll.h>
+ #include <poll.h>
+ #include <linux/errqueue.h>
+ #include <linux/net_tstamp.h>
+ #include <cerrno>
 #else
 #include "sys/stat.h"
 #include "sys/types.h"
@@ -27,6 +34,8 @@ struct int_symbol platform_symbols_table[] = {
 
     { SOCK_DGRAM,                       "SOCK_DGRAM"                      },
     { SOCK_STREAM,                      "SOCK_STREAM"                     },
+    { SOCK_NONBLOCK,                    "SOCK_NONBLOCK"                   },
+    { SOCK_CLOEXEC,                     "SOCK_CLOEXEC"                    },
 
     { IPPROTO_IP,                       "IPPROTO_IP"                      },
     { IPPROTO_UDP,                      "IPPROTO_UDP"                     },
@@ -61,11 +70,94 @@ struct int_symbol platform_symbols_table[] = {
 
     { SPP_HB_DISABLE,                   "SPP_HB_DISABLE"                  },
     { SPP_HB_ENABLE,                    "SPP_HB_ENABLE"                   },
+    { SHUT_RD,                          "SHUT_RD"                         },
     { SHUT_WR,                          "SHUT_WR"                         },
+    { SHUT_RDWR,                        "SHUT_RDWR"                       },
     { SCTP_STATUS,                      "SCTP_STATUS"                     },
     { F_GETFL,                          "F_GETFL"                         },
     { F_SETFL,                          "F_SETFL"                         },
     { O_RDWR,                           "PD_O_RDWR"                       },
+    { O_NONBLOCK,                       "O_NONBLOCK"                      },
+
+    { SOL_SOCKET,                       "SOL_SOCKET"                      },
+    { SOL_TCP,                          "SOL_TCP"                         },
+    { TCP_CM_INQ,                       "TCP_CM_INQ"                      },
+    { SCM_TIMESTAMPING,                 "SCM_TIMESTAMPING"                },
+
+    /* /usr/include/sys/epoll.h */
+    { EPOLL_CTL_ADD,                    "EPOLL_CTL_ADD"                   },
+    { EPOLL_CTL_MOD,                    "EPOLL_CTL_MOD"                   },
+    { EPOLL_CTL_DEL,                    "EPOLL_CTL_DEL"                   },
+    { EPOLLIN,                          "EPOLLIN"                         },
+    { EPOLLOUT,                         "EPOLLOUT"                        },
+    { EPOLLERR,                         "EPOLLERR"                        },
+    { EPOLLHUP,                         "EPOLLHUP"                        },
+    { EPOLLRDHUP,                       "EPOLLRDHUP"                      },
+    { EPOLLPRI,                         "EPOLLPRI"                        },
+    { EPOLLET,                          "EPOLLET"                         },
+    { EPOLLONESHOT,                     "EPOLLONESHOT"                    },
+    { EPOLLEXCLUSIVE,                   "EPOLLEXCLUSIVE"                  },
+
+    /* /usr/include/linux/errqueue.h, /usr/include/netinet/in.h (MSG_ERRQUEUE cmsg for IP_RECVERR) */
+    { SOL_IP,                           "CMSG_LEVEL_IP"                   },
+    { IP_RECVERR,                       "CMSG_TYPE_RECVERR"               },
+    { SO_EE_ORIGIN_ZEROCOPY,            "SO_EE_ORIGIN_ZEROCOPY"           },
+    { SO_EE_CODE_ZEROCOPY_COPIED,       "SO_EE_CODE_ZEROCOPY_COPIED"      },
+
+    /* /usr/include/bits/socket.h -- send/recv flags */
+    { MSG_FASTOPEN,                     "MSG_FASTOPEN"                    },
+    { MSG_ZEROCOPY,                     "MSG_ZEROCOPY"                    },
+    { MSG_DONTWAIT,                     "MSG_DONTWAIT"                    },
+    { MSG_ERRQUEUE,                     "MSG_ERRQUEUE"                    },
+    { MSG_NOSIGNAL,                     "MSG_NOSIGNAL"                    },
+    { MSG_TRUNC,                        "MSG_TRUNC"                       },
+    { MSG_EOR,                          "MSG_EOR"                         },
+    { MSG_MORE,                         "MSG_MORE"                        },
+    { AF_UNSPEC,                        "AF_UNSPEC"                       },
+
+    /* socket options routed to INET's TCP socket-API extensions (harness
+     * upgrade for INET #1155; a recognized symbol makes the syscall
+     * *run* -- see syscallSetsockopt for which ones act vs. no-op) */
+    { SO_REUSEADDR,                     "SO_REUSEADDR"                    },
+    { SO_KEEPALIVE,                     "SO_KEEPALIVE"                    },
+    { SO_SNDBUF,                        "SO_SNDBUF"                       },
+    { SO_RCVBUF,                        "SO_RCVBUF"                       },
+    { SO_MARK,                          "SO_MARK"                         },
+    { SO_ZEROCOPY,                      "SO_ZEROCOPY"                     },
+    { SO_TIMESTAMPING,                  "SO_TIMESTAMPING"                 },
+    { SO_ERROR,                         "SO_ERROR"                        },
+    { TCP_MAXSEG,                       "TCP_MAXSEG"                      },
+    { TCP_NODELAY,                      "TCP_NODELAY"                     },
+    { TCP_SYNCNT,                       "TCP_SYNCNT"                      },
+    { TCP_CORK,                         "TCP_CORK"                        },
+    { TCP_KEEPIDLE,                     "TCP_KEEPIDLE"                    },
+    { TCP_FASTOPEN,                     "TCP_FASTOPEN"                    },
+    { TCP_FASTOPEN_CONNECT,             "TCP_FASTOPEN_CONNECT"            },
+    { TCP_FASTOPEN_KEY,                 "TCP_FASTOPEN_KEY"                },
+    { TCP_NOTSENT_LOWAT,                "TCP_NOTSENT_LOWAT"               },
+
+    /* /usr/include/linux/net_tstamp.h -- SO_TIMESTAMPING request flags */
+    { SOF_TIMESTAMPING_TX_SOFTWARE,     "SOF_TIMESTAMPING_TX_SOFTWARE"    },
+    { SOF_TIMESTAMPING_TX_SCHED,        "SOF_TIMESTAMPING_TX_SCHED"       },
+    { SOF_TIMESTAMPING_TX_ACK,          "SOF_TIMESTAMPING_TX_ACK"         },
+    { SOF_TIMESTAMPING_SOFTWARE,        "SOF_TIMESTAMPING_SOFTWARE"       },
+    { SOF_TIMESTAMPING_OPT_ID,          "SOF_TIMESTAMPING_OPT_ID"         },
+
+    /* /usr/include/linux/errqueue.h -- timestamping errqueue entries */
+    { SO_EE_ORIGIN_TIMESTAMPING,        "SO_EE_ORIGIN_TIMESTAMPING"       },
+    { SCM_TSTAMP_SND,                   "SCM_TSTAMP_SND"                  },
+    { SCM_TSTAMP_SCHED,                 "SCM_TSTAMP_SCHED"                },
+    { SCM_TSTAMP_ACK,                   "SCM_TSTAMP_ACK"                  },
+    { ENOMSG,                           "ENOMSG"                          },
+
+    /* /usr/include/poll.h */
+    { POLLIN,                           "POLLIN"                          },
+    { POLLOUT,                          "POLLOUT"                         },
+    { POLLERR,                          "POLLERR"                         },
+    { POLLHUP,                          "POLLHUP"                         },
+    { POLLRDHUP,                        "POLLRDHUP"                       },
+    { POLLPRI,                          "POLLPRI"                         },
+    { POLLNVAL,                         "POLLNVAL"                        },
     /* Sentinel marking the end of the table. */
     { 0, nullptr },
 };
@@ -115,7 +207,11 @@ PacketDrillExpression::PacketDrillExpression(enum expression_t type_)
 
 PacketDrillExpression::~PacketDrillExpression()
 {
-    if (type == EXPR_LIST) {
+    // An empty array ('[]', or the implicit empty opt_cmsg alternative)
+    // parses with a null list rather than an empty cQueue -- nothing to
+    // free, and the cQueue::Iterator below would dereference the null
+    // pointer (see the matching guard in evaluateListExpression()).
+    if (type == EXPR_LIST && list) {
         for (cQueue::Iterator iter(*list); !iter.end(); iter++)
             list->remove((*iter));
         delete list;
@@ -165,6 +261,26 @@ int PacketDrillExpression::unescapeCstringExpression(const char *input_string, c
                     *c_out = '\v';
                     break;
 
+                case 'x': {
+                    // \xNN hex escape -- binary payloads, e.g. the 16 raw key
+                    // bytes of setsockopt(TCP_FASTOPEN_KEY, "\xf7\x63...").
+                    // (A NUL byte would truncate the C-string result; the
+                    // corpus's binary literals contain none.)
+                    int v = 0, n = 0;
+                    while (n < 2 && isxdigit((unsigned char)c_in[1])) {
+                        char d = c_in[1];
+                        v = v * 16 + (isdigit((unsigned char)d) ? d - '0' : (tolower((unsigned char)d) - 'a' + 10));
+                        ++c_in;
+                        ++n;
+                    }
+                    if (n == 0) {
+                        EV_DEBUG << "Empty \\x escape" << endl;
+                        return STATUS_ERR;
+                    }
+                    *c_out = (char)v;
+                    break;
+                }
+
                 default:
                     EV_DEBUG << "Unsupported escape code: " << *c_in << endl;
                     return STATUS_ERR;
@@ -176,6 +292,10 @@ int PacketDrillExpression::unescapeCstringExpression(const char *input_string, c
         ++c_in;
         ++c_out;
     }
+    // Escapes SHRINK the output below the input's length: without an explicit
+    // terminator, strlen() on the result reads uninitialized heap bytes past
+    // the last written character.
+    *c_out = '\0';
     return STATUS_OK;
 }
 
@@ -382,6 +502,11 @@ PacketDrillTcpOption::PacketDrillTcpOption(uint16_t kind_, uint16_t length_)
     blockList = nullptr;
     windowScale = 0;
     blockCount = 0;
+    fastOpenExperimental = false;
+    accEcn.present = 0;
+    accEcn.e0b = 0;
+    accEcn.e1b = 0;
+    accEcn.ceb = 0;
 }
 
 PacketDrillSctpChunk::PacketDrillSctpChunk(uint8_t type_, SctpChunk *sctpChunk)
