@@ -1280,7 +1280,123 @@ int PacketDrillApp::syscallSocket(struct syscall_spec *syscall, cQueue *args, ch
             break;
 
         case IP_PROT_TCP:
+            // Each script socket() call is a FRESH socket. Sequential
+            // multi-connection scripts (TFO cache warmup + the real attempt,
+            // close-listener-then-relisten servers) reuse the single primary
+            // TcpSocket member; without renewing it, the second socket()'s
+            // bind() throws "socket already bound" on the stale state.
+            if (tcpSocket.getState() != TcpSocket::NOT_BOUND) {
+                tcpSocket.renewSocket();
+                listenScriptFd = acceptedScriptFd = -1; // fd bookkeeping restarts with the fresh socket
+                lastDataSocketId = -1;
+                sndbufLimitBytes = 0; // SO_SNDBUF is per-socket
+                if (writerUnblockTimer->isScheduled())
+                    cancelEvent(writerUnblockTimer);
+                tfoSynDeferredKick = false; // per-connection state, gone with the old socket
+                tfoShadowSynDataEndOut = tfoShadowSynDataEndIn = 0;
+                tfoSynDataAckedShadow = false;
+                maxInjectedPayload = 0;
+                peerClosedSeen = false;
+                peerFinPending = false; // the old connection's FIN does not inflate the new stream's TCP_CM_INQ
+                connErrorSeen = false;
+                pollDeferred = false;
+                // Connection ids are per-connection: without this reset a later
+                // close()/shutdown() would route to the previous (already
+                // closed) connection's id and silently no-op -- no FIN.
+                tcpConnId = -1;
+                // TX timestamping / zerocopy are per-socket in Linux; the write
+                // counter and pending entries are keyed in the OLD connection's
+                // byte space and would never (or spuriously) match the new one.
+                txTsWriteSeq = 1;
+                txTsOptIdBase = 1;
+                pendingTxSchedSnd.clear();
+                pendingTxAck.clear();
+                txTimestampQueue.clear();
+                timestampingFlags = 0;
+                zerocopyEnabled = false;
+                if (pollTimer->isScheduled())
+                    cancelEvent(pollTimer);
+                if (cModule *tcpModule = getParentModule()->getSubmodule("tcp"))
+                    tcpModule->par("synRetries").setIntValue(-1); // TCP_SYNCNT is per-socket; a fresh socket() reverts to the default
+                // ... on a fresh LOCAL PORT: real packetdrill gives every
+                // socket a new ephemeral port, and the previous connection
+                // (TIME_WAIT, or a still-open listener) would otherwise
+                // capture the new connection's 5-tuple -- an injected conn-2
+                // SYN-ACK delivered to conn-1's TIME_WAIT PCB kills both.
+                // Injection and comparison stamp ports at run time (packets
+                // are prebuilt with the parse-time port), so everything
+                // follows this member.
+                // EXCEPT when the replaced socket was a LISTENER: compound
+                // server scripts (fastopen/server/pure-syn-data etc.) close
+                // the listener and re-bind the SAME port under SO_REUSEADDR
+                // -- bumping there desyncs the harness's port bookkeeping
+                // from the wire (srcPort expected N+1, actual N) while INET
+                // itself behaves correctly.
+                if (!socketWasListener) {
+                    localPort++;
+                }
+                else {
+                    // Replacing a LISTENER means the next inbound connection is
+                    // a NEW client: real packetdrill gives every server-side
+                    // connection a fresh ephemeral REMOTE port (run_packet.c
+                    // next_ephemeral_port), which is also what keeps a
+                    // lingering previous connection on the old tuple from
+                    // capturing the new connection's SYN (the DUT-side port is
+                    // deliberately NOT bumped -- the script re-binds it under
+                    // SO_REUSEADDR). Injection and comparison stamp ports at
+                    // run time, and the port-based defunct filter then hides
+                    // any stragglers from the old connection.
+                    remotePort++;
+                    // TCP_FASTOPEN_KEY is a PER-SOCKET override in Linux: a
+                    // fresh listener falls back to the global sysctl key. The
+                    // sockopt handler writes the Tcp module's fastopenKey
+                    // param directly, so restore the ini-mapped sysctl value
+                    // here (sockopt-fastopen-key pins the old cookie being
+                    // REJECTED by the third listener, which never sets a key).
+                    if (!fastopenKeySysctl.empty()) {
+                        if (cModule *tcpModule = getParentModule()->getSubmodule("tcp")) {
+                            if (strcmp(tcpModule->par("fastopenKey").stringValue(), fastopenKeySysctl.c_str()) != 0) {
+                                tcpModule->par("fastopenKey").setStringValue(fastopenKeySysctl.c_str());
+                                EV_INFO << "listener renewed: fastopenKey restored to sysctl value " << fastopenKeySysctl << "\n";
+                            }
+                        }
+                    }
+                }
+                // Purge tun packets buffered from the now-defunct previous
+                // connection (e.g. its FIN, buffered before this socket()
+                // advanced the port): real packetdrill's per-socket packet
+                // filter never sees them, but they would be picked up as
+                // livePacket for the NEW connection's first expectation and
+                // fail on "srcPort expected N+1 actual N". App-data
+                // messages (non-IP packets) stay queued -- they belong to
+                // the byte stream, not the wire.
+                {
+                    std::vector<Packet *> stale;
+                    for (cQueue::Iterator it(*receivedPackets); !it.end(); it++) {
+                        auto *qpkt = dynamic_cast<Packet *>(*it);
+                        if (qpkt && tcpPayloadLength(qpkt) >= 0)
+                            stale.push_back(qpkt);
+                    }
+                    for (auto *qpkt : stale) {
+                        EV_DETAIL << "Purging buffered tun packet from defunct connection\n";
+                        receivedPackets->remove(qpkt);
+                        delete (PacketDrillInfo *)qpkt->getContextPointer();
+                        delete qpkt;
+                    }
+                }
+            }
+            socketWasListener = false;
             tcpSocket.setOutputGate(gate("socketOut"));
+            // Without this, TcpSocket::processMessage()'s `if (cb) cb->...`
+            // guard is always false and every TcpSocket::ICallback override
+            // on this class (socketDataArrived, socketEstablished,
+            // socketStatusArrived, etc.) is silently never invoked for the
+            // app's own primary connection -- accepted (forked) sockets get
+            // setCallback() via `newSocket->setCallback(this)` elsewhere in
+            // this file, but the primary tcpSocket member never did.
+            tcpSocket.setCallback(this);
+            if (explicitRead)
+                tcpSocket.setAutoRead(false); // unread data stays in TCP's receive queue (real socket-buffer semantics); listeners propagate this to accepted connections
             tcpSocket.bind(localPort);
             break;
         case IP_PROT_SCTP:
@@ -1358,7 +1474,16 @@ int PacketDrillApp::syscallListen(struct syscall_spec *syscall, cQueue *args, ch
 
         case IP_PROT_TCP:
             listenSet = true;
+            socketWasListener = true;
+            listenScriptFd = script_fd;
             tcpSocket.listenOnce();
+            // Explicit-read mode drives Linux's sk->sk_socket ownership
+            // truthfully: the (non-forking) listening connection is EMBRYONIC
+            // until the script's accept() runs -- kernel behaviors like
+            // OOO-pressure rcvbuf growth are gated on ownership
+            // (ooo-before-and-after-accept pins both halves).
+            if (explicitRead)
+                tcpSocket.setOwned(false);
             break;
         case IP_PROT_SCTP: {
             sctpSocket.listen(0, true, 0, true, script_fd);
@@ -1380,6 +1505,21 @@ int PacketDrillApp::syscallAccept(struct syscall_spec *syscall, cQueue *args, ch
     PacketDrillExpression *exp = syscall->result;
     if (!exp || exp->getS32(&script_accepted_fd, error))
         return STATUS_ERR;
+    acceptedScriptFd = script_accepted_fd;
+    // explicit-read mode: the script's accept() is the moment the connection
+    // becomes application-OWNED (Linux sk->sk_socket) -- lift the embryonic
+    // marker set at listen() (with the non-forking listenOnce, tcpSocket
+    // itself IS the connection).
+    if (explicitRead && protocol == IP_PROT_TCP)
+        tcpSocket.setOwned(true);
+    // explicit-read mode deferred the TCP-level accept to THIS script event
+    // (see socketAvailable): perform it now -- the connection leaves its
+    // embryonic state exactly when the script's accept() runs, like Linux.
+    if (availablePending) {
+        availablePending = false;
+        completeTcpAccept(pendingAvailableSocket, &pendingAvailableInfo);
+        return STATUS_OK;
+    }
     if (establishedPending) {
         if (protocol == IP_PROT_TCP)
             tcpSocket.setState(TcpSocket::CONNECTED);
@@ -1395,9 +1535,46 @@ int PacketDrillApp::syscallAccept(struct syscall_spec *syscall, cQueue *args, ch
     return STATUS_OK;
 }
 
+void PacketDrillApp::sendTcpPayloadWithFlags(int64_t numBytes, int flags)
+{
+    // Shared TCP send path for write()/send()/sendto()/sendmsg(): builds the
+    // ByteCountChunk payload and routes the send-flag extensions to INET's
+    // socket API -- MSG_EOR marks a record boundary,
+    // MSG_ZEROCOPY (gated on a prior SO_ZEROCOPY like Linux) requests a
+    // completion notification collected by socketZerocopyCompletion().
+    if (tcpSocket.getState() == TcpSocket::LISTENING && acceptSet) {
+        // accept()/send same-tick race fixup (see syscallWrite's original
+        // comment): the script already ran accept() but the ESTABLISHED
+        // indication hasn't been delivered yet -- applies to every send-family
+        // syscall, not just write()/send() (caught live by sendmsg-based
+        // zerocopy scripts crashing on "state is LISTENING").
+        tcpSocket.setState(TcpSocket::CONNECTED);
+        acceptSet = false;
+    }
+    Packet *payload = new Packet("Write");
+    if (numBytes > 0)
+        payload->insertAtBack(makeShared<ByteCountChunk>(B(numBytes)));
+    // else: dataless send -- only legal as the TFO deferred-SYN kick
+    // (sendto(..., 0, MSG_FASTOPEN) with a cached cookie); process_SEND's
+    // deferred branch tolerates the empty packet and sends the bare
+    // cookie-bearing SYN.
+    if (flags & MSG_EOR)
+        payload->addTagIfAbsent<TcpSendEorReq>();
+    if ((flags & MSG_ZEROCOPY) && zerocopyEnabled)
+        payload->addTagIfAbsent<TcpSendZerocopyReq>();
+    if (flags & MSG_MORE)
+        payload->addTagIfAbsent<TcpSendMoreReq>();
+    // TX timestamping (SO_TIMESTAMPING): register this write's last-byte key so its
+    // SCM_TSTAMP_SCHED/SND/ACK errqueue entries can be generated as the data is
+    // transmitted and acked (drained by recvmsg(MSG_ERRQUEUE)).
+    if (numBytes > 0)
+        recordTxTimestampWrite(numBytes);
+    tcpSocket.send(payload);
+}
+
 int PacketDrillApp::syscallWrite(struct syscall_spec *syscall, cQueue *args, char **error)
 {
-    int script_fd, count;
+    int script_fd, count, flags = 0;
     PacketDrillExpression *exp;
 
     if (args->getLength() > 4)
@@ -1411,12 +1588,58 @@ int PacketDrillApp::syscallWrite(struct syscall_spec *syscall, cQueue *args, cha
     exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(2));
     if (!exp || exp->getS32(&count, error))
         return STATUS_ERR;
+    if (args->getLength() == 4) { // send() has a flags argument, write() doesn't
+        exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(3));
+        if (!exp || exp->getS32(&flags, error))
+            return STATUS_ERR;
+    }
 
     switch (protocol) {
         case IP_PROT_TCP: {
-            Packet *payload = new Packet("Write");
-            payload->setByteLength(syscall->result->getNum());
-            tcpSocket.send(payload);
+            if (tcpSocket.getState() == TcpSocket::LISTENING && acceptSet) {
+                // The script's own event clock already ran accept() on this
+                // socket, but the real ESTABLISHED indication from the Tcp
+                // module is only delivered in a later event, not yet visible
+                // here -- mirrors the same manual state fixup syscallAccept()
+                // already applies via establishedPending, just reactively at
+                // the point of use instead of proactively at accept() time.
+                tcpSocket.setState(TcpSocket::CONNECTED);
+                acceptSet = false;
+            }
+            // A BLOCKING write bigger than the send buffer (SO_SNDBUF seen
+            // earlier): the script's syscall-duration annotation
+            // ("+.09...0.14") is application-behavior ground truth recorded on
+            // the real kernel -- the writer was stalled on buffer space until
+            // its end time. Convey that to TCP for the SNDBUF_LIMITED chrono
+            // (tcp-info-sndbuf-limited pins ~20ms of transmission actually
+            // starved inside that window).
+            if (sndbufLimitBytes > 0 && (long)count > sndbufLimitBytes
+                    && currentSyscallEnd > simTime()) {
+                tcpSocket.setWriterBlocked(true);
+                rescheduleAt(currentSyscallEnd, writerUnblockTimer);
+            }
+            // A script's asserted return value can be a negative errno (e.g.
+            // "send(...) = -1 EPIPE" on a closed/reset connection) rather than
+            // a byte count -- only build and send a payload for a successful,
+            // non-negative return; an error return means nothing was sent.
+            if (syscall->result->getNum() > 0) {
+                // inet::Packet overrides setBitLength()/setByteLength() to
+                // throw (packet length must come from its Chunk content);
+                // sendTcpPayloadWithFlags gives it a ByteCountChunk of the
+                // script's asserted length instead -- the actual byte values
+                // are irrelevant to this framework's model.
+                sendTcpPayloadWithFlags(syscall->result->getNum(), flags);
+            }
+            else if (tfoSynDeferredKick) {
+                // TFO deferred SYN: Linux transmits the SYN(+data) INSIDE this
+                // failing/blocking write() -- the scripted error (ECONNREFUSED,
+                // ETIMEDOUT, ...) describes a LATER outcome. Send the requested
+                // byte count (INET caps it to the SYN payload limit); without
+                // this kick the deferred SYN never fires and the connection
+                // stalls until the 75s conn-estab safety net.
+                sendTcpPayloadWithFlags(count, flags);
+            }
+            tfoSynDeferredKick = false;
             break;
         }
         case IP_PROT_SCTP: {
@@ -1459,7 +1682,18 @@ int PacketDrillApp::syscallConnect(struct syscall_spec *syscall, cQueue *args, c
     if (!exp || exp->getS32(&script_fd, error))
         return STATUS_ERR;
     exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(1));
-    if (!exp || (exp->getType() != EXPR_ELLIPSIS))
+    if (!exp)
+        return STATUS_ERR;
+    // connect(fd, AF_UNSPEC, ...) is Linux's tcp_disconnect(): abort the
+    // connection (RST if the peer sent data / a handshake is in flight) and
+    // return the SAME fd to a fresh unconnected state, ready for a new
+    // connect() (tcp_fastopen_server_trigger-rst-reconnect). The bareword
+    // AF_UNSPEC is the only non-'...' address the corpus uses here.
+    int64_t addrFamily = -1;
+    bool disconnect = (exp->getType() == EXPR_WORD && exp->getString() != nullptr
+                       && !strcmp(exp->getString(), "AF_UNSPEC"))
+                      || (exp->getType() == EXPR_INTEGER && (addrFamily = exp->getNum()) == AF_UNSPEC);
+    if (!disconnect && exp->getType() != EXPR_ELLIPSIS)
         return STATUS_ERR;
     exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(2));
     if (!exp || (exp->getType() != EXPR_ELLIPSIS))
@@ -1470,7 +1704,45 @@ int PacketDrillApp::syscallConnect(struct syscall_spec *syscall, cQueue *args, c
             break;
 
         case IP_PROT_TCP:
-            tcpSocket.connect(remoteAddress, remotePort);
+            if (disconnect) {
+                if (tcpSocket.getState() == TcpSocket::LISTENING && acceptSet) {
+                    // same accept()/same-tick race fixup as the send paths:
+                    // the ESTABLISHED indication hasn't been delivered yet
+                    tcpSocket.setState(TcpSocket::CONNECTED);
+                    acceptSet = false;
+                }
+                tcpSocket.abort();       // Linux tcp_disconnect sends the RST for an active/child conn
+                tcpSocket.renewSocket(); // same fd, fresh socket underneath
+                tcpSocket.setOutputGate(gate("socketOut"));
+                tcpSocket.setCallback(this);
+                if (explicitRead)
+                    tcpSocket.setAutoRead(false);
+                tcpSocket.bind(localPort);
+                tcpConnId = tcpSocket.getSocketId();
+                tfoSynDeferredKick = false;
+                peerClosedSeen = false;
+                peerFinPending = false; // fresh stream: the old connection's FIN no longer counts toward TCP_CM_INQ
+                connErrorSeen = false;
+                break;
+            }
+            // Repeat connect() on an already-connecting/connected socket:
+            // Linux returns EALREADY/EISCONN (the scripted error result) and
+            // nothing happens on the wire -- calling TcpSocket::connect()
+            // again would throw "connect() already called".
+            if (tcpSocket.getState() == TcpSocket::CONNECTING || tcpSocket.getState() == TcpSocket::CONNECTED) {
+                fastopenConnectPending = false;
+                break;
+            }
+            // A prior setsockopt(TCP_FASTOPEN_CONNECT) turns this connect()
+            // into INET's Fast Open connect (deferred SYN when a cookie is
+            // cached, cookie-request SYN otherwise).
+            tcpSocket.connect(remoteAddress, remotePort, fastopenConnectPending);
+            // With a cached cookie the fastOpen connect DEFERS its SYN until the
+            // first send -- remember that so the next send-family syscall kicks
+            // it even on a scripted error/0-byte result (see tfoSynDeferredKick).
+            if (fastopenConnectPending && (tfoCookieCached || tfoNoCookieMode))
+                tfoSynDeferredKick = true;
+            fastopenConnectPending = false;
             // tcpConnId is otherwise never assigned (stays at its -1 default),
             // so later syscalls (close, read, ...) tag their SocketReq with -1,
             // which Tcp interprets as "create a new connection" instead of
@@ -1490,13 +1762,187 @@ int PacketDrillApp::syscallConnect(struct syscall_spec *syscall, cQueue *args, c
     return STATUS_OK;
 }
 
+int PacketDrillApp::setsockoptTcpLevel(int level, cQueue *args, char **error)
+{
+    // TCP/UDP-family setsockopt (harness upgrade for INET #1155):
+    // dispatch on (level, optname) and route the options INET's TcpSocket now
+    // models to its new API calls; recognize-and-ignore the rest so scripts
+    // don't fail on secondary knobs. The value argument is usually a
+    // single-element list ([1], [4000]); flag combinations (SO_TIMESTAMPING)
+    // have already been folded to one integer by expression evaluation.
+    int optname = -1;
+    int64_t optval = 0;
+    PacketDrillExpression *exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(2));
+    if (!exp || exp->getS32(&optname, error))
+        return STATUS_ERR;
+    exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(3));
+    if (exp && exp->getType() == EXPR_LIST && exp->getList() && exp->getList()->getLength() == 1) {
+        if (auto *v = check_and_cast_nullable<PacketDrillExpression *>(exp->getList()->get(0)))
+            if (v->getType() == EXPR_INTEGER)
+                optval = v->getNum();
+    }
+
+    if (level == SOL_SOCKET) {
+        switch (optname) {
+            case SO_ZEROCOPY:
+                // Gate for MSG_ZEROCOPY sends, mirroring Linux's requirement
+                // that the flag only works after SO_ZEROCOPY is enabled.
+                zerocopyEnabled = (optval != 0);
+                return STATUS_OK;
+            case SO_TIMESTAMPING:
+                // INET models RX delivery-time stamps only (TcpRxTimestampInd);
+                // the TX flag bits (SOF_TIMESTAMPING_TX_*) requested by the
+                // corpus's timestamping scripts have no INET counterpart --
+                // recorded so recvmsg(MSG_ERRQUEUE) can report the honest gap.
+                timestampingFlags = (int)optval;
+                // OPT_ID keys count byte offsets from the point the option is
+                // enabled (Linux sk_tskey), not from connection start -- capture the
+                // current write position so mid-stream enablement keys correctly.
+                if (optval & SOF_TIMESTAMPING_OPT_ID)
+                    txTsOptIdBase = txTsWriteSeq;
+                tcpSocket.setTimestamping(optval != 0);
+                return STATUS_OK;
+            case SO_SNDBUF:
+                // Linux sk_sndbuf = 2 * optval (getsockopt confirms the
+                // doubling in the scripts). Recorded so a later blocking
+                // write() larger than the buffer drives the writer-blocked /
+                // SNDBUF_LIMITED chrono (tcp-info-sndbuf-limited).
+                sndbufLimitBytes = 2L * optval;
+                return STATUS_OK;
+            case SO_RCVBUF: {
+                // Model SO_RCVBUF's effect on the advertised receive window and
+                // the SYN/SYN-ACK window-scale shift. Linux: sk_rcvbuf = 2*optval,
+                // the offered window = tcp_win_from_space(sk_rcvbuf) (default
+                // scaling_ratio halves it, so = optval), quantized DOWN to a whole
+                // advertised MSS. INET reproduces this exactly if we set
+                // advertisedWindow to that quantized value and let windowScalingFactor
+                // auto-select (-1): configureStateVariables' shift loop then derives
+                // the same wscale, and rcv_wnd is capped to 65535 on the SYN-ACK just
+                // as Linux advertises min(rcv_wnd, 65535) unscaled. Without this INET
+                // advertises its fixed base wscale (from base.ini) and every
+                // SO_RCVBUF script diverges at the SYN-ACK. Must land before the
+                // connection is configured -- the rcv scripts set it pre-listen.
+                const int ADVMSS = 1460; // IPv4 advertised MSS; the rcv corpus is all IPv4
+                long advWnd = ((long)optval / ADVMSS) * ADVMSS; // rounddown to a whole advmss
+                if (advWnd < ADVMSS)
+                    advWnd = ADVMSS;
+                // On an ESTABLISHED socket the module parameters are already spent --
+                // the connection read them at open time -- so the new buffer has to
+                // reach the connection itself. That is also the only form that pins
+                // the buffer (SOCK_RCVBUF_LOCK), which is what makes shrinking it a
+                // genuine memory squeeze rather than an invitation to grow again.
+                if (tcpSocket.getState() == TcpSocket::CONNECTED) {
+                    tcpSocket.setReceiveBufferSize(2 * optval);
+                    return STATUS_OK;
+                }
+                if (cModule *tcpModule = getParentModule()->getSubmodule("tcp")) {
+                    tcpModule->par("advertisedWindow").setIntValue(advWnd);
+                    tcpModule->par("windowScalingFactor").setIntValue(-1);
+                    // sk_rcvbuf itself, which is what the window's free-space
+                    // arithmetic and the receive-memory accounting work against.
+                    // SO_RCVBUF also pins it (SOCK_RCVBUF_LOCK), whatever the socket's
+                    // state, so the kernel's grow-under-pressure path is off from here on.
+                    tcpModule->par("receiveBufferSize").setDoubleValue(2.0 * optval);
+                    tcpModule->par("receiveBufferLocked").setBoolValue(true);
+                }
+                return STATUS_OK;
+            }
+            default:
+                EV_INFO << "setsockopt(SOL_SOCKET, " << optname << ") not modeled, ignored\n";
+                return STATUS_OK;
+        }
+    }
+    else if (level == IPPROTO_TCP) { // == SOL_TCP
+        switch (optname) {
+            case TCP_NOTSENT_LOWAT:
+                tcpSocket.setNotsentLowat((int)optval);
+                return STATUS_OK;
+            case TCP_MAXSEG:
+                tcpSocket.setMaxSeg((int)optval);
+                return STATUS_OK;
+            case TCP_SYNCNT:
+                // per-socket SYN-retransmission cap: inject into the module's
+                // @mutable synRetries (reset to -1 on the next socket(), see
+                // syscallSocket -- the sockopt is per-socket in Linux)
+                if (cModule *tcpModule = getParentModule()->getSubmodule("tcp"))
+                    tcpModule->par("synRetries").setIntValue(optval);
+                return STATUS_OK;
+            case TCP_NODELAY:
+                tcpSocket.setNoDelay(optval != 0);
+                return STATUS_OK;
+            case TCP_CORK:
+                tcpSocket.setCork(optval != 0);
+                return STATUS_OK;
+            case TCP_FASTOPEN_CONNECT:
+                // Consumed by syscallConnect: the next connect() on this
+                // socket uses INET's fastOpen connect overload.
+                fastopenConnectPending = (optval != 0);
+                return STATUS_OK;
+            case TCP_FASTOPEN:
+                // Server-side enable; the INET run already enables INET's
+                // fastopenServerEnabled via the sysctl-driven ini mapping.
+                return STATUS_OK;
+            case TCP_FASTOPEN_KEY: {
+                // 16 raw key bytes as a quoted string of \xNN escapes --
+                // equivalent to writing the tcp_fastopen_key sysctl. Convert
+                // to the sysctl's "%08x-..." text form (le32 words) and set
+                // the Tcp module's fastopenKey, so INET's Linux-compatible
+                // SipHash cookie derivation uses it for later connections.
+                PacketDrillExpression *sexp = check_and_cast_nullable<PacketDrillExpression *>(args->get(3));
+                if (sexp && sexp->getType() == EXPR_STRING && sexp->getString()) {
+                    std::vector<uint8_t> bytes;
+                    const char *p = sexp->getString();
+                    size_t n = strlen(p);
+                    for (size_t i = 0; i < n; ) {
+                        if (p[i] == '\\' && i + 3 < n && (p[i+1] == 'x' || p[i+1] == 'X')) {
+                            bytes.push_back((uint8_t)strtol(std::string(p + i + 2, 2).c_str(), nullptr, 16));
+                            i += 4;
+                        }
+                        else {
+                            bytes.push_back((uint8_t)p[i]);
+                            i++;
+                        }
+                    }
+                    if (bytes.size() >= 16) {
+                        auto w = [&](int k) {
+                            return (uint32_t)bytes[k] | ((uint32_t)bytes[k+1] << 8)
+                                 | ((uint32_t)bytes[k+2] << 16) | ((uint32_t)bytes[k+3] << 24);
+                        };
+                        char buf[40];
+                        snprintf(buf, sizeof(buf), "%08x-%08x-%08x-%08x", w(0), w(4), w(8), w(12));
+                        if (cModule *tcpModule = getParentModule()->getSubmodule("tcp")) {
+                            // remember the global (sysctl-mapped) key so a later
+                            // listener renewal can fall back to it -- the sockopt
+                            // key is per-socket in Linux, not global
+                            if (fastopenKeySysctl.empty())
+                                fastopenKeySysctl = tcpModule->par("fastopenKey").stringValue();
+                            tcpModule->par("fastopenKey").setStringValue(buf);
+                        }
+                        EV_INFO << "setsockopt(TCP_FASTOPEN_KEY): fastopenKey <- " << buf << "\n";
+                    }
+                    else
+                        EV_WARN << "setsockopt(TCP_FASTOPEN_KEY): only " << bytes.size() << " bytes parsed, ignored\n";
+                }
+                else
+                    EV_WARN << "setsockopt(TCP_FASTOPEN_KEY): unexpected value expr type "
+                            << (sexp ? (int)sexp->getType() : -1) << ", ignored\n";
+                return STATUS_OK;
+            }
+            default:
+                EV_INFO << "setsockopt(SOL_TCP, " << optname << ") not modeled, ignored\n";
+                return STATUS_OK;
+        }
+    }
+    EV_INFO << "setsockopt(level=" << level << ") not modeled, ignored\n";
+    return STATUS_OK;
+}
+
 int PacketDrillApp::syscallSetsockopt(struct syscall_spec *syscall, cQueue *args, char **error)
 {
     int script_fd, level, optname;
     PacketDrillExpression *exp;
 
     args->setName("syscallSetsockopt");
-    assert(protocol == IP_PROT_SCTP);
     if (args->getLength() != 5)
         return STATUS_ERR;
     exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(0));
@@ -1505,6 +1951,8 @@ int PacketDrillApp::syscallSetsockopt(struct syscall_spec *syscall, cQueue *args
     exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(1));
     if (!exp || exp->getS32(&level, error))
         return STATUS_ERR;
+    if (protocol != IP_PROT_SCTP)
+        return setsockoptTcpLevel(level, args, error);
     if (level != IPPROTO_SCTP) {
         return STATUS_ERR;
     }
@@ -1691,7 +2139,6 @@ int PacketDrillApp::syscallGetsockopt(struct syscall_spec *syscall, cQueue *args
     int script_fd, level, optname;
     PacketDrillExpression *exp;
 
-    assert(protocol == IP_PROT_SCTP);
     if (args->getLength() != 5)
         return STATUS_ERR;
     exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(0));
@@ -1700,6 +2147,14 @@ int PacketDrillApp::syscallGetsockopt(struct syscall_spec *syscall, cQueue *args
     exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(1));
     if (!exp || exp->getS32(&level, error))
         return STATUS_ERR;
+    if (protocol != IP_PROT_SCTP) {
+        // TCP/UDP-family getsockopt: the script's bracketed value is its own
+        // asserted expectation of what the kernel returns; INET has no
+        // readback path for these options, so recognize-and-accept rather
+        // than fail the whole script on a query.
+        EV_INFO << "getsockopt(level=" << level << ") not modeled, accepted as asserted\n";
+        return STATUS_OK;
+    }
     if (level != IPPROTO_SCTP) {
         return STATUS_ERR;
     }
@@ -1755,12 +2210,69 @@ int PacketDrillApp::syscallSendTo(struct syscall_spec *syscall, cQueue *args, ch
     if (!exp || (exp->getType() != EXPR_ELLIPSIS))
         return STATUS_ERR;
 
-    Packet *payload = new Packet("SendTo");
-    payload->setByteLength(count);
-
     switch (protocol) {
-        case IP_PROT_UDP:
+        case IP_PROT_UDP: {
+            Packet *payload = new Packet("SendTo");
+            // sendto(..., 0, ...) is a valid zero-length UDP datagram; a
+            // zero-length ByteCountChunk would trip the chunk API's
+            // "chunk is empty" usage check.
+            if (count > 0)
+                payload->insertAtBack(makeShared<ByteCountChunk>(B(count)));
             udpSocket.sendTo(payload, remoteAddress, remotePort);
+            break;
+        }
+
+        case IP_PROT_TCP:
+            // sendto(..., MSG_FASTOPEN, ...) is Linux's single-syscall Fast
+            // Open connect+send: route the implicit connect through INET's
+            // fastOpen overload so a cached cookie defers the
+            // SYN and attaches this data to it, and a cookie-less socket sends
+            // the bare cookie-request SYN -- exactly Linux's two TFO phases.
+            // A LISTENING socket is the SERVER side: sendto() there is a plain
+            // send on the accepted connection (e.g. sendto(..., MSG_ZEROCOPY)
+            // in the zerocopy fastopen-server tests), never an implicit
+            // connect -- sendTcpPayloadWithFlags()'s LISTENING+acceptSet fixup
+            // handles the socket state, same as write()/send().
+            if (tcpSocket.getState() != TcpSocket::CONNECTED && tcpSocket.getState() != TcpSocket::CONNECTING
+                    && tcpSocket.getState() != TcpSocket::LISTENING) {
+                bool fastOpen = (flags & MSG_FASTOPEN) || fastopenConnectPending;
+                if (fastOpen && !tfoClientEnabled && syscall->result->getNum() < 0) {
+                    // Linux rejects MSG_FASTOPEN with EOPNOTSUPP while
+                    // net.ipv4.tcp_fastopen bit 0x1 is off: no connection is
+                    // created, nothing goes on the wire, and a LATER sendto
+                    // after re-enabling starts from scratch.
+                    fastopenConnectPending = false;
+                    break;
+                }
+                tcpSocket.connect(remoteAddress, remotePort, fastOpen);
+                fastopenConnectPending = false;
+                tcpConnId = tcpSocket.getSocketId();
+                // Cached cookie -> INET deferred the SYN; this very sendto must
+                // release it below even on a scripted error/0-byte result.
+                if (fastOpen && (tfoCookieCached || tfoNoCookieMode))
+                    tfoSynDeferredKick = true;
+            }
+            // A script-asserted failure return means Linux REJECTED the data:
+            // sendto(MSG_FASTOPEN) with no cached cookie returns -1 EINPROGRESS
+            // and only the (dataless, cookie-requesting) connect proceeds -- the
+            // payload is never queued, so nothing must be transmitted after the
+            // handshake either. Queuing it would emit a phantom data segment.
+            // Linux accepts exactly the scripted RESULT bytes: a short TFO
+            // write's excess is never taken into the socket, so enqueueing
+            // `count` would emit a phantom post-handshake segment (the
+            // empty-buf script's third connection: sendto(...,2000,...)=900
+            // puts 900 bytes on the SYN and nothing more). A negative result
+            // with a deferred TFO SYN still carries the requested bytes on
+            // the SYN (INET caps them; the connection dies before the excess
+            // could flush), and count==0 releases the dataless SYN.
+            if (syscall->result->getNum() >= 0) {
+                int64_t accepted = std::min((int64_t)count, syscall->result->getNum());
+                if (accepted > 0 || tfoSynDeferredKick)
+                    sendTcpPayloadWithFlags(accepted, flags);
+            }
+            else if (tfoSynDeferredKick)
+                sendTcpPayloadWithFlags(count, flags);
+            tfoSynDeferredKick = false;
             break;
 
         default:
@@ -1895,7 +2407,10 @@ int PacketDrillApp::syscallRead(PacketDrillEvent *event, struct syscall_spec *sy
     if (syscall->result->getNum() == -1) {
         return STATUS_OK;
     }
-    if (args->getLength() != 3)
+    // 3 args = read(fd, buf, count); 4 args = recv(fd, buf, count, flags) --
+    // same byte-stream consumption, the flags argument is not modeled (the
+    // corpus uses plain 0 / MSG_DONTWAIT, both equivalent under autoRead).
+    if (args->getLength() != 3 && args->getLength() != 4)
         return STATUS_ERR;
     exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(0));
     if (!exp || exp->getS32(&script_fd, error))
@@ -1908,16 +2423,44 @@ int PacketDrillApp::syscallRead(PacketDrillEvent *event, struct syscall_spec *sy
         return STATUS_ERR;
 
     if ((expectedMessageSize = syscall->result->getNum()) > 0) {
+        // Explicit-read model: arrived data is still in TCP's receive queue
+        // (autoRead off) -- ask for it. TCP delivers up to `count` bytes as a
+        // TCP_I_DATA message; socketDataArrived() queues it and the deferred
+        // completion below finishes the syscall against the scripted result.
+        if (protocol == IP_PROT_TCP && explicitRead && availableAppBytes() < syscall->result->getNum()) {
+            TcpSocket *readSocket = &tcpSocket;
+            if (lastDataSocketId != -1) {
+                // server scripts: the byte stream lives on the ACCEPTED socket
+                if (auto *s = dynamic_cast<TcpSocket *>(socketMap.getSocketById(lastDataSocketId)))
+                    readSocket = s;
+            }
+            readSocket->read(count);
+            msgArrived = false;
+            recvFromSet = true;
+            return STATUS_OK;
+        }
         if (msgArrived || receivedPackets->getLength() > 0) {
             switch (protocol) {
                 case IP_PROT_TCP: {
-                    Request *msg = new Request("dataRequest", TCP_C_READ);
-                    TcpCommand *tcpcmd = new TcpCommand();
-                    msg->addTag<SocketReq>()->setSocketId(tcpConnId);
-                    msg->addTag<DispatchProtocolReq>()->setProtocol(&Protocol::tcp);
-                    msg->setControlInfo(tcpcmd);
-                    send(msg, "socketOut"); // send to TCP
-                    break;
+                    // This harness always runs TCP sockets in autoRead mode, so
+                    // arrived data was already delivered by socketDataArrived()
+                    // and queued. The queued messages form ONE byte stream
+                    // (Linux read() semantics): a read may stop mid-message
+                    // (partial read, e.g. read(...,1000)=1000 of 10000 queued)
+                    // or span several arrival chunks. A short read (result <
+                    // count) is legal exactly when it drains the stream.
+                    int64_t expected = syscall->result->getNum();
+                    int64_t avail = availableAppBytes();
+                    if (avail >= expected) {
+                        if (expected < count && avail > expected)
+                            throw cTerminationException("Packetdrill error: Wrong payload length"); // short read asserted while more data was queued
+                        consumeAppBytes(expected);
+                        return STATUS_OK;
+                    }
+                    // not enough delivered yet: defer, socketDataArrived() completes it
+                    msgArrived = false;
+                    recvFromSet = true;
+                    return STATUS_OK;
                 }
                 case IP_PROT_SCTP: {
                     Packet *pkt = new Packet("dataRequest", SCTP_C_RECEIVE);
@@ -1944,7 +2487,14 @@ int PacketDrillApp::syscallRead(PacketDrillEvent *event, struct syscall_spec *sy
     }
     else {
         if (msgArrived) {
-            outboundPackets->pop();
+            // Legacy flow -- do not pop an outbound EXPECTATION that is not
+            // there: a read()<=0 while data has arrived can legitimately
+            // coincide with an empty expectation queue (e.g. a server whose
+            // strict TFO cookie validation rejected the SYN data, so the
+            // script's read comes before any outbound line), and popping an
+            // empty cPacketQueue kills the simulation.
+            if (outboundPackets->getLength() > 0)
+                outboundPackets->pop();
             msgArrived = false;
         }
     }
@@ -2003,6 +2553,632 @@ int PacketDrillApp::syscallRecvFrom(PacketDrillEvent *event, struct syscall_spec
     return STATUS_OK;
 }
 
+int PacketDrillApp::syscallSendMsg(struct syscall_spec *syscall, cQueue *args, char **error)
+{
+    PacketDrillExpression *exp;
+    int flags = 0;
+
+    if (args->getLength() != 3)
+        return STATUS_ERR;
+    exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(1));
+    if (!exp || (exp->getType() != EXPR_MSGHDR))
+        return STATUS_ERR;
+    exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(2));
+    if (exp && exp->getType() == EXPR_INTEGER)
+        flags = (int)exp->getNum();
+
+    // sendmsg(..., MSG_FASTOPEN) on an unconnected socket is an implicit TFO
+    // connect: even with a script-asserted failure result (-1 EINPROGRESS, the
+    // canonical cookie-less first attempt) Linux still sends the cookie-request
+    // SYN, so the connect must run BEFORE the negative-result bail-out below --
+    // same ordering as syscallSendTo(). EOPNOTSUPP (client TFO sysctl off, with
+    // the scripted failure result) creates no connection and nothing on the wire.
+    if (protocol == IP_PROT_TCP && (flags & MSG_FASTOPEN)
+        && tcpSocket.getState() != TcpSocket::CONNECTED && tcpSocket.getState() != TcpSocket::CONNECTING
+        && (tfoClientEnabled || syscall->result->getNum() >= 0))
+    {
+        tcpSocket.connect(remoteAddress, remotePort, true);
+        tcpConnId = tcpSocket.getSocketId();
+    }
+
+    // Errors (e.g. sendmsg-empty-iov's EINVAL) have nothing to send.
+    if (syscall->result->getNum() < 0)
+        return STATUS_OK;
+
+    switch (protocol) {
+        case IP_PROT_TCP: {
+            // Same coarse "send N bytes, trust the script's asserted return
+            // value" model as syscallWrite(); the flag argument's modeled
+            // bits (MSG_EOR/MSG_ZEROCOPY/MSG_FASTOPEN) now route through the
+            // same shared path as send()/sendto(). msg_control on the send
+            // side is still not modeled.
+            if (syscall->result->getNum() > 0) {
+                // MSG_ZEROCOPY pins each iovec element as one skb frag, so an
+                // iov of more than MAX_SKB_FRAGS (17 with 4K pages) elements
+                // spills into multiple skbs -- each transmitted as its own
+                // PSH-marked segment (tcp/zerocopy/maxfrags.pkt pins the
+                // 17+1 and 17+17+17+13 shapes). Model an skb boundary as a
+                // record boundary (MSG_EOR): sendSegment then stops and sets
+                // PSH exactly at the chunk edges. The zerocopy completion
+                // stays ONE per sendmsg (tag only the final chunk). Without
+                // zerocopy (or with a small iov) the elements coalesce into
+                // one linear skb -- the plain single-payload path.
+                std::vector<int64_t> chunks;
+                exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(1));
+                struct msghdr_expr *msghdr = exp ? exp->getMsghdr() : nullptr;
+                if ((flags & MSG_ZEROCOPY) && zerocopyEnabled && msghdr && msghdr->msg_iov
+                        && msghdr->msg_iov->getType() == EXPR_LIST)
+                {
+                    const int MAX_SKB_FRAGS = 17;
+                    int64_t chunkBytes = 0, totalBytes = 0;
+                    int frags = 0;
+                    for (cQueue::Iterator it(*msghdr->msg_iov->getList()); !it.end(); it++) {
+                        auto *iovExp = check_and_cast<PacketDrillExpression *>(*it);
+                        struct iovec_expr *iov = iovExp->getIovec();
+                        int32_t len = 0;
+                        char *err = nullptr;
+                        if (!iov || !iov->iov_len || iov->iov_len->getS32(&len, &err))
+                            { chunks.clear(); totalBytes = -1; break; }
+                        if (frags == MAX_SKB_FRAGS) {
+                            chunks.push_back(chunkBytes);
+                            chunkBytes = 0;
+                            frags = 0;
+                        }
+                        chunkBytes += len;
+                        totalBytes += len;
+                        frags++;
+                    }
+                    if (chunkBytes > 0)
+                        chunks.push_back(chunkBytes);
+                    // only trust the split if the iov's total matches the
+                    // asserted return (no partial-write modeling)
+                    if (totalBytes != syscall->result->getNum())
+                        chunks.clear();
+                }
+                if (chunks.size() > 1) {
+                    for (size_t i = 0; i < chunks.size(); i++) {
+                        int chunkFlags = (flags | MSG_EOR);
+                        if (i + 1 < chunks.size())
+                            chunkFlags &= ~MSG_ZEROCOPY;
+                        sendTcpPayloadWithFlags(chunks[i], chunkFlags);
+                    }
+                }
+                else
+                    sendTcpPayloadWithFlags(syscall->result->getNum(), flags);
+            }
+            break;
+        }
+        default:
+            EV_INFO << "Protocol not supported for this socket call";
+            break;
+    }
+    return STATUS_OK;
+}
+
+int PacketDrillApp::syscallRecvMsg(PacketDrillEvent *event, struct syscall_spec *syscall, cQueue *args, char **error)
+{
+    PacketDrillExpression *exp;
+    int flags = 0;
+
+    if (args->getLength() != 3)
+        return STATUS_ERR;
+    exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(1));
+    if (!exp || (exp->getType() != EXPR_MSGHDR))
+        return STATUS_ERR;
+    if (auto *flagsExp = check_and_cast_nullable<PacketDrillExpression *>(args->get(2)))
+        if (flagsExp->getType() == EXPR_INTEGER)
+            flags = (int)flagsExp->getNum();
+
+    // recvmsg(MSG_ERRQUEUE) reads the error queue (zerocopy completions,
+    // TX timestamps), never the data stream -- it must not consume a queued
+    // data packet nor arm the deferred-read machinery.
+    if (flags & MSG_ERRQUEUE)
+        return verifyMsgErrQueue(exp->getMsghdr(), syscall, error);
+
+    // A script-asserted failure (e.g. recvmsg(...) = -1 EAGAIN) consumes
+    // nothing and must not arm the deferred-read machinery:
+    // expectedMessageSize is unsigned, so -1 would wedge every later
+    // socketDataArrived() in its availableAppBytes() early-return forever.
+    // (syscallRead has the same guard.)
+    if (syscall->result->getNum() < 0)
+        return STATUS_OK;
+
+    // recvmsg reads the TCP byte stream like read() (Linux semantics): a queued
+    // message may be read partially (e.g. recvmsg(...)=2000 of 10000 queued), with
+    // the unread remainder reported to the app via a TCP_CM_INQ control message.
+    // Consume from the same stream buffer read()/recvfrom() use rather than
+    // requiring exactly one whole arrival message per call.
+    int64_t expected = syscall->result->getNum();
+    if (msgArrived || receivedPackets->getLength() > 0) {
+        if (availableAppBytes() >= expected) {
+            consumeAppBytes(expected);
+            msgArrived = (availableAppBytes() > 0);
+            recvFromSet = false;
+            // TCP_CM_INQ, if asserted, reports the bytes still queued after this read.
+            if (verifyMsgControlInq(exp->getMsghdr(), error) == STATUS_ERR)
+                throw cTerminationException("Packetdrill error: TCP_CM_INQ value mismatch");
+            return STATUS_OK;
+        }
+        // not enough delivered yet: defer, socketDataArrived() completes it (byte
+        // length only -- the msghdr, and any TCP_CM_INQ assert, is gone by then).
+        msgArrived = false;
+        recvFromSet = true;
+        expectedMessageSize = expected;
+        return STATUS_OK;
+    }
+    else {
+        expectedMessageSize = expected;
+        recvFromSet = true;
+    }
+    return STATUS_OK;
+}
+
+int PacketDrillApp::verifyMsgControlInq(struct msghdr_expr *msgExpr, char **error)
+{
+    if (!msgExpr || !msgExpr->msg_control)
+        return STATUS_OK;
+    cQueue *cmsgList = msgExpr->msg_control->getList();
+    if (!cmsgList)
+        return STATUS_OK;
+    for (cQueue::Iterator it(*cmsgList); !it.end(); it++) {
+        auto *cmsgExpr = check_and_cast<PacketDrillExpression *>(*it);
+        if (cmsgExpr->getType() != EXPR_CMSG)
+            continue;
+        struct cmsg_expr *cmsg = cmsgExpr->getCmsg();
+        int32_t cmsgType;
+        if (cmsg->cmsg_type->getS32(&cmsgType, error))
+            continue; // symbolic/unresolved cmsg_type: nothing we can check
+        if (cmsgType != TCP_CM_INQ)
+            continue; // other cmsg types (zerocopy completion, timestamping, ...) aren't modeled
+        int32_t expectedInq;
+        if (cmsg->cmsg_data->getS32(&expectedInq, error))
+            return STATUS_ERR;
+        // Bytes still queued in the receive stream AFTER this recvmsg's read
+        // (the caller consumes first); availableAppBytes() accounts for a
+        // partially-read front message, unlike a raw sum of message lengths.
+        int64_t actualInq = availableAppBytes() + (peerFinPending ? 1 : 0);
+        if (actualInq != expectedInq) {
+            EV_INFO << "TCP_CM_INQ mismatch: expected " << expectedInq << " actual " << actualInq << endl;
+            return STATUS_ERR;
+        }
+    }
+    return STATUS_OK;
+}
+
+int PacketDrillApp::verifyMsgErrQueue(struct msghdr_expr *msgExpr, struct syscall_spec *syscall, char **error)
+{
+    // recvmsg(MSG_ERRQUEUE): verify the script's asserted error-queue entries
+    // against what INET reported. Only MSG_ZEROCOPY completion notifications
+    // (collected in send order by socketZerocopyCompletion())
+    // are modeled; a Linux completion cmsg carries the id RANGE ee_info(lo)..
+    // ee_data(hi), which must exactly drain the front of the collected queue.
+    // TX timestamping entries (SCM_TIMESTAMPING / SO_EE_ORIGIN_TIMESTAMPING)
+    // have no INET counterpart -- H3 models RX delivery stamps only -- so any
+    // script asserting them gets an explicit, honest divergence rather than a
+    // silent skip.
+    if (syscall->result->getNum() < 0) {
+        // e.g. "recvmsg(...) = -1 EAGAIN": the script asserts an EMPTY error
+        // queue; pending completions Linux would have delivered are a mismatch.
+        if (!completedZerocopyIds.empty())
+            throw cTerminationException("Packetdrill error: error queue expected empty but zerocopy completions are pending");
+        return STATUS_OK;
+    }
+    if (!msgExpr || !msgExpr->msg_control)
+        return STATUS_OK;
+    cQueue *cmsgList = msgExpr->msg_control->getList();
+    if (!cmsgList)
+        return STATUS_OK;
+    // A TX-timestamp recvmsg carries two cmsgs describing ONE errqueue entry:
+    // SCM_TIMESTAMPING holds the event time (scm_sec/scm_nsec) and IP_RECVERR/
+    // SO_EE_ORIGIN_TIMESTAMPING holds the type in ee_info and the byte key in
+    // ee_data. Collect both across the cmsg list, then drain one entry off
+    // txTimestampQueue. Zerocopy (SO_EE_ORIGIN_ZEROCOPY) is drained inline as before.
+    bool haveTsTime = false, haveTsErr = false;
+    double tsSec = 0, tsNsec = 0;
+    int32_t tsType = -1, tsKey = -1;
+    for (cQueue::Iterator it(*cmsgList); !it.end(); it++) {
+        auto *cmsgExpr = check_and_cast<PacketDrillExpression *>(*it);
+        if (cmsgExpr->getType() != EXPR_CMSG)
+            continue;
+        struct cmsg_expr *cmsg = cmsgExpr->getCmsg();
+        int32_t cmsgType;
+        if (cmsg->cmsg_type->getS32(&cmsgType, error))
+            continue;
+        if (cmsgType == SCM_TIMESTAMPING) {
+            if (cmsg->cmsg_data && cmsg->cmsg_data->getType() == EXPR_SCM_TIMESTAMPING) {
+                auto *ts = cmsg->cmsg_data->getScmTimestamping();
+                int32_t s = 0, ns = 0;
+                if (ts->scm_sec) ts->scm_sec->getS32(&s, error);
+                if (ts->scm_nsec) ts->scm_nsec->getS32(&ns, error);
+                tsSec = s; tsNsec = ns; haveTsTime = true;
+            }
+            continue;
+        }
+        if (cmsgType != IP_RECVERR || !cmsg->cmsg_data || cmsg->cmsg_data->getType() != EXPR_SOCK_EXTENDED_ERR)
+            continue;
+        struct sock_extended_err_expr *ee = cmsg->cmsg_data->getSockExtendedErr();
+        int32_t origin = -1;
+        if (!ee->ee_origin || ee->ee_origin->getS32(&origin, error))
+            continue;
+        if (origin == SO_EE_ORIGIN_TIMESTAMPING) {
+            int32_t info = -1, data = -1;
+            if (ee->ee_info) ee->ee_info->getS32(&info, error);
+            if (ee->ee_data) ee->ee_data->getS32(&data, error);
+            tsType = info; tsKey = data; haveTsErr = true;
+            continue;
+        }
+        if (origin != SO_EE_ORIGIN_ZEROCOPY)
+            continue;
+        int32_t lo = 0, hi = 0;
+        if (!ee->ee_info || ee->ee_info->getS32(&lo, error) || !ee->ee_data || ee->ee_data->getS32(&hi, error))
+            throw cTerminationException("Packetdrill error: zerocopy completion cmsg without a literal ee_info/ee_data id range");
+        for (int32_t id = lo; id <= hi; id++) {
+            if (completedZerocopyIds.empty())
+                throw cTerminationException("Packetdrill error: zerocopy completion id expected but none pending");
+            if (completedZerocopyIds.front() != (uint32_t)id) {
+                EV_INFO << "zerocopy completion mismatch: expected id " << id << " actual " << completedZerocopyIds.front() << endl;
+                throw cTerminationException("Packetdrill error: zerocopy completion id mismatch");
+            }
+            completedZerocopyIds.pop_front();
+        }
+    }
+    if (haveTsErr) {
+        if (txTimestampQueue.empty())
+            throw cTerminationException("Packetdrill error: TX timestamp expected in error queue but none pending");
+        const TxTimestamp& e = txTimestampQueue.front();
+        if (e.type != tsType || (uint32_t)tsKey != e.key) {
+            EV_INFO << "TX timestamp mismatch: expected type=" << tsType << " key=" << tsKey
+                    << " actual type=" << e.type << " key=" << e.key << endl;
+            throw cTerminationException("Packetdrill error: TX timestamp type/key mismatch");
+        }
+        // Time (SCM_TIMESTAMPING) is checked leniently -- some corpus scripts
+        // (tcp_tx_timestamp_bug) explicitly disclaim precision; a couple of ms of
+        // tolerance covers scheduling granularity while still catching a wrong event.
+        if (haveTsTime) {
+            double expected = tsSec + tsNsec / 1e9;
+            double actual = e.time.dbl();
+            if (fabs(expected - actual) > 0.002) {
+                EV_INFO << "TX timestamp time mismatch: expected " << expected << "s actual " << actual << "s (key " << e.key << ")" << endl;
+                throw cTerminationException("Packetdrill error: TX timestamp time mismatch");
+            }
+        }
+        txTimestampQueue.pop_front();
+    }
+    return STATUS_OK;
+}
+
+void PacketDrillApp::recordTxTimestampWrite(int64_t numBytes)
+{
+    // A write's LAST byte carries the OPT_ID timestamp key = its offset (0-based, so
+    // relative data seq - 1). Record it as pending SCHED/SND (stamped when the
+    // carrying segment is transmitted) and/or ACK (stamped when acknowledged), per
+    // the enabled SOF_TIMESTAMPING_TX_* flags. txTsWriteSeq advances for every send
+    // so the relative seq stays correct even for writes before timestamping is on.
+    if (numBytes <= 0)
+        return;
+    uint32_t lastByteSeq = txTsWriteSeq + (uint32_t)numBytes - 1;
+    txTsWriteSeq += (uint32_t)numBytes;
+    bool txSched = timestampingFlags & SOF_TIMESTAMPING_TX_SCHED;
+    bool txSnd = timestampingFlags & SOF_TIMESTAMPING_TX_SOFTWARE;
+    bool txAck = timestampingFlags & SOF_TIMESTAMPING_TX_ACK;
+    if (!(txSched || txSnd || txAck))
+        return;
+    uint32_t key = lastByteSeq - txTsOptIdBase;
+    if (txSched || txSnd)
+        pendingTxSchedSnd.push_back({ key, lastByteSeq });
+    if (txAck)
+        pendingTxAck.push_back({ key, lastByteSeq });
+}
+
+void PacketDrillApp::recordTxTimestampSend(inet::Packet *packet)
+{
+    // Every INET outbound segment (socketDataArrived TunSocket): if its relative
+    // payload range covers a pending key's last byte, take the SCHED and SND stamps
+    // now -- Linux stamps both at transmission (tcp_write_xmit + software TX), so
+    // they share this instant. A retransmit re-covering the byte does not re-fire
+    // (the key was already removed on first transmission).
+    if (pendingTxSchedSnd.empty())
+        return;
+    auto ipHeader = packet->peekAtFront<Ipv4Header>();
+    if (ipHeader->getProtocolId() != IP_PROT_TCP)
+        return;
+    auto tcpHeader = packet->peekDataAt<TcpHeader>(ipHeader->getChunkLength());
+    int64_t payload = tcpPayloadLength(packet);
+    if (payload <= 0)
+        return;
+    // The SYN flag occupies the first sequence number, so a data-bearing SYN's
+    // (TFO) payload starts at header seq + 1 in relative data space. A SYN also
+    // DEFINES the direction's ISN -- relSequenceOut is captured later, in
+    // compareDatagram() -- so its payload always starts at relative seq 1.
+    uint32_t relStart = tcpHeader->getSynBit() ? 1 : (tcpHeader->getSequenceNo() - relSequenceOut);
+    uint32_t relEnd = relStart + (uint32_t)payload; // exclusive
+    simtime_t now = simTime() - simStartTime;
+    bool txSched = timestampingFlags & SOF_TIMESTAMPING_TX_SCHED;
+    bool txSnd = timestampingFlags & SOF_TIMESTAMPING_TX_SOFTWARE;
+    for (auto it = pendingTxSchedSnd.begin(); it != pendingTxSchedSnd.end(); ) {
+        if (seqGE(it->lastByteSeq, relStart) && seqLess(it->lastByteSeq, relEnd)) {
+            if (txSched) txTimestampQueue.push_back({ SCM_TSTAMP_SCHED, it->key, now });
+            if (txSnd) txTimestampQueue.push_back({ SCM_TSTAMP_SND, it->key, now });
+            it = pendingTxSchedSnd.erase(it);
+        }
+        else
+            ++it;
+    }
+}
+
+void PacketDrillApp::recordTxTimestampAck(uint32_t relAck)
+{
+    // An inbound ACK (relAck in the DUT's relative data space): any pending key
+    // whose last byte is now acknowledged (relAck past it) gets SCM_TSTAMP_ACK
+    // stamped at this ACK's arrival time.
+    if (pendingTxAck.empty())
+        return;
+    simtime_t now = simTime() - simStartTime;
+    for (auto it = pendingTxAck.begin(); it != pendingTxAck.end(); ) {
+        if (seqGE(relAck, it->lastByteSeq + 1)) {
+            txTimestampQueue.push_back({ SCM_TSTAMP_ACK, it->key, now });
+            it = pendingTxAck.erase(it);
+        }
+        else
+            ++it;
+    }
+}
+
+int PacketDrillApp::syscallEpollCreate(struct syscall_spec *syscall, cQueue *args, char **error)
+{
+    // This framework only ever has one socket worth watching, so "creating"
+    // an epoll instance just (re-)clears the single registration below.
+    epollRegistered = false;
+    epollWatchedEvents = 0;
+    epollInEdgePending = false;
+    epollOutEdgePending = false;
+    epollErrEdgePending = false;
+    epollOneshotFired = false;
+    return STATUS_OK;
+}
+
+int PacketDrillApp::syscallEpollCtl(struct syscall_spec *syscall, cQueue *args, char **error)
+{
+    if (args->getLength() != 4)
+        return STATUS_ERR;
+    PacketDrillExpression *exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(1));
+    int32_t op;
+    if (!exp || exp->getS32(&op, error))
+        return STATUS_ERR;
+
+    if (op == EPOLL_CTL_DEL) {
+        epollRegistered = false;
+        epollWatchedEvents = 0;
+        return STATUS_OK;
+    }
+
+    exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(3));
+    if (!exp || (exp->getType() != EXPR_EPOLLEV))
+        return STATUS_ERR;
+    struct epollev_expr *ev = exp->getEpollev();
+    uint32_t events;
+    if (!ev->events || ev->events->getU32(&events, error))
+        return STATUS_ERR;
+
+    epollWatchedEvents = events;
+    epollRegistered = true;
+    // (Re-)registering counts as a fresh edge for edge-triggered watches:
+    // any already-queued data, writability (this framework's TCP writes
+    // always succeed immediately, so the socket is always "writable"), and
+    // any pending error-queue entries are all new-to-report as of this call.
+    // EPOLL_CTL_MOD also re-arms an EPOLLONESHOT-disabled fd.
+    if (availableAppBytes() > 0)
+        epollInEdgePending = true;
+    epollOutEdgePending = true;
+    if (!completedZerocopyIds.empty())
+        epollErrEdgePending = true;
+    epollOneshotFired = false;
+    return STATUS_OK;
+}
+
+int PacketDrillApp::syscallEpollWait(struct syscall_spec *syscall, cQueue *args, char **error)
+{
+    if (args->getLength() != 4)
+        return STATUS_ERR;
+    PacketDrillExpression *exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(1));
+    if (!exp || (exp->getType() != EXPR_EPOLLEV))
+        return STATUS_ERR;
+    struct epollev_expr *expectedEv = exp->getEpollev();
+
+    uint32_t actualEvents = 0;
+    if (epollRegistered && !((epollWatchedEvents & EPOLLONESHOT) && epollOneshotFired)) {
+        bool edgeTriggered = (epollWatchedEvents & EPOLLET) != 0;
+        // EPOLLERR cannot be masked out by the watched-events set. For the
+        // error queue it is "not edge-triggered but not level-triggered
+        // either" (the kernel's own zerocopy epoll tests' words): it reports
+        // once per batch of new error-queue arrivals, regardless of EPOLLET,
+        // and a non-empty-but-already-reported queue stays silent.
+        bool errReady = epollErrEdgePending && !completedZerocopyIds.empty();
+        // In edge-triggered mode a wakeup on ANY event puts the fd on the
+        // ready list, and epoll_wait then reports the fd's entire current
+        // readiness mask -- e.g. a new-data or errqueue wakeup re-reports
+        // EPOLLOUT even though its own edge was already consumed. (EPOLLOUT
+        // itself: this framework never models a full send buffer, so the
+        // socket is always writable once connected; its own edge only fires
+        // right after registration.)
+        bool wakeup = errReady
+            || ((epollWatchedEvents & EPOLLIN) && availableAppBytes() > 0 &&
+                (!edgeTriggered || epollInEdgePending))
+            || ((epollWatchedEvents & EPOLLOUT) && (!edgeTriggered || epollOutEdgePending));
+        if (wakeup) {
+            if (errReady)
+                actualEvents |= EPOLLERR;
+            if ((epollWatchedEvents & EPOLLIN) && availableAppBytes() > 0)
+                actualEvents |= EPOLLIN;
+            if (epollWatchedEvents & EPOLLOUT)
+                actualEvents |= EPOLLOUT;
+            epollErrEdgePending = false;
+            epollInEdgePending = false;
+            epollOutEdgePending = false;
+            if (epollWatchedEvents & EPOLLONESHOT)
+                epollOneshotFired = true;
+        }
+    }
+
+    int32_t expectedReturn = syscall->result->getNum();
+    int32_t actualReturn = (actualEvents != 0) ? 1 : 0;
+    if (actualReturn != expectedReturn)
+        throw cTerminationException("Packetdrill error: epoll_wait returned unexpected event count");
+
+    if (actualEvents != 0) {
+        uint32_t expectedEvMask;
+        if (!expectedEv->events || expectedEv->events->getU32(&expectedEvMask, error) || expectedEvMask != actualEvents)
+            throw cTerminationException("Packetdrill error: epoll_wait returned unexpected events");
+    }
+    return STATUS_OK;
+}
+
+uint32_t PacketDrillApp::computePollRevents(uint32_t requestedEvents)
+{
+    uint32_t actualRevents = 0;
+    // readable = unread APP data (a captured outbound tun packet queued ahead
+    // of its expectation event is not socket read data), or EOF: after the
+    // peer's FIN, Linux tcp_poll reports EPOLLIN even with the queue drained
+    // (RCV_SHUTDOWN -- a read would return 0 immediately).
+    if ((requestedEvents & POLLIN) && (availableAppBytes() > 0 || peerClosedSeen))
+        actualRevents |= POLLIN;
+    // This framework never models a full send buffer, so the
+    // socket is always writable once connected.
+    if (requestedEvents & POLLOUT)
+        actualRevents |= POLLOUT;
+    // POLLRDHUP: the peer closed its write side (FIN seen); a persistent
+    // (half-close) condition, still reported after the EOF has been read.
+    if ((requestedEvents & POLLRDHUP) && peerClosedSeen)
+        actualRevents |= POLLRDHUP;
+    // A reset/failed connection: Linux reports POLLERR|POLLHUP and the socket
+    // is "readable" (a read returns the error immediately). POLLERR and
+    // POLLHUP are NOT maskable -- poll(2) ignores them in `events` and always
+    // reports them in `revents`.
+    if (connErrorSeen) {
+        actualRevents |= POLLERR | POLLHUP;
+        if (requestedEvents & POLLIN)
+            actualRevents |= POLLIN;
+    }
+    return actualRevents;
+}
+
+void PacketDrillApp::checkDeferredPollNow()
+{
+    // A blocked poll() completes the MOMENT the requested readiness appears
+    // (Linux wakes the sleeper immediately) -- waiting until the window end
+    // is too late: later script events (e.g. the reads that consume the very
+    // data the poll was waiting for) run meanwhile under the non-blocking
+    // script clock and destroy the readiness again.
+    if (!pollDeferred)
+        return;
+    if (computePollRevents(pollPendingRequested) == pollPendingExpectedRevents
+            && (pollPendingExpectedRevents != 0 ? 1 : 0) == pollPendingExpectedReturn) {
+        pollDeferred = false;
+        if (pollTimer->isScheduled())
+            cancelEvent(pollTimer);
+    }
+}
+
+void PacketDrillApp::evaluateDeferredPoll()
+{
+    pollDeferred = false;
+    uint32_t actualRevents = computePollRevents(pollPendingRequested);
+    if (actualRevents != pollPendingExpectedRevents)
+        throw cTerminationException("Packetdrill error: poll() returned unexpected revents (expected 0x%x actual 0x%x, requested 0x%x)",
+            pollPendingExpectedRevents, actualRevents, pollPendingRequested);
+    int32_t readyCount = actualRevents != 0 ? 1 : 0;
+    if (readyCount != pollPendingExpectedReturn)
+        throw cTerminationException("Packetdrill error: poll() returned unexpected ready-fd count");
+}
+
+int PacketDrillApp::syscallPoll(PacketDrillEvent *event, struct syscall_spec *syscall, cQueue *args, char **error)
+{
+    if (args->getLength() != 3)
+        return STATUS_ERR;
+    PacketDrillExpression *fdsExp = check_and_cast_nullable<PacketDrillExpression *>(args->get(0));
+    if (!fdsExp || (fdsExp->getType() != EXPR_LIST))
+        return STATUS_ERR;
+    cQueue *fdsList = fdsExp->getList();
+
+    // Unlike epoll_wait's optional edge-triggered mode, poll() is always
+    // level-triggered: every call reports current readiness fresh, with no
+    // per-fd registration/edge state to track.
+    int32_t readyCount = 0;
+    bool mismatch = false;
+    uint32_t deferRequested = 0, deferExpected = 0;
+    int fdCount = 0;
+    if (fdsList) {
+        for (cQueue::Iterator it(*fdsList); !it.end(); it++) {
+            auto *pollExp = check_and_cast<PacketDrillExpression *>(*it);
+            if (pollExp->getType() != EXPR_POLLFD)
+                return STATUS_ERR;
+            struct pollfd_expr *pfd = pollExp->getPollfd();
+            fdCount++;
+
+            uint32_t requestedEvents;
+            if (!pfd->events || pfd->events->getU32(&requestedEvents, error))
+                return STATUS_ERR;
+
+            uint32_t actualRevents = computePollRevents(requestedEvents);
+
+            uint32_t expectedRevents;
+            if (!pfd->revents || pfd->revents->getU32(&expectedRevents, error))
+                throw cTerminationException("Packetdrill error: poll() returned unexpected revents");
+            if (expectedRevents != actualRevents) {
+                mismatch = true;
+                deferRequested = requestedEvents;
+                deferExpected = expectedRevents;
+            }
+
+            if (actualRevents != 0)
+                readyCount++;
+        }
+    }
+
+    int32_t expectedReturn = syscall->result->getNum();
+    if (mismatch || readyCount != expectedReturn) {
+        // A BLOCKING poll (time-range syscall, single fd): Linux sleeps until
+        // the requested readiness appears or the range's end -- the script
+        // clock keeps running (same principle as the blocked-read fix), and
+        // the events the script placed inside the window (e.g. the SYN-ACK
+        // carrying data+FIN that produces POLLIN|POLLRDHUP) are delivered
+        // meanwhile. Re-evaluate once at the range end.
+        // "+0...0.010 poll(...)": the blocking window's end lives in the
+        // SYSCALL spec (end_usecs, relative like the event's own '+' time),
+        // not in the event's time range. Map it to live time via the same
+        // offset adjustTimes() applied to the event's start.
+        if (fdCount == 1) {
+            // Even a zero-timeout poll sees the same-script-instant events on
+            // Linux (they were delivered before the syscall ran) -- defer the
+            // one re-evaluation to at least now+2ns so a same-instant
+            // injection finishes propagating up the stack (the
+            // statusRequestTimer trick). A blocking poll defers to its
+            // end_usecs window end instead.
+            simtime_t liveEnd = getSimulation()->getSimTime();
+            if (syscall->end_usecs >= 0) {
+                simtime_t windowEnd = SimTime(syscall->end_usecs, SIMTIME_US) + event->getEventOffset() + simStartTime;
+                if (windowEnd > liveEnd)
+                    liveEnd = windowEnd;
+            }
+            pollDeferred = true;
+            pollPendingRequested = deferRequested;
+            pollPendingExpectedRevents = deferExpected;
+            pollPendingExpectedReturn = expectedReturn;
+            if (pollTimer->isScheduled())
+                cancelEvent(pollTimer);
+            // 4ns: the injected packet's tun->ip->tcp->app delivery chain
+            // spans a few 1ns hops; the re-evaluation must land strictly
+            // after the app-side data arrival
+            scheduleAt(liveEnd + SimTime(4, SIMTIME_NS), pollTimer);
+            return STATUS_OK;
+        }
+        throw cTerminationException(mismatch
+            ? "Packetdrill error: poll() returned unexpected revents"
+            : "Packetdrill error: poll() returned unexpected ready-fd count");
+    }
+    return STATUS_OK;
+}
+
 int PacketDrillApp::syscallClose(struct syscall_spec *syscall, cQueue *args, char **error)
 {
     int script_fd;
@@ -2021,9 +3197,59 @@ int PacketDrillApp::syscallClose(struct syscall_spec *syscall, cQueue *args, cha
         }
 
         case IP_PROT_TCP: {
+            // Route to the REAL connection. tcpConnId covers the active
+            // (connect) path; on the passive path it was never assigned, but
+            // the non-forking listenOnce() means tcpSocket itself IS the
+            // accepted connection. Exception: close(listen_fd) while an
+            // accepted connection lives is a wire no-op -- Linux keeps the
+            // accepted conn when the listener closes (tcp_basic_server closes
+            // the listener first and keeps using the data connection).
+            int connId = tcpConnId;
+            if (connId == -1) {
+                if (script_fd == listenScriptFd && acceptedScriptFd != -1 && script_fd != acceptedScriptFd)
+                    break;
+                connId = tcpSocket.getSocketId();
+                if (script_fd == listenScriptFd && acceptedScriptFd == -1) {
+                    // Closing a LISTENER that has no accept()ed connection:
+                    // Linux inet_csk_listen_stop kills a TFO child sitting in
+                    // the accept queue with unread data via a RST
+                    // (listener-closed-trigger-rst pins it) and drops a mere
+                    // SYN_RCVD request sock SILENTLY -- never a FIN.
+                    if (closedTcpConnIds.count(connId))
+                        break;
+                    closedTcpConnIds.insert(connId);
+                    if (availableAppBytes() > 0)
+                        tcpSocket.abort();
+                    else
+                        tcpSocket.destroy();
+                    break;
+                }
+                // close() of a socket that never connected or listened (e.g.
+                // socket(); sendto(bad buf) = -1 EFAULT; close()): no TCP
+                // connection exists underneath, so -- like Linux -- nothing
+                // goes on the wire. Without this, the TCP_C_CLOSE below would
+                // address a connection id the Tcp module has never seen.
+                if (tcpSocket.getState() == TcpSocket::NOT_BOUND || tcpSocket.getState() == TcpSocket::BOUND)
+                    break;
+            }
+            // close() on a connection this app already closed (a second
+            // close(), or a close() after shutdown() already sent the FIN)
+            // must be a no-op like the real syscall, not a fatal "Duplicate
+            // CLOSE command".
+            if (closedTcpConnIds.count(connId))
+                break;
+            closedTcpConnIds.insert(connId);
+            // Linux tcp_close(): unread receive-queue data at close time means
+            // the app never consumed what the peer sent -- send a RST and tear
+            // the connection down instead of a graceful FIN (the fastopen
+            // *-trigger-rst scripts pin this).
+            if (availableAppBytes() > 0 && connId == tcpSocket.getSocketId()) {
+                tcpSocket.abort();
+                break;
+            }
             Request *msg = new Request("close", TCP_C_CLOSE);
             TcpCommand *cmd = new TcpCommand();
-            msg->addTag<SocketReq>()->setSocketId(tcpConnId);
+            msg->addTag<SocketReq>()->setSocketId(connId);
             msg->addTag<DispatchProtocolReq>()->setProtocol(&Protocol::tcp);
             msg->setControlInfo(cmd);
             send(msg, "socketOut"); // send to TCP
@@ -2040,17 +3266,65 @@ int PacketDrillApp::syscallClose(struct syscall_spec *syscall, cQueue *args, cha
     return STATUS_OK;
 }
 
+int PacketDrillApp::syscallSendFile(struct syscall_spec *syscall, cQueue *args, char **error)
+{
+    // sendfile(out_fd, in_fd, [offset], count): in this framework's model all
+    // payloads are zero bytes, so the file side is irrelevant and this is
+    // write(out_fd, ..., count) -- send the script's asserted byte count.
+    if (args->getLength() != 4)
+        return STATUS_ERR;
+    if (protocol != IP_PROT_TCP)
+        return STATUS_ERR;
+    if (tcpSocket.getState() == TcpSocket::LISTENING && acceptSet) {
+        tcpSocket.setState(TcpSocket::CONNECTED); // same accept()-race fixup as syscallWrite
+        acceptSet = false;
+    }
+    if (syscall->result->getNum() > 0)
+        sendTcpPayloadWithFlags(syscall->result->getNum(), 0);
+    return STATUS_OK;
+}
+
 int PacketDrillApp::syscallShutdown(struct syscall_spec *syscall, cQueue *args, char **error)
 {
     int script_fd;
-    printf("syscallShutdown\n");
     if (args->getLength() != 2)
         return STATUS_ERR;
     PacketDrillExpression *exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(0));
     if (!exp || exp->getS32(&script_fd, error))
         return STATUS_ERR;
+    int how;
+    PacketDrillExpression *howExp = check_and_cast_nullable<PacketDrillExpression *>(args->get(1));
+    if (!howExp || howExp->getS32(&how, error))
+        return STATUS_ERR;
 
     switch (protocol) {
+        case IP_PROT_TCP: {
+            // shutdown(SHUT_WR/SHUT_RDWR) enqueues a FIN after any pending
+            // write-queue data, exactly what TCP_C_CLOSE does; the socket
+            // object stays around and the later close() adds nothing on the
+            // wire -- mark the connection closed so close() is a no-op then.
+            // SHUT_RD has no wire effect. On the passive (accept) path
+            // tcpConnId is never assigned (it is set by connect() only), but
+            // the non-forking listenOnce() means tcpSocket itself IS the
+            // accepted connection -- fall back to its id.
+            if (how == SHUT_WR || how == SHUT_RDWR) {
+                int connId = tcpConnId != -1 ? tcpConnId : tcpSocket.getSocketId();
+                if (closedTcpConnIds.count(connId))
+                    break;
+                closedTcpConnIds.insert(connId);
+                Request *msg = new Request("close", TCP_C_CLOSE);
+                TcpCommand *cmd = new TcpCommand();
+                // SHUT_WR is a HALF close: the application keeps reading, so
+                // data arriving afterwards must not reset the connection.
+                // SHUT_RDWR shuts the receive side too, like a full close().
+                cmd->setHalfClose(how == SHUT_WR);
+                msg->addTag<SocketReq>()->setSocketId(connId);
+                msg->addTag<DispatchProtocolReq>()->setProtocol(&Protocol::tcp);
+                msg->setControlInfo(cmd);
+                send(msg, "socketOut"); // send to TCP
+            }
+            break;
+        }
         case IP_PROT_SCTP: {
             sctpSocket.shutdown(script_fd);
             break;
@@ -2065,11 +3339,30 @@ int PacketDrillApp::syscallShutdown(struct syscall_spec *syscall, cQueue *args, 
 void PacketDrillApp::finish()
 {
     EV_INFO << "PacketDrillApp finished\n";
+    // A script whose events were not all consumed by simulation end STALLED:
+    // an expected outbound packet never arrived (and nothing else diverged
+    // first), a %{ }% block never ran, or a GSO super-segment was left
+    // half-matched. Without this marker such a run is indistinguishable from
+    // a completed one and used to classify as INET_PASS (the four shutdown/*
+    // scripts passed vacuously for weeks on a close() that never sent a FIN).
+    // suite.py's classifier turns this line into an INET_STALLED verdict.
+    bool allEventsConsumed = numEvents == 0
+            || (eventCounter >= numEvents - 1 && !codeEventPending
+                && outboundPackets->getLength() == 0 && aggExpectedOutbound == nullptr);
+    if (!allEventsConsumed)
+        EV_INFO << "PacketDrill script INCOMPLETE: stalled at event " << (eventCounter + 1)
+                << " of " << numEvents
+                << " (pending outbound expectations: " << outboundPackets->getLength()
+                << ", pending code block: " << (codeEventPending ? "yes" : "no")
+                << ", pending GSO aggregate: " << (aggExpectedOutbound != nullptr ? "yes" : "no") << ")\n";
 }
 
 PacketDrillApp::~PacketDrillApp()
 {
     cancelAndDelete(eventTimer);
+    cancelAndDelete(statusRequestTimer);
+    cancelAndDelete(pollTimer);
+    cancelAndDelete(writerUnblockTimer);
     delete pd;
     delete receivedPackets;
     delete outboundPackets;
