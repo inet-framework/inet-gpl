@@ -8,10 +8,23 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <climits>
+#include <cmath>
+#include <map>
+#include <regex>
+#include <sstream>
+#include <poll.h>
+#include <sys/epoll.h>
+#include <sys/wait.h>
+#include <netinet/tcp.h>
+#include <linux/errqueue.h>
+#include <linux/net_tstamp.h> // SOF_TIMESTAMPING_TX_* flags for TX timestamping
 
 #include "inetgpl/applications/packetdrill/PacketDrillInfo_m.h"
 #include "inetgpl/applications/packetdrill/PacketDrillUtils.h"
 #include "inet/common/ModuleAccess.h"
+#include "inet/common/packet/chunk/ByteCountChunk.h"
 #include "inet/common/TimeTag_m.h"
 #include "inet/common/lifecycle/ModuleOperations.h"
 #include "inet/common/lifecycle/NodeStatus.h"
@@ -20,7 +33,12 @@
 #include "inet/networklayer/common/L3AddressResolver.h"
 #include "inet/networklayer/configurator/ipv4/Ipv4NodeConfigurator.h"
 #include "inet/networklayer/ipv4/Ipv4Header_m.h"
+#include "inet/networklayer/ipv4/IcmpHeader_m.h"
 #include "inet/transportlayer/contract/sctp/SctpCommand_m.h"
+#include "inet/transportlayer/tcp/Tcp.h"
+#include "inet/transportlayer/contract/tcp/TcpSendEorTag_m.h"
+#include "inet/transportlayer/contract/tcp/TcpSendMoreTag_m.h"
+#include "inet/transportlayer/contract/tcp/TcpZerocopyTag_m.h"
 #include "inet/transportlayer/sctp/SctpAssociation.h"
 #include "inet/transportlayer/udp/UdpHeader_m.h"
 
@@ -33,6 +51,9 @@ using namespace tcp;
 
 #define MSGKIND_START    0
 #define MSGKIND_EVENT    1
+#define MSGKIND_STATUS_REQUEST 2
+#define MSGKIND_POLL_DEFERRED  3
+#define MSGKIND_WRITER_UNBLOCK 4
 
 PacketDrillApp::PacketDrillApp()
 {
@@ -58,6 +79,18 @@ void PacketDrillApp::initialize(int stage)
         numEvents = 0;
         localVTag = 0;
         eventTimer = new cMessage("event timer", MSGKIND_EVENT);
+        // Real packetdrill's tuntap write is synchronous: the kernel fully
+        // processes an injected packet before the next script line runs. In
+        // the simulation an injected packet traverses the stack in several
+        // same-simtime events, so run each script event AFTER all same-time
+        // default-priority events (in-flight packets) have settled -- else a
+        // "+0" syscall right after an inbound injection (e.g. epoll_wait
+        // asserting a zerocopy completion the in-flight ACK delivers) sees
+        // pre-packet state that the real kernel never exposes.
+        eventTimer->setSchedulingPriority(100);
+        statusRequestTimer = new cMessage("status request", MSGKIND_STATUS_REQUEST);
+        pollTimer = new cMessage("deferred poll", MSGKIND_POLL_DEFERRED);
+        writerUnblockTimer = new cMessage("writer unblock", MSGKIND_WRITER_UNBLOCK);
         simStartTime = simTime();
         simRelTime = simTime();
     }
@@ -71,6 +104,7 @@ void PacketDrillApp::initialize(int stage)
         remoteAddress = L3Address(par("remoteAddress"));
         localPort = par("localPort");
         remotePort = par("remotePort");
+        explicitRead = par("explicitRead");
         const char *crcModeString = par("crcMode");
         crcMode = parseChecksumMode(crcModeString, false);
         const char *interface = par("interface");
@@ -133,27 +167,64 @@ void PacketDrillApp::socketClosed(UdpSocket *socket)
 
 void PacketDrillApp::socketDataArrived(TcpSocket *socket, Packet *msg, bool urgent)
 {
-    if (recvFromSet) {
-        auto *msg = new Request("data request", TCP_C_READ);
-        TcpCommand *cmd = new TcpCommand();
-        msg->addTag<SocketReq>()->setSocketId(tcpConnId);
-        msg->addTag<DispatchProtocolReq>()->setProtocol(&Protocol::tcp);
-        msg->setControlInfo(cmd);
-        send(msg, "socketOut"); // send to TCP
-        recvFromSet = false;
-        // send a receive request to TCP
-    }
+    // Mirrors the working UDP socketDataArrived() below: the socket runs in
+    // TcpSocket's default autoRead mode, so data is pushed up as it arrives
+    // rather than pulled via an explicit TCP_C_READ command (a command this
+    // handler used to send anyway, as a plain TcpCommand rather than a
+    // TcpReadCommand -- unreachable in practice since it only fired when
+    // data had already arrived, but would have crashed process_READ_REQUEST()
+    // if it ever had). The previous version also discarded the payload
+    // (`delete msg`) without ever queuing it, so read()/recvfrom()/recvmsg()
+    // could never actually verify TCP payload lengths.
+    epollInEdgePending = true;
+    PacketDrillInfo *info = new PacketDrillInfo();
+    info->setLiveTime(getSimulation()->getSimTime());
+    msg->setContextPointer(info);
+    receivedPackets->insert(msg);
     msgArrived = true;
-    delete msg;
+    checkDeferredPollNow();
+    if (recvFromSet) {
+        // a read()/recv() is blocked on this stream: complete it once enough
+        // bytes have accumulated (stream semantics -- the read may span
+        // several arrival chunks), else keep waiting
+        if (availableAppBytes() < expectedMessageSize)
+            return;
+        recvFromSet = false;
+        consumeAppBytes(expectedMessageSize);
+    }
+    if (!eventTimer->isScheduled() && eventCounter < numEvents - 1) {
+        eventCounter++;
+        scheduleEvent();
+    }
 }
 
 void PacketDrillApp::socketAvailable(TcpSocket *socket, TcpAvailableInfo *availableInfo)
+{
+    // Explicit-read mode defers the TCP-level accept until the SCRIPT's
+    // accept() runs: Linux keeps a not-yet-accepted socket embryonic (its
+    // rcvbuf never grows under OOO pressure -- tcp_data_queue_ofo's "do not
+    // grow rcvbuf for not-yet-accepted or orphaned sockets" gate;
+    // ooo-before-and-after-accept pins both halves), and with autoRead off
+    // no data indications are needed before the accept anyway.
+    if (explicitRead && !acceptSet) {
+        pendingAvailableInfo = *availableInfo;
+        pendingAvailableSocket = socket;
+        availablePending = true;
+        return;
+    }
+    completeTcpAccept(socket, availableInfo);
+}
+
+void PacketDrillApp::completeTcpAccept(TcpSocket *socket, TcpAvailableInfo *availableInfo)
 {
     // new TCP connection -- create new socket object and server process
     TcpSocket *newSocket = new TcpSocket(availableInfo);
     newSocket->setOutputGate(gate("socketOut"));
     newSocket->setCallback(this);
     socketMap.addSocket(newSocket);
+    // the accepted socket carries the server's byte stream: explicit-read
+    // READ requests must go to it, not to the primary/listener socket
+    lastDataSocketId = newSocket->getSocketId();
     socket->accept(newSocket->getSocketId());
 }
 
@@ -163,6 +234,8 @@ void PacketDrillApp::socketEstablished(TcpSocket *socket)
 
 void PacketDrillApp::socketPeerClosed(TcpSocket *socket)
 {
+    peerFinPending = true;
+    peerClosedSeen = true; // POLLRDHUP: half-close is a persistent condition
 }
 
 void PacketDrillApp::socketClosed(TcpSocket *socket)
@@ -270,6 +343,76 @@ void PacketDrillApp::addressAddedArrived(SctpSocket *socket, L3Address localAddr
 void PacketDrillApp::socketDataArrived(TunSocket *socket, Packet *packet)
 {
     // received from tunnel interface
+    if (scriptComplete) {
+        // Every scripted event has already been consumed and every expected
+        // outbound packet matched; real packetdrill would have ended the test
+        // here. Ignore INET's post-script timer traffic (RTO retransmit,
+        // delayed ACK) so the INET run observes the same window as the Linux run.
+        delete (PacketDrillInfo *)packet->getContextPointer();
+        delete packet;
+        return;
+    }
+    // TX timestamping: this is the single choke point for every real INET outbound
+    // segment (before GSO aggregation), so SCM_TSTAMP_SCHED/SND for a key byte are
+    // taken from the segment that actually carries it -- even when it lands in a
+    // later, cwnd-released segment rather than the one produced at write time.
+    recordTxTimestampSend(packet);
+    // Track the DUT's latest outbound TS value so an injected inbound segment can
+    // echo it as TSecr (peerTS). Without this peerTS stayed 0, every injected ACK
+    // echoed ecr=0, and the DUT's TS-based RTT measurement mapped to send-time 0 --
+    // blowing SRTT up to the absolute sim time on any TS-enabled connection.
+    {
+        auto ipH = packet->peekAtFront<Ipv4Header>();
+        if (ipH->getProtocolId() == IP_PROT_TCP) {
+            auto tcpH = packet->peekDataAt<TcpHeader>(ipH->getChunkLength());
+            for (unsigned int i = 0; i < tcpH->getHeaderOptionArraySize(); i++) {
+                if (auto *tsOpt = dynamic_cast<const TcpOptionTimestamp *>(tcpH->getHeaderOption(i))) {
+                    peerTS = tsOpt->getSenderTimestamp();
+                    break;
+                }
+            }
+        }
+    }
+    // TCPI_OPT_SYN_DATA wire shadow (see the header): record the DUT's
+    // data-bearing SYN, and detect its data being acked by an outbound
+    // SYN-ACK's ackNo when the DUT is the server.
+    {
+        auto ipH = packet->peekAtFront<Ipv4Header>();
+        if (ipH->getProtocolId() == IP_PROT_TCP) {
+            auto tcpH = packet->peekDataAt<TcpHeader>(ipH->getChunkLength());
+            int64_t payload = (B(ipH->getTotalLengthField()) - ipH->getChunkLength() - tcpH->getHeaderLength()).get<B>();
+            if (tcpH->getSynBit() && !tcpH->getAckBit() && payload > 0)
+                tfoShadowSynDataEndOut = tcpH->getSequenceNo() + 1 + payload;
+            if (tcpH->getSynBit() && tcpH->getAckBit() && tfoShadowSynDataEndIn != 0
+                    && !seqLess(tcpH->getAckNo(), tfoShadowSynDataEndIn))
+                tfoSynDataAckedShadow = true;
+        }
+    }
+    // Real packetdrill filters captured packets by the socket-under-test's
+    // 4-tuple (its packet-socket filter): a trailing FIN/RST/rexmit from an
+    // ALREADY-CLOSED earlier connection of a multi-connection script is
+    // invisible to it. Without this filter such a straggler (srcPort = the
+    // previous conn's port) gets compared against the NEXT connection's
+    // expectation and fails on "srcPort expected N+1 actual N".
+    {
+        auto ipH = packet->peekAtFront<Ipv4Header>();
+        if (ipH->getProtocolId() == IP_PROT_TCP) {
+            auto tcpH = packet->peekDataAt<TcpHeader>(ipH->getChunkLength());
+            if (tcpH->getSrcPort() != localPort || tcpH->getDestPort() != remotePort) {
+                EV_DETAIL << "Ignoring outbound packet from defunct connection (srcPort="
+                          << tcpH->getSrcPort() << ", current localPort=" << localPort << ")\n";
+                delete (PacketDrillInfo *)packet->getContextPointer();
+                delete packet;
+                return;
+            }
+        }
+    }
+    if (aggExpectedOutbound != nullptr) {
+        // an expected GSO super-segment is being matched by consecutive live
+        // MSS-sized segments -- this packet continues (or completes) it
+        continueOutboundAggregation(packet);
+        return;
+    }
     if (outboundPackets->getLength() == 0) {
         cEvent *nextMsg = getSimulation()->getScheduler()->guessNextEvent();
         if (nextMsg) {
@@ -406,15 +549,148 @@ void PacketDrillApp::runEvent(PacketDrillEvent *event)
             if (ipHeader->getTotalLengthField() < packetByteLength)
                 pk->setBackOffset(B(ipHeader->getTotalLengthField()) - ipHeader->getChunkLength());
 
-            if (protocol == IP_PROT_TCP) {
+            if (ipHeader->getProtocolId() == IP_PROT_ICMP) {
+                // An injected ICMP error carries a copy of OUR outbound
+                // packet as its payload. The prebuilt copy has the
+                // parse-time port pair -- stale after a multi-connection
+                // script's per-socket local-port bump, which made INET route
+                // the error to a DEFUNCT earlier connection (e.g. the
+                // TIME_WAIT cookie-warmup conn) instead of the live one.
+                // Re-stamp the embedded TCP header's ports like the plain-TCP
+                // branch below does for its own header.
+                auto icmpHeader = pk->removeAtFront<IcmpHeader>();
+                if (pk->getDataLength() >= B(20) + B(8)) { // embedded IPv4 header + >=8B of TCP
+                    auto embIpHeader = pk->removeAtFront<Ipv4Header>();
+                    auto embTcpHeader = pk->removeAtFront<TcpHeader>();
+                    embTcpHeader->setSrcPort(localPort);
+                    embTcpHeader->setDestPort(remotePort);
+                    // the quoted packet is OUR outbound: rebase its script-
+                    // frame sequence onto the live ISN, so INET's quoted-seq
+                    // window validation (RFC 5927) sees the intended
+                    // in/out-of-window relation
+                    embTcpHeader->setSequenceNo(embTcpHeader->getSequenceNo() + relSequenceOut);
+                    pk->insertAtFront(embTcpHeader);
+                    pk->insertAtFront(embIpHeader);
+                }
+                pk->insertAtFront(icmpHeader);
+            }
+            else if (protocol == IP_PROT_TCP) {
                 auto tcpHeader = pk->removeAtFront<TcpHeader>();
-                tcpHeader->setAckNo(tcpHeader->getAckNo() + relSequenceOut);
+                // stamp the CURRENT port pair: prebuilt packets carry the
+                // parse-time ports, stale after a multi-connection script's
+                // per-socket local-port bump (see syscallSocket)
+                tcpHeader->setSrcPort(remotePort);
+                tcpHeader->setDestPort(localPort);
+                // Upstream packetdrill's tcpdump convention: a SYN's seq is the
+                // absolute peer ISN (injected raw, remembered); every other
+                // inbound packet's seq is RELATIVE to it (e.g. simple1's
+                // "< . 1:1(0)" after "< S 1428932:..." must arrive at wire seq
+                // 1428933). Zero for the common 0-based scripts.
+                if (tcpHeader->getSynBit())
+                    relSequenceIn = tcpHeader->getSequenceNo();
+                else
+                    tcpHeader->setSequenceNo(tcpHeader->getSequenceNo() + relSequenceIn);
+                // tcpi_rcv_mss wire shadow: largest injected TCP payload
+                {
+                    int64_t pl = (B(ipHeader->getTotalLengthField()) - ipHeader->getChunkLength() - tcpHeader->getHeaderLength()).get<B>();
+                    if (pl > (int64_t)maxInjectedPayload)
+                        maxInjectedPayload = (uint32_t)pl;
+                }
+                // POLLRDHUP truth: Linux reports the half-close the moment the
+                // FIN ARRIVES, even while undelivered data sits in the receive
+                // queue -- INET's TCP_I_PEER_CLOSED indication is deferred
+                // until the data is read, too late for a poll() right after
+                // the FIN. The harness injected this FIN itself: record it.
+                if (tcpHeader->getFinBit()) {
+                    peerClosedSeen = true;
+                    checkDeferredPollNow();
+                }
+                // TCPI_OPT_SYN_DATA wire shadow (see the header): a peer SYN
+                // carrying data toward the DUT server; and a peer SYN-ACK
+                // acking the DUT client's SYN data (ack rebasing happens just
+                // below, so compare in the script frame here).
+                {
+                    int64_t payload = (B(ipHeader->getTotalLengthField()) - ipHeader->getChunkLength() - tcpHeader->getHeaderLength()).get<B>();
+                    if (tcpHeader->getSynBit() && !tcpHeader->getAckBit() && payload > 0)
+                        tfoShadowSynDataEndIn = tcpHeader->getSequenceNo() + 1 + payload;
+                    if (tcpHeader->getSynBit() && tcpHeader->getAckBit() && tfoShadowSynDataEndOut != 0) {
+                        uint32_t liveAck = tcpHeader->getAckNo() + relSequenceOut - scriptIsnOut;
+                        if (!seqLess(liveAck, tfoShadowSynDataEndOut))
+                            tfoSynDataAckedShadow = true;
+                    }
+                }
+                // TX timestamping: a non-SYN ACK's number here is still in the DUT's
+                // relative data space (script frame) -- exactly what pending TX-ACK
+                // keys are measured in -- so fire SCM_TSTAMP_ACK for any key this ACK
+                // covers BEFORE the number is rebased onto the live ISN below.
+                if (tcpHeader->getAckBit() && !tcpHeader->getSynBit())
+                    recordTxTimestampAck(tcpHeader->getAckNo());
+                // ack: script acks the DUT's data relative to the DUT's script
+                // ISN; on a SYN(-ACK) packet the script literal is absolute in
+                // the script's own frame, so the declared script ISN is
+                // subtracted before rebasing onto the live ISN.
+                tcpHeader->setAckNo(tcpHeader->getAckNo() + relSequenceOut
+                    - (tcpHeader->getSynBit() ? scriptIsnOut : 0));
                 if (tcpHeader->getHeaderOptionArraySize() > 0) {
                     for (unsigned int i = 0; i < tcpHeader->getHeaderOptionArraySize(); i++) {
                         if (tcpHeader->getHeaderOption(i)->getKind() == TCPOPT_TIMESTAMP) {
+                            // TSecr must echo the DUT's LIVE timestamp clock, which
+                            // the script cannot know -- re-stamp it with the last
+                            // TSval observed on a live outbound segment (peerTS),
+                            // like upstream packetdrill's ecr remapping. The TSval
+                            // is the scripted PEER's own clock and must be
+                            // PRESERVED verbatim: the DUT stores it as ts_recent
+                            // and echoes it back, and the script's outbound "ecr"
+                            // assertions are written against these literals.
+                            // (Previously the whole option was rebuilt with only
+                            // ecr set, silently zeroing every injected TSval.)
+                            auto *oldTs = check_and_cast<const TcpOptionTimestamp *>(tcpHeader->getHeaderOption(i));
                             TcpOptionTimestamp *option = new TcpOptionTimestamp();
-                            option->setEchoedTimestamp(peerTS);
+                            option->setSenderTimestamp(oldTs->getSenderTimestamp());
+                            // Map the script's ecr onto the live clock: a KNOWN
+                            // script TSval maps to its recorded live value, an
+                            // ecr matching the last outbound expectation's clock
+                            // in general falls back to peerTS -- but an ecr the
+                            // DUT never sent (a deliberate bad echo, e.g. 9999
+                            // in synack-data TEST5) is injected RAW so the DUT
+                            // can reject it like Linux does.
+                            uint32_t scriptEcr = oldTs->getEchoedTimestamp();
+                            if (scriptEcr == 0)
+                                option->setEchoedTimestamp(0);
+                            else if (scriptOutTsVals.empty() || scriptOutTsVals.count(scriptEcr))
+                                option->setEchoedTimestamp(peerTS);
+                            else
+                                option->setEchoedTimestamp(scriptEcr);
+                            tcpHeader->removeHeaderOption(i);
                             tcpHeader->setHeaderOption(i, option);
+                        }
+                        else if (auto *sackOpt = dynamic_cast<TcpOptionSack *>(tcpHeader->getHeaderOptionForUpdate(i))) {
+                            // SACK blocks report ranges of the DUT's OWN sequence
+                            // space, which the script writes relative to the DUT's
+                            // ISN (packetdrill maps it to 0) -- shift them by the
+                            // live ISN exactly like the ACK number above. Unshifted,
+                            // a "sack 1001:2001" block lands below snd_una and INET
+                            // rightly discards it as stale/D-SACK, so injected
+                            // dupacks never arm fast retransmit and every loss
+                            // -recovery script ends in an RTO instead.
+                            for (unsigned int s = 0; s < sackOpt->getSackItemArraySize(); s++) {
+                                auto& item = sackOpt->getSackItemForUpdate(s);
+                                item.setStart(item.getStart() + relSequenceOut);
+                                item.setEnd(item.getEnd() + relSequenceOut);
+                            }
+                        }
+                        else if (tcpHeader->getSynBit() && tcpHeader->getAckBit()) {
+                            // TFO cookie-cache mirror (see tfoCookieCached in the
+                            // header): a SYN-ACK delivering a valid-length cookie
+                            // makes INET cache it, so subsequent fastOpen connects
+                            // will DEFER their SYN until the first send.
+                            unsigned int fooLen = 0;
+                            if (auto *fo = dynamic_cast<const TcpOptionTcpFastOpen *>(tcpHeader->getHeaderOption(i)))
+                                fooLen = fo->getCookieArraySize();
+                            else if (auto *foe = dynamic_cast<const TcpOptionTcpFastOpenExp *>(tcpHeader->getHeaderOption(i)))
+                                fooLen = foe->getCookieArraySize();
+                            if (fooLen >= 4 && fooLen <= 16)
+                                tfoCookieCached = true;
                         }
                     }
                 }
@@ -511,8 +787,25 @@ void PacketDrillApp::runEvent(PacketDrillEvent *event)
             tunSocket.send(pk);
         }
         else if (event->getPacket()->getDirection() == DIRECTION_OUTBOUND) { // >
-            if (receivedPackets->getLength() > 0) {
-                Packet *livePacket = check_and_cast<Packet *>(receivedPackets->pop());
+            // Find the first queued OUTBOUND IP datagram, skipping any app-layer
+            // read data. A server that both ACKs a segment and delivers its
+            // payload to the app queues BOTH into receivedPackets (the TCP-socket
+            // data callback and the tun callback share the queue); only the IP
+            // datagrams are outbound packets to compare -- app data (a bare
+            // ByteCountChunk with no Ipv4Header) stays queued for
+            // read()/recvfrom() to consume. Any IP datagram qualifies: SCTP and
+            // UDP scripts' outbound expectations go through this same path, so
+            // the predicate must not be TCP-only.
+            Packet *livePacket = nullptr;
+            for (cQueue::Iterator it(*receivedPackets); !it.end(); it++) {
+                auto *p = dynamic_cast<Packet *>(check_and_cast<cPacket *>(*it));
+                if (p && dynamicPtrCast<const Ipv4Header>(p->peekAtFront<Chunk>()) != nullptr) {
+                    livePacket = p;
+                    break;
+                }
+            }
+            if (livePacket) {
+                receivedPackets->remove(livePacket);
                 if (pk && livePacket) {
                     PacketDrillInfo *liveInfo = (PacketDrillInfo *)livePacket->getContextPointer();
                     if (verifyTime(event->getTimeType(), event->getEventTime(),
@@ -521,17 +814,35 @@ void PacketDrillApp::runEvent(PacketDrillEvent *event)
                     {
                         throw cTerminationException("Packetdrill error: Timing error");
                     }
-                    if (!compareDatagram(pk, livePacket)) {
-                        throw cTerminationException("Packetdrill error: Datagrams are not the same");
-                    }
-                    delete liveInfo;
-                    if (!eventTimer->isScheduled() && eventCounter < numEvents - 1) {
-                        eventCounter++;
-                        scheduleEvent();
+                    // takes ownership of both packets; may park pk as a GSO
+                    // super-segment awaiting further live slices
+                    startOutboundComparison(pk, livePacket);
+                    // further slices may already be queued (INET emits its
+                    // burst back-to-back before the script clock advances).
+                    // receivedPackets can INTERLEAVE app-data deliveries with
+                    // tun packets (e.g. unread TFO SYN payload sitting at the
+                    // front for the whole script) -- iterate and consume tun
+                    // slices in arrival order, leaving app data queued, same
+                    // as consumeAppBytes() does in the other direction.
+                    while (aggExpectedOutbound != nullptr) {
+                        Packet *slice = nullptr;
+                        for (cQueue::Iterator it(*receivedPackets); !it.end(); it++) {
+                            auto *qpkt = dynamic_cast<Packet *>(*it);
+                            if (qpkt && tcpPayloadLength(qpkt) >= 0) {
+                                slice = qpkt;
+                                break;
+                            }
+                        }
+                        if (!slice)
+                            break;
+                        receivedPackets->remove(slice);
+                        continueOutboundAggregation(slice);
                     }
                 }
-                delete livePacket;
-                delete pk;
+                else {
+                    delete livePacket;
+                    delete pk;
+                }
             }
             else {
                 if (protocol == IP_PROT_SCTP) {
@@ -570,11 +881,140 @@ void PacketDrillApp::runEvent(PacketDrillEvent *event)
     else if (event->getType() == SYSCALL_EVENT) {
         EV_INFO << "syscallEvent: time_type = " << event->getTimeType() << " event time = " << event->getEventTime()
                 << " end event time = " << event->getEventTimeEnd() << endl;
+        // a blocking syscall's scripted end time ("+.09...0.14" -- the range
+        // end lives in the SYSCALL spec's end_usecs, not the event time),
+        // application-behavior ground truth consumed by syscallWrite's
+        // writer-blocked marker; mapped to live time the same way the
+        // blocking-poll window end is
+        if (event->getSyscall()->end_usecs >= 0)
+            currentSyscallEnd = SimTime(event->getSyscall()->end_usecs, SIMTIME_US)
+                + event->getEventOffset() + simStartTime;
         runSystemCallEvent(event, event->getSyscall());
+        currentSyscallEnd = -1;
     }
     else if (event->getType() == COMMAND_EVENT) {
-        eventCounter++;
-        scheduleEvent();
+        runCommandEvent(event);
+        // same bounds guard as every other advancement site: a script whose
+        // LAST event is a backtick command (e.g. a trailing sysctl restore)
+        // must not walk past the event list (scheduleEvent() null-derefs)
+        if (!eventTimer->isScheduled() && eventCounter < numEvents - 1) {
+            eventCounter++;
+            scheduleEvent();
+        }
+    }
+    else if (event->getType() == CODE_EVENT) {
+        runCodeEvent(event);
+    }
+}
+
+void PacketDrillApp::runCommandEvent(PacketDrillEvent *event)
+{
+    // A timed backtick shell command. Real packetdrill hands the line to
+    // /bin/sh; the only effect worth modeling for the simulated stack is a
+    // sysctl assignment that changes TCP behavior for LATER connections
+    // (INET's Tcp module reads its parameters per connection at open time,
+    // which is also when Linux samples these). Everything else the corpus
+    // uses in timed commands (nstat, tc qdisc, ip tcp_metrics flush, the
+    // sysctl_restore tail script) is a no-op here. The key->parameter
+    // mapping mirrors the preamble translation of tcp/sysctls.yaml in the packetdrill suite.
+    const char *cmdline = event->getCommand() ? event->getCommand()->command_line : nullptr;
+    if (!cmdline)
+        return;
+    cModule *tcpModule = getParentModule()->getSubmodule("tcp");
+    // `ip tcp_metrics flush` drops the per-destination TFO cookie cache, which is
+    // how a script re-arms the cookie-REQUEST path mid-run. Not a sysctl, so it
+    // has to be matched on the command line rather than as a key=value token.
+    // net.ipv4.tcp_fastopen_cookies is the Google-only knob the corpus tries
+    // first for the same purpose, with the ip command as its `||` fallback --
+    // treat either as the flush, since the fallback only runs when the sysctl is
+    // absent (it is, on a generic kernel) and both mean the same thing here.
+    std::string cmdstr(cmdline);
+    if (cmdstr.find("tcp_metrics flush") != std::string::npos
+        || cmdstr.find("tcp_fastopen_cookies") != std::string::npos)
+    {
+        auto *tcp = dynamic_cast<inet::tcp::Tcp *>(tcpModule);
+        if (tcp) {
+            tcp->clearFastOpenCookieCache();
+            EV_INFO << "command event: Fast Open cookie cache flushed\n";
+        }
+        else
+            EV_WARN << "command event: cannot flush the Fast Open cookie cache -- the tcp"
+                       " sibling module is not an inet::tcp::Tcp\n";
+    }
+    // `ip route change <dst> ... mtu [lock] N`: the route under the LIVE connection
+    // gained a new MTU, which is what lets RFC 4821 probing search higher. Unlike a
+    // sysctl this affects the current connection, so it goes to the socket.
+    if (cmdstr.find("ip route ") != std::string::npos) {
+        std::smatch m;
+        static const std::regex mtuRe("\\bmtu\\s+(?:lock\\s+)?([0-9]+)");
+        if (std::regex_search(cmdstr, m, mtuRe) && tcpSocket.getState() != TcpSocket::NOT_BOUND) {
+            int mtu = atoi(m[1].str().c_str());
+            tcpSocket.setPathMtu(mtu);
+            EV_INFO << "command event: path MTU <- " << mtu << "\n";
+        }
+    }
+    std::istringstream tokens(cmdline);
+    std::string token;
+    while (tokens >> token) {
+        size_t eq = token.find('=');
+        if (eq == std::string::npos || eq == 0)
+            continue;
+        std::string key = token.substr(0, eq);
+        std::string value = token.substr(eq + 1);
+        // normalize /proc/sys/net/ipv4/x and net/ipv4/x to net.ipv4.x
+        if (key.compare(0, 10, "/proc/sys/") == 0)
+            key = key.substr(10);
+        std::replace(key.begin(), key.end(), '/', '.');
+        if (key.compare(0, 4, "net.") != 0)
+            continue; // shell noise (redirections, flags), not a sysctl
+        if (!tcpModule) {
+            EV_WARN << "command event: no tcp sibling module, ignoring sysctl " << key << "\n";
+            continue;
+        }
+        if (key == "net.ipv4.tcp_timestamps") {
+            tcpModule->par("timestampSupport").setBoolValue(atoi(value.c_str()) != 0);
+            EV_INFO << "command event: timestampSupport <- " << value << " for later connections\n";
+        }
+        else if (key == "net.ipv4.tcp_ecn" || key == "net.ipv4.tcp_ecn_option") {
+            // Same enum as tcp/sysctls.yaml's preamble translation -- keep the two in
+            // step. The corpus reaches here from the fastopen server tests, which
+            // re-run the same scenario with ECN switched on mid-script and then
+            // assert an ECN-setup SYN-ACK ("> SE.") on the next connection.
+            if (key == "net.ipv4.tcp_ecn_option")
+                tcpModule->par("accEcnOptionEnabled").setBoolValue(atoi(value.c_str()) != 0);
+            else {
+                static const char *const modes[] = { "off", "rfc3168", "passive", "accecn", "rfc3168", "accecn-passive" };
+                long mode = strtol(value.c_str(), nullptr, 0);
+                if (mode < 0 || mode >= (long)(sizeof(modes) / sizeof(modes[0]))) {
+                    EV_WARN << "command event: unmodeled tcp_ecn value " << value << " ignored\n";
+                    continue;
+                }
+                tcpModule->par("tcpEcnMode").setStringValue(modes[mode]);
+            }
+            EV_INFO << "command event: " << key << " <- " << value << " for later connections\n";
+        }
+        else if (key == "net.ipv4.tcp_fastopen_key") {
+            // primary key only ("primary,backup" allowed by Linux)
+            std::string primary = value.substr(0, value.find(','));
+            tcpModule->par("fastopenKey").setStringValue(primary.c_str());
+            EV_INFO << "command event: fastopenKey <- " << primary << "\n";
+        }
+        else if (key == "net.ipv4.tcp_fastopen") {
+            // same bit interpretation as tcp/sysctls.yaml (0x2/0x400 deliberately
+            // swapped from the kernel's nominal meaning -- see the mapping's
+            // comment on modeling the per-listener TCP_FASTOPEN setsockopt)
+            long bits = strtol(value.c_str(), nullptr, 0);
+            tcpModule->par("fastopenClientEnabled").setBoolValue((bits & 0x1) != 0);
+            tfoClientEnabled = (bits & 0x1) != 0;
+            tcpModule->par("fastopenClientNoCookieRequired").setBoolValue((bits & 0x4) != 0);
+            tfoNoCookieMode = (bits & 0x4) != 0; // mirror for the deferred-SYN kick predicate
+            tcpModule->par("fastopenExpOptionEnabled").setBoolValue((bits & 0x2) != 0);
+            tcpModule->par("fastopenServerEnabled").setBoolValue((bits & 0x400) != 0);
+            tcpModule->par("fastopenAcceptWithoutCookie").setBoolValue((bits & 0x200) != 0);
+            EV_INFO << "command event: fastopen params <- " << value << " for later connections\n";
+        }
+        else
+            EV_WARN << "command event: unmodeled sysctl " << key << "=" << value << " ignored\n";
     }
 }
 
@@ -602,17 +1042,53 @@ void PacketDrillApp::handleTimer(cMessage *msg)
             // For TCP/UDP scripts it never fires, so gating advancement on it
             // unconditionally stalled every non-SCTP script after its first
             // event. Only require it for SCTP.
-            if (((protocol != IP_PROT_SCTP || socketOptionsArrived_) && !recvFromSet && outboundPackets->getLength() == 0) &&
+            // aggExpectedOutbound != nullptr means a GSO super-segment is only
+            // PARTIALLY matched (its expectation was already popped off
+            // outboundPackets, so the queue-empty check alone is a lie): the
+            // event counter must not advance past the aggregate, or the next
+            // "> P." step consumes live slices that belong to the still-open
+            // super-segment (seq expected N+agg, actual N).
+            // A BLOCKED TCP read must not stop the script clock: real
+            // packetdrill executes the event timeline in a separate thread
+            // from the blocking syscall, so later events (e.g. the very
+            // injection that will satisfy the read) keep firing and the read
+            // completes asynchronously in socketDataArrived(TcpSocket).
+            // Freezing on recvFromSet deadlocked every "read-then-inject"
+            // script whose data event follows the blocking read
+            // (basic-zero-payload's read stalled until the SYN-ACK rexmit).
+            // UDP/SCTP keep the old serialized behavior.
+            if (((protocol != IP_PROT_SCTP || socketOptionsArrived_) && (!recvFromSet || protocol == IP_PROT_TCP) && !codeEventPending &&
+                    outboundPackets->getLength() == 0 && aggExpectedOutbound == nullptr) &&
                 (!eventTimer->isScheduled() && eventCounter < numEvents - 1))
             {
                 eventCounter++;
                 scheduleEvent();
             }
-            if (eventCounter >= numEvents - 1 && outboundPackets->getLength() == 0) {
+            if (eventCounter >= numEvents - 1 && !codeEventPending && outboundPackets->getLength() == 0
+                    && aggExpectedOutbound == nullptr && !eventTimer->isScheduled()) {
+                if (!codeBlockBuffer.empty())
+                    executeCodeBlocks();
                 closeAllSockets();
+                scriptComplete = true;
             }
             break;
         }
+
+        case MSGKIND_WRITER_UNBLOCK:
+            // the blocking write's scripted end time: the writer wrote its
+            // last byte and returned -- it is no longer stalled on space
+            tcpSocket.setWriterBlocked(false);
+            break;
+
+        case MSGKIND_POLL_DEFERRED:
+            evaluateDeferredPoll();
+            break;
+
+        case MSGKIND_STATUS_REQUEST:
+            // Fired an instant after runCodeEvent() so any same-instant inbound
+            // packet has settled; now take the tcp_info snapshot.
+            tcpSocket.requestStatus();
+            break;
 
         default:
             throw cRuntimeError("Unknown message kind");
@@ -702,7 +1178,7 @@ void PacketDrillApp::runSystemCallEvent(PacketDrillEvent *event, struct syscall_
     else if (!strcmp(name, "write") || !strcmp(name, "send")) {
         result = syscallWrite(syscall, args, &error);
     }
-    else if (!strcmp(name, "read")) {
+    else if (!strcmp(name, "read") || !strcmp(name, "recv")) {
         result = syscallRead(event, syscall, args, &error);
     }
     else if (!strcmp(name, "sendto")) {
@@ -716,6 +1192,32 @@ void PacketDrillApp::runSystemCallEvent(PacketDrillEvent *event, struct syscall_
     }
     else if (!strcmp(name, "shutdown")) {
         result = syscallShutdown(syscall, args, &error);
+    }
+    else if (!strcmp(name, "open")) {
+        // File descriptors are not modeled; the framework's payloads are all
+        // zeroes anyway, so open()'s only role (feeding sendfile) is inert.
+        result = STATUS_OK;
+    }
+    else if (!strcmp(name, "sendfile")) {
+        result = syscallSendFile(syscall, args, &error);
+    }
+    else if (!strcmp(name, "sendmsg")) {
+        result = syscallSendMsg(syscall, args, &error);
+    }
+    else if (!strcmp(name, "recvmsg")) {
+        result = syscallRecvMsg(event, syscall, args, &error);
+    }
+    else if (!strcmp(name, "epoll_create") || !strcmp(name, "epoll_create1")) {
+        result = syscallEpollCreate(syscall, args, &error);
+    }
+    else if (!strcmp(name, "epoll_ctl")) {
+        result = syscallEpollCtl(syscall, args, &error);
+    }
+    else if (!strcmp(name, "epoll_wait")) {
+        result = syscallEpollWait(syscall, args, &error);
+    }
+    else if (!strcmp(name, "poll")) {
+        result = syscallPoll(event, syscall, args, &error);
     }
     else if (!strcmp(name, "connect")) {
         result = syscallConnect(syscall, args, &error);

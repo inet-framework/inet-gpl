@@ -35,6 +35,13 @@ simple PacketDrillApp like IApp
         int streamReset = default(0);
         string crcMode @enum("declared", "computed") = default("declared");
         double latency @unit(s) = default(0s);
+        // Explicit-read receive model: TCP sockets run with autoRead=false and every
+        // script read()/recv() issues a TCP READ request, so arrived-but-unread data
+        // stays in TCP's receive queue exactly like unread data in a Linux socket
+        // buffer -- receive-window shrink, buffer-occupancy acceptance decisions and
+        // delayed-ACK gating then follow genuine occupancy. Off by default: most
+        // corpus scripts read promptly and the autoRead model is equivalent for them.
+        bool explicitRead = default(false);
         @display("i=block/app");
     gates:
         input socketIn;
