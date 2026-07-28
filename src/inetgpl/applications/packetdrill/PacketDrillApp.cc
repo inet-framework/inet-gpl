@@ -477,25 +477,191 @@ void PacketDrillApp::socketDataArrived(TunSocket *socket, Packet *packet)
     }
     else {
         Packet *ipv4Packet = check_and_cast<Packet *>(outboundPackets->pop());
-//        const auto& ipv4Header = ipv4Packet->peekAtFront<Ipv4Header>();
-        Packet *liveIpv4Packet = packet;
-//        const auto& liveIpv4Header = liveIpv4Packet->peekAtFront<Ipv4Header>();
         PacketDrillInfo *info = (PacketDrillInfo *)ipv4Packet->getContextPointer();
         if (verifyTime(static_cast<eventTime_t>(info->getTimeType()), info->getScriptTime(),
             info->getScriptTimeEnd(), info->getOffset(), getSimulation()->getSimTime(), "outbound packet") == STATUS_ERR)
         {
             throw cTerminationException("Packetdrill error: Packet arrived at the wrong time");
         }
-        if (!compareDatagram(ipv4Packet, liveIpv4Packet)) {
-            throw cTerminationException("Packetdrill error: Datagrams are not the same");
-        }
         delete info;
-        if (!eventTimer->isScheduled() && eventCounter < numEvents - 1) {
-            eventCounter++;
-            scheduleEvent();
+        ipv4Packet->setContextPointer(nullptr);
+        startOutboundComparison(ipv4Packet, packet);
+    }
+}
+
+int64_t PacketDrillApp::tcpPayloadLength(Packet *pkt)
+{
+    // -1 = not an IPv4/TCP packet (caller falls back to plain comparison)
+    const auto& chunk = pkt->peekAtFront<Chunk>();
+    auto ip = dynamicPtrCast<const Ipv4Header>(chunk);
+    if (!ip || ip->getProtocolId() != IP_PROT_TCP)
+        return -1;
+    const auto& tcp = pkt->peekDataAt<TcpHeader>(ip->getChunkLength());
+    return pkt->getByteLength() - B(ip->getChunkLength()).get() - B(tcp->getHeaderLength()).get();
+}
+
+int64_t PacketDrillApp::availableAppBytes()
+{
+    // Total unread bytes across queued app-data messages (the TCP receive
+    // stream), net of the partially-read front message's consumed prefix.
+    int64_t total = 0;
+    for (cQueue::Iterator it(*receivedPackets); !it.end(); it++) {
+        auto *qpkt = dynamic_cast<Packet *>(*it);
+        if (qpkt && tcpPayloadLength(qpkt) < 0)
+            total += qpkt->getByteLength() - (qpkt == partialReadPkt ? partialReadOffset : 0);
+    }
+    return total;
+}
+
+void PacketDrillApp::consumeAppBytes(int64_t count)
+{
+    // Drain `count` bytes from the receive stream in arrival order,
+    // discarding fully-read messages and advancing the partial-read offset
+    // into a message a read stops in the middle of. Caller has verified
+    // availableAppBytes() >= count.
+    std::vector<Packet *> appData;
+    for (cQueue::Iterator it(*receivedPackets); !it.end(); it++) {
+        auto *qpkt = dynamic_cast<Packet *>(*it);
+        if (qpkt && tcpPayloadLength(qpkt) < 0)
+            appData.push_back(qpkt);
+    }
+    for (auto *qpkt : appData) {
+        if (count <= 0)
+            break;
+        int64_t avail = qpkt->getByteLength() - (qpkt == partialReadPkt ? partialReadOffset : 0);
+        if (avail <= count) {
+            count -= avail;
+            receivedPackets->remove(qpkt);
+            if (qpkt == partialReadPkt) {
+                partialReadPkt = nullptr;
+                partialReadOffset = 0;
+            }
+            delete (PacketDrillInfo *)qpkt->getContextPointer();
+            delete qpkt;
         }
-        delete (PacketDrillInfo *)packet->getContextPointer();
-        delete packet;
+        else {
+            if (qpkt != partialReadPkt) {
+                partialReadPkt = qpkt;
+                partialReadOffset = 0;
+            }
+            partialReadOffset += count;
+            count = 0;
+        }
+    }
+    msgArrived = receivedPackets->getLength() > 0;
+}
+
+void PacketDrillApp::startOutboundComparison(Packet *expectedPacket, Packet *livePacket)
+{
+    // Both packets are owned by this function. Equal payloads (or non-TCP):
+    // ordinary one-to-one comparison. An expected TCP payload LARGER than the
+    // live segment's is the GSO shape (see aggExpectedOutbound's comment):
+    // verify the live segment as the aggregate's first slice -- PSH-leniently,
+    // Linux sets PSH only on the last sub-segment -- and park the expected
+    // packet until seq-contiguous follow-up segments complete the payload.
+    int64_t expectedPayload = tcpPayloadLength(expectedPacket);
+    int64_t livePayload = tcpPayloadLength(livePacket);
+    if (expectedPayload >= 0 && livePayload >= 0 && expectedPayload > livePayload) {
+        comparePshLeniently = true;
+        bool headersMatch = compareDatagram(expectedPacket, livePacket);
+        comparePshLeniently = false;
+        if (!headersMatch)
+            throw cTerminationException("Packetdrill error: Datagrams are not the same");
+        const auto& liveIp = livePacket->peekAtFront<Ipv4Header>();
+        const auto& liveTcp = livePacket->peekDataAt<TcpHeader>(liveIp->getChunkLength());
+        aggExpectedOutbound = expectedPacket;
+        aggRemainingPayload = (uint32_t)(expectedPayload - livePayload);
+        aggNextSeq = liveTcp->getSequenceNo() + (uint32_t)livePayload;
+        EV_DETAIL << "GSO aggregation: expected " << expectedPayload << "B super-segment, first live slice "
+                  << livePayload << "B, awaiting " << aggRemainingPayload << "B more from seq " << aggNextSeq << "\n";
+        delete (PacketDrillInfo *)livePacket->getContextPointer();
+        delete livePacket;
+        return; // event counter advances when the aggregate completes
+    }
+    // The reverse mismatch -- the live segment carrying MORE payload than the
+    // script asserted -- is a genuine wire divergence (e.g. a bare-FIN
+    // expectation answered by data+FIN). compareTcpHeader() compares no length
+    // field (unlike the UDP header compare), so without this check the surplus
+    // payload would be invisible and the event would falsely MATCH.
+    if (expectedPayload >= 0 && livePayload >= 0 && expectedPayload < livePayload) {
+        EV_WARN << "TCP compare: payload length expected " << expectedPayload
+                << " actual " << livePayload << "\n";
+        throw cTerminationException("Packetdrill error: Datagrams are not the same");
+    }
+    if (!compareDatagram(expectedPacket, livePacket)) {
+        throw cTerminationException("Packetdrill error: Datagrams are not the same");
+    }
+    delete expectedPacket;
+    if (!eventTimer->isScheduled() && eventCounter < numEvents - 1) {
+        eventCounter++;
+        scheduleEvent();
+    }
+    // If that outbound expectation was the script's last event, no further
+    // event timer fires to re-run the handleTimer() completion check, so mark
+    // completion here too -- otherwise post-script timer traffic would still be
+    // flagged (see the scriptComplete comment in the header).
+    // !eventTimer->isScheduled() is in the else-if guard above, so a merely
+    // SCHEDULED (not yet run) final event cannot reach this branch and mark
+    // completion prematurely.
+    else if (eventCounter >= numEvents - 1 && !codeEventPending && outboundPackets->getLength() == 0
+             && !eventTimer->isScheduled()) {
+        if (!codeBlockBuffer.empty())
+            executeCodeBlocks();
+        closeAllSockets();
+        scriptComplete = true;
+    }
+    delete (PacketDrillInfo *)livePacket->getContextPointer();
+    delete livePacket;
+}
+
+void PacketDrillApp::continueOutboundAggregation(Packet *livePacket)
+{
+    int64_t livePayload = tcpPayloadLength(livePacket);
+    uint32_t liveSeq = 0;
+    bool liveFin = false, liveSyn = true, liveRst = true;
+    if (livePayload > 0) {
+        const auto& liveIp = livePacket->peekAtFront<Ipv4Header>();
+        const auto& liveTcp = livePacket->peekDataAt<TcpHeader>(liveIp->getChunkLength());
+        liveSeq = liveTcp->getSequenceNo();
+        liveFin = liveTcp->getFinBit();
+        liveSyn = liveTcp->getSynBit();
+        liveRst = liveTcp->getRstBit();
+    }
+    delete (PacketDrillInfo *)livePacket->getContextPointer();
+    delete livePacket;
+    if (livePayload <= 0 || liveSyn || liveRst || liveSeq != aggNextSeq || (uint32_t)livePayload > aggRemainingPayload)
+        throw cTerminationException("Packetdrill error: outbound segment does not continue the expected GSO super-segment");
+    aggRemainingPayload -= (uint32_t)livePayload;
+    aggNextSeq += (uint32_t)livePayload;
+    if (aggRemainingPayload > 0)
+        return;
+    // aggregate complete: the FIN of the super-segment (if any) must have been
+    // on this final slice
+    const auto& expIp = aggExpectedOutbound->peekAtFront<Ipv4Header>();
+    const auto& expTcp = aggExpectedOutbound->peekDataAt<TcpHeader>(expIp->getChunkLength());
+    bool expFin = expTcp->getFinBit();
+    delete aggExpectedOutbound;
+    aggExpectedOutbound = nullptr;
+    if (expFin != liveFin)
+        throw cTerminationException("Packetdrill error: FIN mismatch on the final slice of a GSO super-segment");
+    EV_DETAIL << "GSO aggregation: super-segment complete\n";
+    if (!eventTimer->isScheduled() && eventCounter < numEvents - 1) {
+        eventCounter++;
+        scheduleEvent();
+    }
+    // If the completed super-segment was the script's LAST event, no further
+    // event timer fires to run the handleTimer() completion check -- mark
+    // completion here too, exactly like the sibling advancement sites
+    // (startOutboundComparison, socketStatusArrived, handleTimer). Without
+    // this, buffered %{ }% code blocks would silently never run (a vacuous
+    // PASS) and post-script timer traffic would be flagged as a spurious
+    // "wrong time" divergence because scriptComplete stays false.
+    else if (eventCounter >= numEvents - 1 && !codeEventPending && outboundPackets->getLength() == 0
+             && !eventTimer->isScheduled()) {
+        if (!codeBlockBuffer.empty())
+            executeCodeBlocks();
+        closeAllSockets();
+        scriptComplete = true;
     }
 }
 
@@ -3717,38 +3883,66 @@ int PacketDrillApp::verifyTime(enum eventTime_t timeType, simtime_t scriptTime, 
 
 bool PacketDrillApp::compareDatagram(Packet *storedPacket, Packet *livePacket)
 {
+    // A comparable outbound datagram always begins with an Ipv4Header. A live
+    // packet that does not (e.g. app-layer payload delivered to the socket as a
+    // bare ByteCountChunk, which can reach the outbound path when the app
+    // receives data while an outbound segment is still pending) is not a
+    // datagram we can match -- report a divergence rather than crashing on the
+    // chunk-type conversion.
+    // Probe the front chunk via the generic base type and a dynamic cast (as
+    // tcpPayloadLength() does) -- peeking/hasAtFront directly as Ipv4Header would
+    // itself throw the ByteCountChunk->Ipv4Header conversion error we are guarding
+    // against.
+    if (!dynamicPtrCast<const Ipv4Header>(storedPacket->peekAtFront<Chunk>())
+        || !dynamicPtrCast<const Ipv4Header>(livePacket->peekAtFront<Chunk>())) {
+        EV_WARN << "compareDatagram: a packet does not begin with an Ipv4Header (live app data on the outbound path?)\n";
+        return false;
+    }
     const auto& storedDatagram = storedPacket->peekAtFront<Ipv4Header>();
     const auto& liveDatagram = livePacket->peekAtFront<Ipv4Header>();
 
 //    if (!(storedDatagram->getSrcAddress() == liveDatagram->getSrcAddress())) {
 //        return false;
 //    }
-    std::cout << __LINE__ << endl;
     if (!(storedDatagram->getDestAddress() == liveDatagram->getDestAddress())) {
         return false;
     }
+    // Divergence diagnostics: name the first mismatching field.
     if (!(storedDatagram->getProtocolId() == liveDatagram->getProtocolId())) {
+        EV_WARN << "IP compare: protocolId expected " << storedDatagram->getProtocolId() << " actual " << liveDatagram->getProtocolId() << "\n";
         return false;
     }
     if (!(storedDatagram->getTimeToLive() == liveDatagram->getTimeToLive())) {
+        EV_WARN << "IP compare: ttl expected " << (int)storedDatagram->getTimeToLive() << " actual " << (int)liveDatagram->getTimeToLive() << "\n";
         return false;
     }
-    if (!(storedDatagram->getIdentification() == liveDatagram->getIdentification())) {
-        return false;
-    }
+    // IP identification is deliberately NOT compared: the packetdrill script
+    // language never asserts it (upstream packetdrill ignores it too) -- the
+    // stored side's value is just a per-script-packet counter, which GSO
+    // aggregation permanently desynchronizes from INET's per-real-segment
+    // Ipv4 counter.
     if (!(storedDatagram->getMoreFragments() == liveDatagram->getMoreFragments())) {
+        EV_WARN << "IP compare: moreFragments mismatch\n";
         return false;
     }
     if (!(storedDatagram->getDontFragment() == liveDatagram->getDontFragment())) {
+        EV_WARN << "IP compare: dontFragment expected " << storedDatagram->getDontFragment() << " actual " << liveDatagram->getDontFragment() << "\n";
         return false;
     }
     if (!(storedDatagram->getFragmentOffset() == liveDatagram->getFragmentOffset())) {
+        EV_WARN << "IP compare: fragmentOffset mismatch\n";
         return false;
     }
-    if (!(storedDatagram->getTypeOfService() == liveDatagram->getTypeOfService())) {
+    if (storedDatagram->getDscp() == 0x3f) {
+        // TOS_CHECK_NONE sentinel (no [ecn] bracket on the expectation, see
+        // PacketDrill::buildTCPPacket): the ToS byte is not checked.
+    }
+    else if (!(storedDatagram->getTypeOfService() == liveDatagram->getTypeOfService())) {
+        EV_WARN << "IP compare: tos expected " << (int)storedDatagram->getTypeOfService() << " actual " << (int)liveDatagram->getTypeOfService() << "\n";
         return false;
     }
     if (!(storedDatagram->getHeaderLength() == liveDatagram->getHeaderLength())) {
+        EV_WARN << "IP compare: headerLength expected " << storedDatagram->getHeaderLength() << " actual " << liveDatagram->getHeaderLength() << "\n";
         return false;
     }
     switch (storedDatagram->getProtocolId()) {
@@ -3764,8 +3958,9 @@ bool PacketDrillApp::compareDatagram(Packet *storedPacket, Packet *livePacket)
         case IP_PROT_TCP: {
             const auto& storedTcp = storedPacket->peekDataAt<TcpHeader>(storedDatagram->getChunkLength());
             const auto& liveTcp = livePacket->peekDataAt<TcpHeader>(liveDatagram->getChunkLength());
-            if (storedTcp->getSynBit()) { // SYN was sent. Store the sequence number for comparisons
+            if (storedTcp->getSynBit()) { // SYN was sent. Store live ISN + the script's literal for it
                 relSequenceOut = liveTcp->getSequenceNo();
+                scriptIsnOut = storedTcp->getSequenceNo();
             }
             if (storedTcp->getSynBit() && storedTcp->getAckBit()) {
                 peerWindow = liveTcp->getWindow();
@@ -3800,25 +3995,75 @@ bool PacketDrillApp::compareUdpHeader(const Ptr<const UdpHeader>& storedUdp, con
 
 bool PacketDrillApp::compareTcpHeader(const Ptr<const TcpHeader>& storedTcp, const Ptr<const TcpHeader>& liveTcp)
 {
-    if (!(storedTcp->getSrcPort() == liveTcp->getSrcPort())) {
+    // Divergence diagnostics: name the first mismatching field (EV_WARN so it
+    // lands in the suite's captured context_log without detail-level logging).
+    // ports are checked against the CURRENT pair (stored packets carry the
+    // parse-time ports, stale after a per-socket local-port bump)
+    if (!(liveTcp->getSrcPort() == localPort)) {
+        EV_WARN << "TCP compare: srcPort expected " << localPort << " actual " << liveTcp->getSrcPort() << "\n";
         return false;
     }
-    if (!(storedTcp->getDestPort() == liveTcp->getDestPort())) {
+    if (!(liveTcp->getDestPort() == remotePort)) {
+        EV_WARN << "TCP compare: destPort expected " << remotePort << " actual " << liveTcp->getDestPort() << "\n";
         return false;
     }
-    if (!(storedTcp->getSequenceNo() + relSequenceOut == liveTcp->getSequenceNo())) {
+    // Upstream packetdrill's tcpdump convention (its socket.h): seq/ack in
+    // packets WITH the SYN flag are ABSOLUTE script literals; in all other
+    // packets they are RELATIVE to the first SYN of the respective direction.
+    // seq: non-SYN expects script + live ISN; a SYN's script literal is the
+    // declared script ISN itself (script + liveISN - scriptISN).
+    uint32_t expectedSeq = storedTcp->getSequenceNo() + relSequenceOut
+        - (storedTcp->getSynBit() ? scriptIsnOut : 0);
+    if (!(expectedSeq == liveTcp->getSequenceNo())) {
+        EV_WARN << "TCP compare: seq expected " << expectedSeq << " actual " << liveTcp->getSequenceNo() << "\n";
         return false;
     }
-    if (!(storedTcp->getAckNo() == liveTcp->getAckNo())) {
+    // ack: absolute on SYN/SYN-ACK packets (e.g. the simple1-3 server tests'
+    // "> S. 0:0(0) ack 1428933"), peer-ISN-relative on all others (e.g. the
+    // TFO-client tests' "> . 1:1(0) ack 1" after "< S. 123:123(0)").
+    uint32_t expectedAck = storedTcp->getAckNo()
+        + ((storedTcp->getAckBit() && !storedTcp->getSynBit()) ? relSequenceIn : 0);
+    if (!(expectedAck == liveTcp->getAckNo())) {
+        EV_WARN << "TCP compare: ack expected " << expectedAck << " actual " << liveTcp->getAckNo() << "\n";
         return false;
     }
+    // Like PSH below, FIN is compared leniently on a GSO super-segment's first
+    // slice: Linux carries the FIN only on the final sub-segment, and
+    // continueOutboundAggregation() verifies it there.
     if (!(storedTcp->getUrgBit() == liveTcp->getUrgBit()) || !(storedTcp->getAckBit() == liveTcp->getAckBit()) ||
-        !(storedTcp->getPshBit() == liveTcp->getPshBit()) || !(storedTcp->getRstBit() == liveTcp->getRstBit()) ||
-        !(storedTcp->getSynBit() == liveTcp->getSynBit()) || !(storedTcp->getFinBit() == liveTcp->getFinBit()))
+        !(storedTcp->getRstBit() == liveTcp->getRstBit()) ||
+        !(storedTcp->getSynBit() == liveTcp->getSynBit()) ||
+        (!comparePshLeniently && storedTcp->getFinBit() != liveTcp->getFinBit()))
     {
+        EV_WARN << "TCP compare: flags expected urg=" << storedTcp->getUrgBit() << " ack=" << storedTcp->getAckBit()
+                << " rst=" << storedTcp->getRstBit() << " syn=" << storedTcp->getSynBit() << " fin=" << storedTcp->getFinBit()
+                << " actual urg=" << liveTcp->getUrgBit() << " ack=" << liveTcp->getAckBit() << " rst=" << liveTcp->getRstBit()
+                << " syn=" << liveTcp->getSynBit() << " fin=" << liveTcp->getFinBit() << "\n";
+        return false;
+    }
+    // PSH is compared leniently while matching a GSO super-segment's first
+    // slice (Linux sets PSH only on the final sub-segment) -- see
+    // startOutboundComparison(); strict everywhere else.
+    if (!comparePshLeniently && storedTcp->getPshBit() != liveTcp->getPshBit()) {
+        EV_WARN << "TCP compare: psh expected " << storedTcp->getPshBit() << " actual " << liveTcp->getPshBit() << "\n";
         return false;
     }
     if (!(storedTcp->getUrgentPointer() == liveTcp->getUrgentPointer())) {
+        EV_WARN << "TCP compare: urgentPointer expected " << storedTcp->getUrgentPointer() << " actual " << liveTcp->getUrgentPointer() << "\n";
+        return false;
+    }
+    // ECN / AccECN bits. PacketDrill::buildTCPPacket decodes both script forms
+    // into these three fields -- the E/W/A letters on the handshake and the
+    // numeric ACE counter (".N", "P.N") afterwards -- so comparing them here is
+    // what turns an ECN expectation into an actual assertion: without it
+    // "> S. ... " and "> SEW. ..." are indistinguishable, and every ACE counter
+    // the script spells out is vacuous.
+    if (storedTcp->getEceBit() != liveTcp->getEceBit() || storedTcp->getCwrBit() != liveTcp->getCwrBit()
+        || storedTcp->getAeBit() != liveTcp->getAeBit())
+    {
+        EV_WARN << "TCP compare: ecn flags expected ae=" << storedTcp->getAeBit() << " cwr=" << storedTcp->getCwrBit()
+                << " ece=" << storedTcp->getEceBit() << " actual ae=" << liveTcp->getAeBit() << " cwr=" << liveTcp->getCwrBit()
+                << " ece=" << liveTcp->getEceBit() << "\n";
         return false;
     }
 
@@ -3827,65 +4072,240 @@ bool PacketDrillApp::compareTcpHeader(const Ptr<const TcpHeader>& storedTcp, con
         if (storedTcp->getHeaderOptionArraySize() == 0) {
             return true;
         }
-        if (storedTcp->getHeaderOptionArraySize() != liveTcp->getHeaderOptionArraySize()) {
-//            const TcpOption *liveOption;
-//            for (unsigned int i = 0; i < liveTcp->getHeaderOptionArraySize(); i++) {
-//                liveOption = liveTcp->getHeaderOption(i);
-//            }
+        // Order-insensitive, padding-agnostic option comparison: TCP option
+        // semantics don't depend on position, and NOP/EOL placement is a
+        // wire-layout artifact of each stack's emitter (Linux and INET pad
+        // differently), not protocol behavior -- a positional byte-layout
+        // compare would fail every option-bearing segment on cosmetics while
+        // hiding the real per-option value differences we're after. Each
+        // stored (script-asserted) option must find a same-kind live option
+        // with matching values; leftover non-padding live options are a
+        // mismatch (an option INET emitted that the script says must not be
+        // there), matching upstream packetdrill's exact-option-set contract.
+        std::vector<const TcpOption *> storedOpts, liveOpts;
+        for (unsigned int i = 0; i < storedTcp->getHeaderOptionArraySize(); i++) {
+            const TcpOption *o = storedTcp->getHeaderOption(i);
+            if (o->getKind() != TCPOPTION_END_OF_OPTION_LIST && o->getKind() != TCPOPTION_NO_OPERATION)
+                storedOpts.push_back(o);
+        }
+        for (unsigned int i = 0; i < liveTcp->getHeaderOptionArraySize(); i++) {
+            const TcpOption *o = liveTcp->getHeaderOption(i);
+            if (o->getKind() != TCPOPTION_END_OF_OPTION_LIST && o->getKind() != TCPOPTION_NO_OPERATION)
+                liveOpts.push_back(o);
+        }
+        if (storedOpts.size() != liveOpts.size()) {
+            EV_WARN << "TCP compare: option count expected " << storedOpts.size() << " actual " << liveOpts.size() << "\n";
             return false;
         }
-        else {
-            const TcpOption *storedOption, *liveOption;
-            for (unsigned int i = 0; i < storedTcp->getHeaderOptionArraySize(); i++) {
-                storedOption = storedTcp->getHeaderOption(i);
-                liveOption = liveTcp->getHeaderOption(i);
-                if (storedOption->getKind() == liveOption->getKind()) {
-                    switch (storedOption->getKind()) {
-                        case TCPOPTION_END_OF_OPTION_LIST:
-                        case TCPOPTION_NO_OPERATION:
-                            if (!(storedOption->getLength() == liveOption->getLength())) {
+        for (const TcpOption *storedOption : storedOpts) {
+            const TcpOption *liveOption = nullptr;
+            for (auto it = liveOpts.begin(); it != liveOpts.end(); ++it) {
+                if ((*it)->getKind() == storedOption->getKind()) {
+                    liveOption = *it;
+                    liveOpts.erase(it);
+                    break;
+                }
+            }
+            if (!liveOption) {
+                EV_WARN << "TCP compare: option kind=" << storedOption->getKind() << " expected but not present; live kinds:";
+                for (const TcpOption *lo : liveOpts)
+                    EV_WARN << " " << lo->getKind();
+                EV_WARN << "\n";
+                return false;
+            }
+            if (storedOption->getLength() != liveOption->getLength()) {
+                EV_WARN << "TCP compare: option kind=" << storedOption->getKind() << " length expected "
+                        << (int)storedOption->getLength() << " actual " << (int)liveOption->getLength() << "\n";
+                return false;
+            }
+            switch (storedOption->getKind()) {
+                case TCPOPTION_MAXIMUM_SEGMENT_SIZE:
+                    if (check_and_cast<const TcpOptionMaxSegmentSize *>(storedOption)->getMaxSegmentSize()
+                        != check_and_cast<const TcpOptionMaxSegmentSize *>(liveOption)->getMaxSegmentSize())
+                    {
+                        EV_WARN << "TCP compare: MSS option expected "
+                                << check_and_cast<const TcpOptionMaxSegmentSize *>(storedOption)->getMaxSegmentSize()
+                                << " actual " << check_and_cast<const TcpOptionMaxSegmentSize *>(liveOption)->getMaxSegmentSize() << "\n";
+                        return false;
+                    }
+                    break;
+                case TCPOPTION_SACK_PERMITTED:
+                    if (storedOption->getLength() != 2) {
+                        EV_WARN << "TCP compare: SACK_PERMITTED option bad length " << (int)storedOption->getLength() << "\n";
+                        return false;
+                    }
+                    break;
+                case TCPOPTION_WINDOW_SCALE:
+                    if (!(storedOption->getLength() == 3 &&
+                          check_and_cast<const TcpOptionWindowScale *>(storedOption)->getWindowScale()
+                          == check_and_cast<const TcpOptionWindowScale *>(liveOption)->getWindowScale()))
+                    {
+                        EV_WARN << "TCP compare: WS option expected "
+                                << (int)check_and_cast<const TcpOptionWindowScale *>(storedOption)->getWindowScale()
+                                << " actual " << (int)check_and_cast<const TcpOptionWindowScale *>(liveOption)->getWindowScale() << "\n";
+                        return false;
+                    }
+                    break;
+                case TCPOPTION_SACK:
+                    if (!(storedOption->getLength() > 2 && (storedOption->getLength() % 8) == 2 &&
+                          check_and_cast<const TcpOptionSack *>(storedOption)->getSackItemArraySize()
+                          == check_and_cast<const TcpOptionSack *>(liveOption)->getSackItemArraySize()))
+                    {
+                        EV_WARN << "TCP compare: SACK option blocks expected "
+                                << check_and_cast<const TcpOptionSack *>(storedOption)->getSackItemArraySize()
+                                << " actual " << check_and_cast<const TcpOptionSack *>(liveOption)->getSackItemArraySize() << "\n";
+                        return false;
+                    }
+                    break;
+                case TCPOPTION_TIMESTAMP: {
+                    // The outbound TSval (sender timestamp) is the DUT's own
+                    // timestamp clock; no stack can be made to emit the script's
+                    // literal placeholder value, so -- exactly as upstream
+                    // packetdrill does -- it is a wildcard here (previously this
+                    // required TSval == the script literal, which no real INET run
+                    // could ever satisfy, failing every timestamped outbound
+                    // segment on cosmetics). The TSecr (echoed timestamp) is NOT
+                    // wildcarded: it must reproduce the peer's timestamp the DUT is
+                    // echoing, so it stays a strict check -- that is what tests like
+                    // ts_recent / ts-progress actually verify, and relaxing it would
+                    // manufacture false matches on genuine TS-echo divergences.
+                    const auto *storedTs = check_and_cast<const TcpOptionTimestamp *>(storedOption);
+                    const auto *liveTs = check_and_cast<const TcpOptionTimestamp *>(liveOption);
+                    // record the DUT's script-frame TSval for TSecr-injection validity
+                    scriptOutTsVals.insert(storedTs->getSenderTimestamp());
+                    if (storedOption->getLength() != 10
+                        || storedTs->getEchoedTimestamp() != liveTs->getEchoedTimestamp())
+                    {
+                        EV_WARN << "TCP compare: TS option mismatch, TSecr expected " << storedTs->getEchoedTimestamp()
+                                << " actual " << liveTs->getEchoedTimestamp() << "\n";
+                        return false;
+                    }
+                    break;
+                }
+                case TCPOPTION_TCP_FASTOPEN: {
+                    // RFC 7413 kind 34 -- typed TcpOptionTcpFastOpen.
+                    const auto *storedFo = check_and_cast<const TcpOptionTcpFastOpen *>(storedOption);
+                    const auto *liveFo = check_and_cast<const TcpOptionTcpFastOpen *>(liveOption);
+                    if (storedFo->getCookieArraySize() != liveFo->getCookieArraySize()) {
+                        EV_WARN << "TCP compare: FO cookie length expected " << storedFo->getCookieArraySize()
+                                << " actual " << liveFo->getCookieArraySize() << "\n";
+                        return false;
+                    }
+                    for (unsigned int b = 0; b < storedFo->getCookieArraySize(); b++) {
+                        if (storedFo->getCookie(b) != liveFo->getCookie(b)) {
+                            EV_WARN << "TCP compare: FO cookie byte " << b << " expected "
+                                    << (int)storedFo->getCookie(b) << " actual " << (int)liveFo->getCookie(b) << "\n";
+                            return false;
+                        }
+                    }
+                    break;
+                }
+                case TCPOPT_ACCECN0:
+                case TCPOPT_ACCECN1: {
+                    // Typed TcpOptionAccEcn on both sides for the
+                    // full 3-field form; a partial-form script builds a raw
+                    // TcpOptionUnknown instead (see PacketDrill.cc), which can
+                    // never equal INET's always-11-byte emission -- the length
+                    // check above already rejected that pairing, so plain
+                    // dynamic_casts distinguish the remaining cases safely.
+                    const auto *storedAe = dynamic_cast<const TcpOptionAccEcn *>(storedOption);
+                    const auto *liveAe = dynamic_cast<const TcpOptionAccEcn *>(liveOption);
+                    if (storedAe && liveAe) {
+                        if (storedAe->getEct0Bytes() != liveAe->getEct0Bytes() ||
+                            storedAe->getEct1Bytes() != liveAe->getEct1Bytes() ||
+                            storedAe->getCeBytes() != liveAe->getCeBytes())
+                        {
+                            EV_WARN << "TCP compare: AccECN option counters expected e0=" << storedAe->getEct0Bytes()
+                                    << " e1=" << storedAe->getEct1Bytes() << " ce=" << storedAe->getCeBytes()
+                                    << " actual e0=" << liveAe->getEct0Bytes() << " e1=" << liveAe->getEct1Bytes()
+                                    << " ce=" << liveAe->getCeBytes() << "\n";
+                            return false;
+                        }
+                        break;
+                    }
+                    if (!storedAe && !liveAe) {
+                        // both raw (a script-injected inbound partial form
+                        // compared against itself never happens on outbound;
+                        // defensive)
+                        const auto *su = check_and_cast<const TcpOptionUnknown *>(storedOption);
+                        const auto *lu = check_and_cast<const TcpOptionUnknown *>(liveOption);
+                        if (su->getBytesArraySize() != lu->getBytesArraySize())
+                            return false;
+                        for (unsigned int b = 0; b < su->getBytesArraySize(); b++)
+                            if (su->getBytes(b) != lu->getBytes(b))
+                                return false;
+                        break;
+                    }
+                    {
+                        // typed vs raw of equal length: INET emits typed SHORT
+                        // (space-fitted) options now, while a partial-form
+                        // script expectation parses as raw bytes -- decode the
+                        // raw side's 24-bit fields in the kind's wire order
+                        // and compare them against the typed counters.
+                        const TcpOptionAccEcn *typed = liveAe ? liveAe : storedAe;
+                        const auto *raw = check_and_cast<const TcpOptionUnknown *>(liveAe ? storedOption : liveOption);
+                        unsigned int nFields = raw->getBytesArraySize() / 3;
+                        uint32_t typedVals[3];
+                        if (storedOption->getKind() == TCPOPT_ACCECN1) {
+                            typedVals[0] = typed->getEct1Bytes(); typedVals[1] = typed->getCeBytes(); typedVals[2] = typed->getEct0Bytes();
+                        }
+                        else {
+                            typedVals[0] = typed->getEct0Bytes(); typedVals[1] = typed->getCeBytes(); typedVals[2] = typed->getEct1Bytes();
+                        }
+                        for (unsigned int f = 0; f < nFields && f < 3; f++) {
+                            uint32_t rawVal = ((uint32_t)raw->getBytes(3 * f) << 16)
+                                | ((uint32_t)raw->getBytes(3 * f + 1) << 8)
+                                | (uint32_t)raw->getBytes(3 * f + 2);
+                            if (rawVal != typedVals[f]) {
+                                EV_WARN << "TCP compare: AccECN option field " << f << " expected "
+                                        << (liveAe ? rawVal : typedVals[f]) << " actual "
+                                        << (liveAe ? typedVals[f] : rawVal) << "\n";
                                 return false;
                             }
-                            break;
-                        case TCPOPTION_SACK_PERMITTED:
-                            if (!(storedOption->getLength() == liveOption->getLength() && storedOption->getLength() == 2)) {
-                                return false;
-                            }
-                            break;
-                        case TCPOPTION_WINDOW_SCALE:
-                            if (!(storedOption->getLength() == liveOption->getLength() && storedOption->getLength() == 3 &&
-                                  check_and_cast<const TcpOptionWindowScale *>(storedOption)->getWindowScale()
-                                  == check_and_cast<const TcpOptionWindowScale *>(liveOption)->getWindowScale()))
-                            {
-                                return false;
-                            }
-                            break;
-                        case TCPOPTION_SACK:
-                            if (!(storedOption->getLength() == liveOption->getLength() &&
-                                  storedOption->getLength() > 2 && (storedOption->getLength() % 8) == 2 &&
-                                  check_and_cast<const TcpOptionSack *>(storedOption)->getSackItemArraySize()
-                                  == check_and_cast<const TcpOptionSack *>(liveOption)->getSackItemArraySize()))
-                            {
-                                return false;
-                            }
-                            break;
-                        case TCPOPTION_TIMESTAMP:
-                            if (!(storedOption->getLength() == liveOption->getLength() && storedOption->getLength() == 10 &&
-                                  check_and_cast<const TcpOptionTimestamp *>(storedOption)->getSenderTimestamp()
-                                  == check_and_cast<const TcpOptionTimestamp *>(liveOption)->getSenderTimestamp()))
-                            {
-                                return false;
-                            }
-                            break;
-                        default:
-                            EV_INFO << "TCP Option type=" << storedOption->getKind() << " not supported";
-                            break;
+                        }
+                        break;
                     }
                 }
-                else {
-                    EV_INFO << "Wrong sequence or option kind not present";
-                    return false;
+                case TCPOPT_MD5SIG:
+                case TCPOPT_EXP: {
+                    // kind 254: INET now EMITS a typed TcpOptionTcpFastOpenExp when
+                    // echoing an experimental-form Fast Open cookie, and the script
+                    // side builds the same type for FOEXP -- compare those field-wise.
+                    const auto *storedFoe = dynamic_cast<const TcpOptionTcpFastOpenExp *>(storedOption);
+                    const auto *liveFoe = dynamic_cast<const TcpOptionTcpFastOpenExp *>(liveOption);
+                    if (storedFoe && liveFoe) {
+                        if (storedFoe->getCookieArraySize() != liveFoe->getCookieArraySize()) {
+                            EV_WARN << "TCP compare: FOEXP cookie length expected " << storedFoe->getCookieArraySize()
+                                    << " actual " << liveFoe->getCookieArraySize() << "\n";
+                            return false;
+                        }
+                        for (unsigned int b = 0; b < storedFoe->getCookieArraySize(); b++) {
+                            if (storedFoe->getCookie(b) != liveFoe->getCookie(b)) {
+                                EV_WARN << "TCP compare: FOEXP cookie byte " << b << " expected "
+                                        << (int)storedFoe->getCookie(b) << " actual " << (int)liveFoe->getCookie(b) << "\n";
+                                return false;
+                            }
+                        }
+                        break;
+                    }
+                    if (storedFoe != nullptr || liveFoe != nullptr) {
+                        EV_WARN << "TCP compare: kind-254 typed/raw mismatch (FOEXP on one side only)\n";
+                        return false;
+                    }
+                    // other kind-254 uses and MD5SIG: both sides carry raw bytes
+                    const auto *storedUnknown = check_and_cast<const TcpOptionUnknown *>(storedOption);
+                    const auto *liveUnknown = check_and_cast<const TcpOptionUnknown *>(liveOption);
+                    if (storedUnknown->getBytesArraySize() != liveUnknown->getBytesArraySize())
+                        return false;
+                    for (unsigned int b = 0; b < storedUnknown->getBytesArraySize(); b++) {
+                        if (storedUnknown->getBytes(b) != liveUnknown->getBytes(b))
+                            return false;
+                    }
+                    break;
                 }
+                default:
+                    EV_INFO << "TCP Option type=" << storedOption->getKind() << " not supported";
+                    break;
             }
         }
     }
