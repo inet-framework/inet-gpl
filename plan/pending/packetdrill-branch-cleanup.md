@@ -1,8 +1,8 @@
 # Make `rh/packetdrill` ready for `inet-gpl` master
 
-Status: **S1 to S4 done 2026-09-29.** The branch holds the series of S2, force-pushed on
-2026-09-29 with the owner's confirmation; INET's branch `topic/tcp-packetdrill-tests` holds S4.
-S5 and S6 are open. All decisions are made.
+Status: **S1 to S4 done, and the branch merged into `master` 2026-09-29** (S6, before S5 and
+before #1155 reaches INET master, at the owner's request). INET's branch
+`topic/tcp-packetdrill-tests` holds S4. S5 is open. All decisions are made.
 
 - Branch `rh/packetdrill`, on `inet-gpl` master `9b2fb1d` (0 behind it).
 - Companion plan: `packetdrill-tcp-protocol-tests.md` (the INET wrappers), which this branch serves.
@@ -502,13 +502,23 @@ Checked: the 27 RFC tests give 25 PASS and 2 FAIL (expected) from `rfc/`, as fro
 wrappers give 297 PASS, 3 FAIL (expected) and 6 FAIL (unexpected) (six, not seven: F22); all 588
 protocol tests give 537 PASS, 45 FAIL (expected) and the six. `opp_repl` gives the wrappers the same
 results, but cannot build the other protocol tests (269 ERROR, `ProtocolTest.h` not found): it does
-not add `tests/protocol/lib`, an older gap of `opp_repl`, outside this plan.
+not add `tests/protocol/lib`, an older gap of `opp_repl`. `opp_repl` `bb4d294` repaired it the same
+day: it runs INET's protocol tests as suites with the shared library, and gives each of the 588
+tests the result of INET's runner. INET's runner and `opp_repl` also select a subfolder of a suite
+with `-w` now, such as `-w tests/protocol/tcp/rfc`.
 
 **S5 — Verification.** `inet-gpl`'s fingerprints and statistical results against INET with #1155:
 each moved row re-recorded and explained (F13).
 
-**S6 — The merge.** After #1155 merges into INET master: rebase onto `inet-gpl` master, run S5
-once more, merge, and push. The companion plan's INET steps follow.
+**S6 — The merge. — done 2026-09-29, earlier than planned.** After #1155 merges into INET master:
+rebase onto `inet-gpl` master, run S5 once more, merge, and push. The companion plan's INET steps
+follow.
+
+The owner merged the branch before both conditions: `master` was still at `9b2fb1d`, so no rebase
+was needed, and `master` moved to the branch by a fast-forward. **Since then, `inet-gpl` master
+builds only against INET #1155** (`topic/tcp-new-audit-fixes`, checked at `359db08cc3`): F1
+holds for master now. Before the merge it built against neither INET master nor #1155 (F10).
+S5 is still open: `inet-gpl`'s own fingerprints and statistical results against #1155 (F13).
 
 ## 7. Effort
 
