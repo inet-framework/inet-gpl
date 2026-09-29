@@ -314,6 +314,11 @@ Three things were found under `src/`, for the owner to take or leave; none block
   checked against it: the scoreboard is 297 MATCH, 6 DIVERGENCE, 12 KERNEL_DRIFT and
   3 UNSUPPORTED_FEATURE. `shutdown/shutdown-rdwr-send-queue-ack-close` passes since INET
   `c23267fa9b`, which cancels the loss probe when all outstanding data is acknowledged.
+  **Resolved 2026-09-29:** the other six divergences were three defects of INET, and the
+  #1155 branch repairs them (`3ed9158dd1`, `e6992aa467`, `f5190638cc`, with the option
+  `retainSackAfterRto` of `cfba7be2d4`, which `tcp/tcp.ini` sets in `d79c008`). Against
+  `3bdc199bb6` the scoreboard is 303 MATCH, 12 KERNEL_DRIFT, 3 UNSUPPORTED_FEATURE and no
+  divergence, the July 2026 result; the README says so since `42a5684`.
 
 ### What is left open
 
