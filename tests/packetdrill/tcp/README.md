@@ -109,33 +109,32 @@ Five scripts cannot run under the fake root of `unshare -r`. Run them with
 
 ## The scoreboard
 
-Measured on 2026-09-29: Linux 7.1.3, INET `359db08cc3` of the #1155 branch in debug mode,
+Measured on 2026-09-29: Linux 7.1.3, INET `cfba7be2d4` of the #1155 branch in debug mode,
 OMNeT++ 6.4.0.
 
 | Verdict | Scripts |
 | --- | --- |
-| `MATCH` | 297 |
-| `DIVERGENCE` | 6 |
+| `MATCH` | 303 |
+| `DIVERGENCE` | 0 |
 | `KERNEL_DRIFT` | 12 |
 | `UNSUPPORTED_FEATURE` | 3 |
 | `CRASH`, `DIALECT_GAP`, `LINUX_SUSPECT` | 0 |
 | skipped | 3 |
 
-**The six divergences are known and open.** They are four scenarios; two scripts are in both
-sets:
+**No script diverges.** A run in July 2026 recorded the same 303 MATCH. The later commits of
+#1155 gave seven divergences; each one was a defect of INET, and each is repaired on the #1155
+branch:
 
-| Script | What INET does |
-| --- | --- |
-| `tcp/linux/tcp_slow_start_slow-start-after-win-update`, `tcp/packetdrill/slow_start/slow-start-after-win-update` | a packet at the wrong time, at 5.8 s; the script also sets `tcp_min_tso_segs`, which INET does not translate |
-| `tcp/linux/tcp_tcp_info_tcp-info-rwnd-limited`, `tcp/packetdrill/tcp_info/tcp-info-rwnd-limited` | stops at event 15 of 22: an expected packet does not come |
-| `tcp/packetdrill/cubic/cubic-rto-ss-ca-cwnd-bump` | a packet at the wrong time, at 2.504 s |
-| `tcp/packetdrill/fast_retransmit/fr-4pkt-fack-last-byte` | the tail loss probe goes out at 2.802 s; the script expects it at 2.202 s |
+| Scripts | The defect | INET repair |
+| --- | --- | --- |
+| `tcp/packetdrill/shutdown/shutdown-rdwr-send-queue-ack-close` | the loss probe stayed armed after the last ACK and sent the FIN again | `c23267fa9b` |
+| `tcp/linux/tcp_slow_start_slow-start-after-win-update`, `tcp/packetdrill/slow_start/slow-start-after-win-update`, `tcp/linux/tcp_tcp_info_tcp-info-rwnd-limited`, `tcp/packetdrill/tcp_info/tcp-info-rwnd-limited` | the classic flavours ignored a window update that reopened a zero window | `3ed9158dd1` |
+| `tcp/packetdrill/cubic/cubic-rto-ss-ca-cwnd-bump` | an RTO did not end the loss probe episode, so the window was cut a second time | `e6992aa467` |
+| `tcp/packetdrill/fast_retransmit/fr-4pkt-fack-last-byte` | F-RTO took a SACK block from before the RTO for proof of a spurious timeout | `f5190638cc` |
 
-A run in July 2026 recorded 303 MATCH and no divergence. INET's `topic/tcp-new` and the later
-commits of #1155 gave seven divergences, and each INET parameter that the run sets exists. Nobody
-has found the INET and OMNeT++ state of the July run. The seventh,
-`tcp/packetdrill/shutdown/shutdown-rdwr-send-queue-ack-close`, passes since INET `c23267fa9b`,
-which cancels the loss probe when all outstanding data is acknowledged.
+INET follows the RFCs by default where Linux departs from them. `tcp.ini` selects the Linux
+behavior for the run: the retransmission timer, the initial window, the reaction to an ICMP
+soft error during setup, and the SACK scoreboard after an RTO (`retainSackAfterRto`).
 
 **The three unsupported scripts** change a `tc qdisc` in the middle of the run, to drop packets
 by local congestion. INET does not model this: `tcp/linux/tcp_user_timeout_user-timeout-probe`,
