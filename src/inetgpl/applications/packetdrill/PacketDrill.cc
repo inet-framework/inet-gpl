@@ -810,8 +810,8 @@ PacketDrillSctpChunk *PacketDrill::buildInitChunk(int64_t flgs, int64_t tag, int
                     flags |= FLAG_INIT_CHUNK_OPT_SUPPORTED_ADDRESS_TYPES_PARAM_NOCHECK;
                     cQueue *list = parameter->getList();
                     if (list != nullptr) {
-                        for (cQueue::Iterator iter(*list); !iter.end(); iter++)
-                            list->remove((*iter));
+                        while (!list->isEmpty())
+                            list->pop();
                         delete list;
                     }
                     break;
@@ -901,8 +901,8 @@ PacketDrillSctpChunk *PacketDrill::buildInitAckChunk(int64_t flgs, int64_t tag, 
                     flags |= FLAG_INIT_CHUNK_OPT_SUPPORTED_ADDRESS_TYPES_PARAM_NOCHECK;
                     cQueue *list = parameter->getList();
                     if (list != nullptr) {
-                        for (cQueue::Iterator iter(*list); !iter.end(); iter++)
-                            list->remove((*iter));
+                        while (!list->isEmpty())
+                            list->pop();
                         delete list;
                     }
                     break;
@@ -1221,8 +1221,8 @@ PacketDrillSctpChunk *PacketDrill::buildReconfigChunk(int64_t flgs, cQueue *para
                                 outResetParam->setStreamNumbersArraySize(outResetParam->getStreamNumbersArraySize() - 1);
                         }
                         len = outResetParam->getStreamNumbersArraySize();
-                        for (cQueue::Iterator iter(*content->getStreams()); !iter.end(); iter++)
-                            content->getStreams()->remove((*iter));
+                        while (!content->getStreams()->isEmpty())
+                            content->getStreams()->pop();
                         delete content->getStreams();
                     }
                     outResetParam->setByteLength(SCTP_OUTGOING_RESET_REQUEST_PARAMETER_LENGTH + len * 2);
@@ -1243,8 +1243,8 @@ PacketDrillSctpChunk *PacketDrill::buildReconfigChunk(int64_t flgs, cQueue *para
                             else
                                 inResetParam->setStreamNumbersArraySize(inResetParam->getStreamNumbersArraySize() - 1);
                         }
-                        for (cQueue::Iterator iter(*content->getStreams()); !iter.end(); iter++)
-                            content->getStreams()->remove((*iter));
+                        while (!content->getStreams()->isEmpty())
+                            content->getStreams()->pop();
                         delete content->getStreams();
                     }
                     inResetParam->setByteLength(SCTP_INCOMING_RESET_REQUEST_PARAMETER_LENGTH + inResetParam->getStreamNumbersArraySize() * 2);
@@ -1319,8 +1319,8 @@ PacketDrillSctpChunk *PacketDrill::buildReconfigChunk(int64_t flgs, cQueue *para
                 default: printf("Parameter type not implemented\n");
             }
         }
-        for (cQueue::Iterator iter(*parameters); !iter.end(); iter++)
-            parameters->remove(*iter);
+        while (!parameters->isEmpty())
+            parameters->pop();
         delete parameters;
     }
     resetChunk->setFlags(flags);

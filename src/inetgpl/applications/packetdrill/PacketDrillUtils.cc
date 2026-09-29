@@ -212,8 +212,8 @@ PacketDrillExpression::~PacketDrillExpression()
     // free, and the cQueue::Iterator below would dereference the null
     // pointer (see the matching guard in evaluateListExpression()).
     if (type == EXPR_LIST && list) {
-        for (cQueue::Iterator iter(*list); !iter.end(); iter++)
-            list->remove((*iter));
+        while (!list->isEmpty())
+            list->pop();
         delete list;
     }
 }
