@@ -906,7 +906,7 @@ def prepare_inet_run(script_id, path, mapping, preamble):
     return clean_text, stripped, ini_overrides, unmapped, blocking
 
 
-def run_inet(set_name, script_id, path, mapping, preamble, preproc_dir):
+def run_inet(set_name, script_id, path, mapping, preamble, preproc_dir, pcap_file=None):
     require_env()
     clean_text, stripped, ini_overrides, unmapped, blocking = prepare_inet_run(script_id, path, mapping, preamble)
 
@@ -930,7 +930,7 @@ def run_inet(set_name, script_id, path, mapping, preamble, preproc_dir):
     if blocking:
         return {
             "verdict": "INET_UNSUPPORTED_CONFIG", "duration_s": 0.0,
-            "diagnostic": "; ".join(blocking), "divergence": None,
+            "diagnostic": "; ".join(blocking), "divergence": None, "output": "",
             **result_common,
         }
 
@@ -944,6 +944,10 @@ def run_inet(set_name, script_id, path, mapping, preamble, preproc_dir):
     ]
     for key, val in ini_overrides.items():
         cmd.append(f"--{key}={val}")
+    # A caller that runs scripts in parallel gives each run its own capture file;
+    # base.ini's single path would be written by every run at once.
+    if pcap_file:
+        cmd.append(f'--**.pdhost.pcapRecorder[0].pcapFile="{pcap_file}"')
 
     start = time.monotonic()
     try:
@@ -967,7 +971,7 @@ def run_inet(set_name, script_id, path, mapping, preamble, preproc_dir):
     divergence = extract_inet_divergence_context(output) if verdict == "INET_DIVERGE" else None
     return {
         "verdict": verdict, "duration_s": round(duration, 3),
-        "diagnostic": detail, "divergence": divergence,
+        "diagnostic": detail, "divergence": divergence, "output": output,
         **result_common,
     }
 
@@ -1016,6 +1020,48 @@ def cmd_inet(args):
     for verdict, n in sorted(counts.items()):
         print(f"  {verdict}: {n}")
     print(f"results written to {results_dir}")
+
+
+def cmd_inet_one(args):
+    """The INET run of one script, as a test runner calls it.
+
+    Prints the simulation output, then one verdict line that a test can match:
+        PACKETDRILL <id>: PASS
+        PACKETDRILL <id>: FAIL (<INET run verdict>: <detail>)
+    and exits 0 only on a pass. It runs the same preparation and the same
+    classification as `inet`, so its verdict is the scoreboard's INET run verdict.
+    It records nothing under out/inet_results: a test run must not change the
+    inputs of `compare`.
+    """
+    require_env()
+    cfg = load_config()
+    mapping = load_mapping()
+    key = args.script
+    path = os.path.join(SCRIPTS_ROOT, key + ".pkt")
+    set_name = script_id = None
+    for name, script_set in cfg["script_sets"].items():
+        root = os.path.join(script_set["path"], script_set["subdir"])
+        if os.path.isfile(path) and os.path.abspath(path).startswith(os.path.abspath(root) + os.sep):
+            set_name, script_id = name, os.path.relpath(path, root)[: -len(".pkt")]
+    if set_name is None:
+        print(f"PACKETDRILL {key}: ERROR (no such script: expected a path below tests/protocol "
+              f"without .pkt, such as tcp/linux/tcp_basic_client)")
+        sys.exit(2)
+    skip = (cfg.get("skips") or {}).get(key)
+    if skip:
+        print(f"#SKIPPED: scripts.yaml skips {key}: {skip}")
+        return
+    preproc_dir = os.path.join(SUITE_DIR, "out", "preprocessed")
+    pcap_file = os.path.join("out", "pcap", script_key_to_filename(key)[:-len(".json")] + ".pcap")
+    result = run_inet(set_name, script_id, path, mapping, preamble_sysctls(cfg, set_name),
+                          preproc_dir, pcap_file=pcap_file)
+    print(result.get("output", ""))
+    if result["verdict"] == "INET_PASS":
+        print(f"PACKETDRILL {key}: PASS")
+        return
+    detail = (result.get("diagnostic") or "").strip().splitlines()
+    print(f"PACKETDRILL {key}: FAIL ({result['verdict']}: {detail[0] if detail else 'no detail'})")
+    sys.exit(1)
 
 
 # ---------------------------------------------------------------------------
@@ -1273,6 +1319,11 @@ def main():
     p_inet = sub.add_parser("inet", help="run the scripts in INET's PacketDrillApp and record the results")
     p_inet.add_argument("--filter", help="regex over the script id (its path below tests/protocol) to restrict scripts")
     p_inet.set_defaults(func=cmd_inet)
+
+    p_one = sub.add_parser("inet-one",
+                           help="run one script in INET, print a verdict line, exit 0 only on a pass")
+    p_one.add_argument("script", help="the script's path below tests/protocol, without .pkt, e.g. tcp/packetdrill/fast_retransmit/fr-4pkt-sack")
+    p_one.set_defaults(func=cmd_inet_one)
 
     p_compare = sub.add_parser("compare", help="join the Linux and INET results into out/report.json and out/report.md")
     p_compare.add_argument("--filter", help="regex over the script id (its path below tests/protocol) to restrict scripts")

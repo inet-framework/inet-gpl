@@ -79,6 +79,7 @@ loop.
 ```sh
 python3 suite.py linux [--filter REGEX] [--tolerance-usecs N] [--privileged]
 python3 suite.py inet [--filter REGEX]
+python3 suite.py inet-one <id>             # one script, as a test runner calls it
 python3 suite.py compare [--filter REGEX]
 python3 suite.py run [--filter REGEX]      # linux, inet and compare
 python3 suite.py preprocess [--filter REGEX] [--verbose]   # the translation only
@@ -145,6 +146,20 @@ Do this after a kernel upgrade, or after a new copy of the scripts:
 3. Run `make test`, and examine each verdict that changed. A script that Linux no longer passes
    is `LINUX_SUSPECT` until its reason goes into `kernel_drift` in the protocol's `scripts.yaml`.
 4. Commit `linux-results.csv` and `scripts.yaml`. Git keeps the old results.
+
+## One script, as a test runner calls it
+
+`inet-one <id>` runs one script, as a test runner calls it. It does the same preparation and
+classification as `inet`, prints the simulation output, and then one line:
+
+```
+PACKETDRILL tcp/packetdrill/fast_retransmit/fr-4pkt-sack: PASS
+PACKETDRILL tcp/packetdrill/fast_retransmit/fr-4pkt-sack: FAIL (INET_DIVERGE: <detail>)
+```
+
+It exits with 0 only on a pass, and with 2 for an unknown id. For a script that the suite skips,
+it prints `#SKIPPED: <reason>`, which `opp_test` counts as a skip. It writes nothing into
+`out/inet_results/`, and each run writes its own capture file, so parallel runs do not collide.
 
 ## Pitfalls
 
