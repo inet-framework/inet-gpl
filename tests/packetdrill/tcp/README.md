@@ -134,7 +134,8 @@ sets:
 A run in July 2026 recorded 303 MATCH and no divergence. INET's `topic/tcp-new` and the later
 commits of #1155 gave seven divergences, and each INET parameter that the run sets exists. Nobody
 has found the INET and OMNeT++ state of the July run. The seventh,
-`tcp/packetdrill/shutdown/shutdown-rdwr-send-queue-ack-close`, passes since INET `f3ab035caa`.
+`tcp/packetdrill/shutdown/shutdown-rdwr-send-queue-ack-close`, passes since INET `c23267fa9b`,
+which cancels the loss probe when all outstanding data is acknowledged.
 
 **The three unsupported scripts** change a `tc qdisc` in the middle of the run, to drop packets
 by local congestion. INET does not model this: `tcp/linux/tcp_user_timeout_user-timeout-probe`,
