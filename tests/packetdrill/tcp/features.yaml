@@ -1,0 +1,59 @@
+# What each script exercises, for the descriptions of INET's wrappers (gen-wrappers).
+#
+# "features" are ids of INET's TCP feature map, doc/project/evidence/protocol/tcp/features.md
+# (TCP-F-*), which covers RFC 9293, RFC 6298 and RFC 5681. A subject outside that map names its
+# document instead ("documents"), or the Linux socket interface that it exercises and that no
+# standard defines ("linux"). Together the last two show where INET's TCP catalogs stop.
+#
+# The map is by category -- tcp.py categorize(): the packetdrill set's subfolder, or the Linux file
+# prefix -- and "scripts" refines it where a category does not say enough; a "scripts" key is a
+# regex over the script's id and its entry replaces the category's. An entry names what a
+# script is about, not everything it touches: nearly every script opens a connection, and none
+# lists TCP-F-ESTABLISH for that alone. A category without an entry stops the generator.
+
+categories:
+  basic:            {features: [TCP-F-ESTABLISH, TCP-F-DATA-TRANSFER, TCP-F-TERMINATE]}
+  close:            {features: [TCP-F-TERMINATE]}
+  shutdown:         {features: [TCP-F-TERMINATE]}
+  disorder:         {features: [TCP-F-TERMINATE, TCP-F-ACKNOWLEDGE]}
+  ooo:              {features: [TCP-F-ACKNOWLEDGE, TCP-F-DATA-TRANSFER]}
+  rcv:              {features: [TCP-F-FLOW-CONTROL, TCP-F-SEGMENT-ACCEPTANCE]}
+  rcv_zero_wnd:     {features: [TCP-F-FLOW-CONTROL]}
+  validate:         {features: [TCP-F-SEGMENT-ACCEPTANCE]}
+  rfc5961:          {features: [TCP-F-SEGMENT-ACCEPTANCE], documents: ["RFC 5961"]}
+  mss:              {features: [TCP-F-DATA-TRANSFER], linux: [TCP_MAXSEG]}
+  rto:              {features: [TCP-F-RTO-BACKOFF, TCP-F-RTO-BOUNDS]}
+  fast_retransmit:  {features: [TCP-F-FAST-RETRANSMIT]}
+  fast_recovery:    {features: [TCP-F-FAST-RETRANSMIT], documents: ["RFC 6937"]}
+  limited_transmit: {documents: ["RFC 3042"]}
+  slow_start:       {features: [TCP-F-CONGESTION-WINDOW]}
+  cwnd_moderation:  {features: [TCP-F-CONGESTION-WINDOW], linux: [cwnd moderation]}
+  nagle:            {documents: ["RFC 9293 section 3.7.4 (Nagle), outside the feature map"]}
+  user_timeout:     {documents: ["RFC 5482"], linux: [TCP_USER_TIMEOUT]}
+  sack:             {documents: ["RFC 2018", "RFC 6675"]}
+  dsack:            {documents: ["RFC 2883"]}
+  ts_recent:        {documents: ["RFC 7323"]}
+  ecn:              {documents: ["RFC 3168"]}
+  accecn:           {documents: ["RFC 9768"]}
+  fastopen:         {documents: ["RFC 7413"]}
+  cubic:            {documents: ["RFC 9438"]}
+  mtu_probe:        {documents: ["RFC 4821"]}
+  syncookies:       {documents: ["RFC 4987"]}
+  md5:              {documents: ["RFC 2385"]}
+  gro:              {linux: [generic receive offload]}
+  zerocopy:         {linux: [MSG_ZEROCOPY]}
+  eor:              {linux: [MSG_EOR]}
+  epoll:            {linux: [epoll]}
+  blocking:         {linux: [blocking socket calls]}
+  inq:              {linux: [TCP_INQ]}
+  notsent_lowat:    {linux: [TCP_NOTSENT_LOWAT]}
+  sendfile:         {linux: [sendfile]}
+  splice:           {linux: [splice]}
+  ioctl:            {linux: [ioctl]}
+  syscall_bad_arg:  {linux: [system call argument checks]}
+  tcp_info:         {linux: [TCP_INFO]}
+  timestamping:     {linux: [SO_TIMESTAMPING]}
+
+scripts:
+  # a slow-start script whose subject is the restart after an idle period (RFC 5681 section 4.1)
+  "slow-start-after-idle$": {features: [TCP-F-CONGESTION-WINDOW, TCP-F-RESTART-IDLE]}

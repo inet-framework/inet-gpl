@@ -152,8 +152,9 @@ Do this after a kernel upgrade, or after a new copy of the scripts:
 ## INET's wrappers
 
 INET's protocol tests run the scripts through wrapper `.test` files, one for each script that
-Linux passes and that the suite runs. A wrapper holds the script's id, its origin and its expected result,
-but no line of the script. The scripts are GPL-2.0 and stay in this repository.
+Linux passes and that the suite runs. A wrapper holds the script's id, its origin, what it
+exercises and its expected result, but no line of the script. The scripts are GPL-2.0 and stay
+in this repository.
 
 A wrapper calls INET's `inet_run_packetdrill <id>`, which calls `suite.py inet-one <id>`.
 `inet-one` does the same preparation and classification as `inet`, prints the simulation output,

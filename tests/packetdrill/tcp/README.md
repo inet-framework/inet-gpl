@@ -44,6 +44,7 @@ INET's wrappers hold the id of a script, but no line of it.
 | `scripts.yaml` | the upstream pin of each set, the helpers that the Linux run places around the scripts, the `defaults:` block, the environment of the Linux run, the skips, and the kernel drift |
 | `linux-results.csv` | the Linux run on the pinned kernel: the verdict and the sha256 of each script, and a header with the kernel release, the packetdrill commit and the date |
 | `sysctls.yaml` | the translation of Linux sysctls and socket options into the parameters of INET's `Tcp` |
+| `features.yaml` | what each script exercises, for INET's wrappers: the ids of INET's TCP feature map, the documents outside it, the Linux interfaces |
 | `tcp.ini` | the Linux behavior that no preamble states, as INET parameters; loaded after `../ini/base.ini` |
 | `tcp.py` | the TCP rules of the tool; its docstring names what a protocol module must give |
 | `set_sysctls.py` | Google's helper, which the Linux run places where the scripts expect it |
