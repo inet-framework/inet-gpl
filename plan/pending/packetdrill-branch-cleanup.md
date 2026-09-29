@@ -1,8 +1,8 @@
 # Make `rh/packetdrill` ready for `inet-gpl` master
 
-Status: **S1, S2 and S3 done 2026-09-29.** The branch holds the series of S2, force-pushed on
-2026-09-29 with the owner's confirmation. S4, S5 and S6 are open. All decisions made except D7's
-scope.
+Status: **S1 to S4 done 2026-09-29.** The branch holds the series of S2, force-pushed on
+2026-09-29 with the owner's confirmation; INET's branch `topic/tcp-packetdrill-tests` holds S4.
+S5 and S6 are open. All decisions are made.
 
 - Branch `rh/packetdrill`, on `inet-gpl` master `9b2fb1d` (0 behind it).
 - Companion plan: `packetdrill-tcp-protocol-tests.md` (the INET wrappers), which this branch serves.
@@ -313,7 +313,7 @@ Three things were found under `src/`, for the owner to take or leave; none block
 - **F22 — The INET baseline moved.** #1155 is rebased; its tip on 2026-09-29 is `359db08cc3`. S2 is
   checked against it: the scoreboard is 297 MATCH, 6 DIVERGENCE, 12 KERNEL_DRIFT and
   3 UNSUPPORTED_FEATURE. `shutdown/shutdown-rdwr-send-queue-ack-close` passes since INET
-  `f3ab035caa`.
+  `c23267fa9b`, which cancels the loss probe when all outstanding data is acknowledged.
 
 ### What is left open
 
@@ -341,7 +341,7 @@ All made with the owner on 2026-09-29.
 - **D5 — INET's runner is `bin/inet_run_packetdrill`**, independent of TCP, with the id below
   `tests/protocol/`.
 - **D6 — INET's RFC-based TCP tests move into `tests/protocol/tcp/rfc/`.**
-- **D7 — Open: TCP alone, or every protocol?** The guide
+- **D7 — TCP alone** (decided by the owner on 2026-09-29, as recommended). The guide
   (`doc/project/guide/derive-tests-from-a-standard.md`, step 6) puts every standards-derived test
   in `tests/protocol/<proto>/<Doc><Name>.test`, and ten other protocol folders follow it. Moving
   TCP alone makes TCP the exception, and the guide then states both forms. Recommendation: **TCP
@@ -460,7 +460,7 @@ implementation plan. The source README also got a new Usage section (its example
 deleted suite's network and files) and corrected Limitations (`%{ }%` blocks, blocking calls and
 `getsockopt()` work now).
 
-**S4 — INET follows.** On the INET branch, rebased onto the rebased #1155 branch:
+**S4 — INET follows. — done 2026-09-29.** On the INET branch, rebased onto the rebased #1155 branch:
 
 - move the 27 RFC-based TCP tests and `TcpMutations.h` into `tests/protocol/tcp/rfc/` with
   `git mv` alone, in a commit of its own, and update the four evidence documents under
@@ -478,6 +478,31 @@ gives 296 PASS, 3 FAIL (expected), 7 FAIL (unexpected) for the wrappers again; t
 
 The RFC-test move depends neither on packetdrill nor on #1155, so it can also go to INET master on
 its own, first.
+
+Done on `topic/tcp-packetdrill-tests`, on INET `359db08cc3`, in eight commits; the INET plan
+(`plan/pending/packetdrill-tcp-protocol-tests.md` there) records them. What differs from the
+list above:
+
+- **INET's runner extracts only a `%testprog` test beside its `.test` file.** The wifi tests
+  include `../../ini/_b.ini` relative to `work/<file name>` of their test folder, and all 45 of
+  them that pass fail from a folder beside the test. A `%testprog` test builds nothing and has no
+  such path, and the wrappers are exactly those tests. The runner also puts the test's own folder
+  on the include path, which `TcpMutations.h` in `rfc/` needs.
+- **The `Fragmentation.test` clash no longer exists** on this base: `ipv4/Fragmentation.test` is
+  gone. The only repeated name among the other protocol tests is `Rfc1122ChecksumDiscard.test`, in
+  two test folders, which never share a work folder.
+- **The evidence documents do not change.** They name the tests by file name only; their run
+  records keep the command of their time.
+- **The classification gate did not know `bin/`**, so a commit that touched only
+  `bin/inet_run_packetdrill` failed with any area; a commit of the step repairs the gate.
+- **The wrappers move in two commits**, a pure move and then the new content, because the commit
+  gate refuses a rename together with a content change.
+
+Checked: the 27 RFC tests give 25 PASS and 2 FAIL (expected) from `rfc/`, as from `tcp/`; the 306
+wrappers give 297 PASS, 3 FAIL (expected) and 6 FAIL (unexpected) (six, not seven: F22); all 588
+protocol tests give 537 PASS, 45 FAIL (expected) and the six. `opp_repl` gives the wrappers the same
+results, but cannot build the other protocol tests (269 ERROR, `ProtocolTest.h` not found): it does
+not add `tests/protocol/lib`, an older gap of `opp_repl`, outside this plan.
 
 **S5 — Verification.** `inet-gpl`'s fingerprints and statistical results against INET with #1155:
 each moved row re-recorded and explained (F13).
