@@ -35,6 +35,7 @@ The scripts keep their upstream licence, GPL-2.0:
   `set_sysctls.py` has Google's copyright header.
 
 The scripts are input files of the suite, and no program of this repository includes them.
+INET's wrappers hold the id of a script, but no line of it.
 
 ## The files
 

@@ -10,9 +10,12 @@
 # relative path is taken relative to INETGPL_ROOT (the repository root). To run against an
 # external clone instead, point `path` at it (absolute, or via a variable) and set `subdir`
 # to the directory holding the .pkt files.
+#
+# `title` names the set in the README that gen-wrappers writes beside the INET wrappers of the set.
 
 script_sets:
   linux:
+    title: the Linux kernel's selftests
     path: tests/protocol/tcp/linux
     upstream_url: https://github.com/torvalds/linux.git
     upstream_path: tools/testing/selftests/net/packetdrill
@@ -25,6 +28,7 @@ script_sets:
       defaults.sh: defaults          # written from the defaults block below
       set_sysctls.py: set_sysctls.py
   packetdrill:
+    title: the packetdrill repository
     path: tests/protocol/tcp/packetdrill
     upstream_url: https://github.com/google/packetdrill.git
     upstream_path: gtests/net/tcp

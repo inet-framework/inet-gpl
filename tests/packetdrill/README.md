@@ -16,13 +16,14 @@ The suite runs each script twice:
 
 The scripts are not in this folder. They are in `tests/protocol/<protocol>/<set>/`, in the same
 tree as INET's protocol tests. A script's id is its path below `tests/protocol/`, without `.pkt`:
-`tcp/packetdrill/fast_retransmit/fr-4pkt-sack`.
+`tcp/packetdrill/fast_retransmit/fr-4pkt-sack`. INET has a wrapper `.test` file with the same path,
+which runs the script through `inet-one` (see [INET's wrappers](#inets-wrappers)).
 
 ## The files
 
 | File | What it holds |
 | --- | --- |
-| `suite.py` | the tool: the two runs, the translation of a script's preamble, the comparison |
+| `suite.py` | the tool: the two runs, the translation of a script's preamble, the comparison, the wrapper generator |
 | `Makefile` | the targets that a developer uses; `make help` lists them |
 | `ini/base.ini` | the simulation that every protocol shares: the host, the tun interface, the capture, the timing tolerance |
 | `ned/PacketDrillNetwork.ned`, `ned/pdhost.mrt` | the network: one `PacketDrillHost` and its routes |
@@ -84,6 +85,7 @@ python3 suite.py compare [--filter REGEX]
 python3 suite.py run [--filter REGEX]      # linux, inet and compare
 python3 suite.py preprocess [--filter REGEX] [--verbose]   # the translation only
 python3 suite.py verify-scripts [--filter REGEX]
+python3 suite.py gen-wrappers --into <inet>/tests/protocol [--check]
 ```
 
 ## How a script runs
@@ -147,10 +149,15 @@ Do this after a kernel upgrade, or after a new copy of the scripts:
    is `LINUX_SUSPECT` until its reason goes into `kernel_drift` in the protocol's `scripts.yaml`.
 4. Commit `linux-results.csv` and `scripts.yaml`. Git keeps the old results.
 
-## One script, as a test runner calls it
+## INET's wrappers
 
-`inet-one <id>` runs one script, as a test runner calls it. It does the same preparation and
-classification as `inet`, prints the simulation output, and then one line:
+INET's protocol tests run the scripts through wrapper `.test` files, one for each script that
+Linux passes and that the suite runs. A wrapper holds the script's id, its origin and its expected result,
+but no line of the script. The scripts are GPL-2.0 and stay in this repository.
+
+A wrapper calls INET's `inet_run_packetdrill <id>`, which calls `suite.py inet-one <id>`.
+`inet-one` does the same preparation and classification as `inet`, prints the simulation output,
+and then one line:
 
 ```
 PACKETDRILL tcp/packetdrill/fast_retransmit/fr-4pkt-sack: PASS
@@ -160,6 +167,11 @@ PACKETDRILL tcp/packetdrill/fast_retransmit/fr-4pkt-sack: FAIL (INET_DIVERGE: <d
 It exits with 0 only on a pass, and with 2 for an unknown id. For a script that the suite skips,
 it prints `#SKIPPED: <reason>`, which `opp_test` counts as a skip. It writes nothing into
 `out/inet_results/`, and each run writes its own capture file, so parallel runs do not collide.
+
+`gen-wrappers --into <inet>/tests/protocol` writes the wrappers at the scripts' own paths, and a
+`README.md` in each set folder that lists the scripts without a wrapper. It changes only the set
+folders. A wrapper expects `FAIL` if the INET run cannot run its script, and `PASS` if it can.
+`--check` compares and writes nothing, and exits with 1 if a file is out of date.
 
 ## Pitfalls
 
