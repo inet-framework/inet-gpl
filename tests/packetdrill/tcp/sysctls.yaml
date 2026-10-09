@@ -95,10 +95,9 @@ sysctl:
       # not model the per-listener setsockopt, so map "accept TFO data on any
       # listener" to bit 0x400 (TFO_SERVER_WO_SOCKOPT2). Otherwise a non-TFO
       # listener under tcp_fastopen=2 (fastopen/server/basic-non-tfo-listener)
-      # would wrongly accept the SYN data. fastopenExpOptionEnabled (can PARSE
-      # the kind-254 legacy form) rides bit 1, since parsing is harmless even
-      # when the listener won't accept -- Linux has no separate toggle for it.
-      "0x2": "**.tcp.fastopenExpOptionEnabled"
+      # would wrongly accept the SYN data. Bit 1 maps to nothing. Linux answers
+      # and tries the experimental kind-254 form with no switch of its own, so
+      # tcp.ini sets fastopenExpOptionEnabled for every script.
       "0x400": "**.tcp.fastopenServerEnabled"
       # Bit 9 (0x200, TFO_SERVER_COOKIE_NOT_REQD): accept SYN data carrying no
       # cookie option at all. The scripts' basic-cookie-not-reqd / zerocopy
@@ -107,6 +106,13 @@ sysctl:
       # fastopenServerEnabled), so this bit only needs to carry the
       # cookie-not-required half.
       "0x200": "**.tcp.fastopenAcceptWithoutCookie"
+  net.ipv4.tcp_fastopen_blackhole_timeout_sec:
+    # Blackhole detection of the Fast Open client. INET's default follows RFC 7413
+    # (3600 s); Linux ships 0 since 5.14, which tcp.ini sets for the scripts that
+    # do not name this sysctl.
+    ini: "**.tcp.fastopenBlackholeTimeout"
+    transform: int
+    suffix: "s"
   net.ipv4.tcp_fastopen_key:
     # Server-role TFO cookie key. INET reproduces Linux's SipHash-2-4 cookie
     # derivation exactly when this is set (fastopen/server/simple1-3 pin the

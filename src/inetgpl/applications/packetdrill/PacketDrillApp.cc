@@ -1212,15 +1212,15 @@ void PacketDrillApp::runCommandEvent(PacketDrillEvent *event)
             EV_INFO << "command event: fastopenKey <- " << primary << "\n";
         }
         else if (key == "net.ipv4.tcp_fastopen") {
-            // same bit interpretation as tcp/sysctls.yaml (0x2/0x400 deliberately
-            // swapped from the kernel's nominal meaning -- see the mapping's
-            // comment on modeling the per-listener TCP_FASTOPEN setsockopt)
+            // same bit interpretation as tcp/sysctls.yaml (0x400 instead of the
+            // kernel's server bit 0x2 -- see the mapping's comment on modeling the
+            // per-listener TCP_FASTOPEN setsockopt; tcp.ini keeps
+            // fastopenExpOptionEnabled on, because Linux has no switch for it)
             long bits = strtol(value.c_str(), nullptr, 0);
             tcpModule->par("fastopenClientEnabled").setBoolValue((bits & 0x1) != 0);
             tfoClientEnabled = (bits & 0x1) != 0;
             tcpModule->par("fastopenClientNoCookieRequired").setBoolValue((bits & 0x4) != 0);
             tfoNoCookieMode = (bits & 0x4) != 0; // mirror for the deferred-SYN kick predicate
-            tcpModule->par("fastopenExpOptionEnabled").setBoolValue((bits & 0x2) != 0);
             tcpModule->par("fastopenServerEnabled").setBoolValue((bits & 0x400) != 0);
             tcpModule->par("fastopenAcceptWithoutCookie").setBoolValue((bits & 0x200) != 0);
             EV_INFO << "command event: fastopen params <- " << value << " for later connections\n";

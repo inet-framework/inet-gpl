@@ -112,6 +112,12 @@ def adjust_inet_run(script_id, clean_text, ini_overrides, blocking):
     uncommented_text = "\n".join(l for l in clean_text.splitlines() if not l.lstrip().startswith("//"))
     if re.search(r"setsockopt\([^)]*TCP_FASTOPEN\b(?!_CONNECT)", uncommented_text):
         ini_overrides["**.tcp.fastopenServerEnabled"] = "true"
+    # The value of that setsockopt is the listener's queue length of pending Fast
+    # Open connections (Linux max_qlen, RFC 7413's PendingFastOpenRequests limit);
+    # INET has one limit for each local port, fastopenMaxPendingRequests.
+    qlen = re.search(r"setsockopt\([^)]*TCP_FASTOPEN, \[(\d+)\]", uncommented_text)
+    if qlen:
+        ini_overrides["**.tcp.fastopenMaxPendingRequests"] = qlen.group(1)
     # Mid-script `tc qdisc` manipulation (e.g. user-timeout-probe installs a
     # zero-limit pfifo so every LOCAL transmit is dropped, exercising Linux's
     # TCP_RESOURCE_PROBE_INTERVAL local-congestion retries): there is no INET
