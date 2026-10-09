@@ -659,8 +659,10 @@ def preprocess_script(text, preamble):
         # dropped the preset entirely for such mixed blocks.
         # join backslash-continued lines first: multi-line set_sysctls.py
         # invocations ("set_sysctls.py \\\n  /proc/sys/... \\\n  ...") must
-        # line-scan as ONE logical line, or every continued assignment is lost
-        content = re.sub(r"\\\s*\n\s*", " ", content)
+        # line-scan as ONE logical line, or every continued assignment is lost;
+        # a backslash at the end of the block (before its closing backtick)
+        # continues nothing, and would otherwise stay in the last value
+        content = re.sub(r"\\\s*(\n\s*|$)", " ", content)
         lines = content.splitlines()
         rest = lines
         if lines and DEFAULTS_REF_RE.fullmatch(lines[0].strip()):
