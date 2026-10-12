@@ -210,10 +210,12 @@ option:
   --strict_segments: {ini: null, transform: ignore}
 
 ignore:
-  # Buffer autotuning: INET has no receive-window autotuning at all (fixed
-  # advertisedWindow); tcp_rmem/tcp_wmem are Linux's autotuning bounds and have
-  # no faithful static translation. Every script sets these via
-  # defaults.sh -- if this were "required" it would blanket-block ~all scripts,
+  # Buffer autotuning: INET models the growth of the offered window and of the
+  # receive buffer (windowAutoTuning, set in tcp.ini), but not the bounds;
+  # tcp_rmem/tcp_wmem are Linux's autotuning bounds and have no faithful static
+  # translation (INET master gets the upper bound with stage S18). Every
+  # script sets these via defaults.sh -- if this were "required" it would
+  # blanket-block ~all scripts,
   # hiding the more precise DIVERGENCE/MATCH signal. Left as a known, tracked gap.
   - net.ipv4.tcp_rmem
   - net.ipv4.tcp_wmem
