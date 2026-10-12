@@ -57,10 +57,9 @@ sysctl:
       "5": '"accecn-passive"'
   net.ipv4.tcp_ecn_option:
     # AccECN option (kinds 172/174): kernel 0=off, 1=minimal, 2=full. INET's
-    # accEcnOptionEnabled is a bool (G6); 0 -> false, 1/2 -> true. The
-    # kernel's tcp_ecn_option_beacon (per-RTT beacon frequency) has a
-    # different unit than INET's accEcnOptionBeaconAcks (per-ACK) and is left
-    # unmapped/recorded rather than mis-translated.
+    # accEcnOptionEnabled is a bool (G6); 0 -> false, 1/2 -> true. The policy
+    # of 2 is accEcnOptionPolicy="linux" (tcp.ini); no script sets 1. The
+    # kernel's tcp_ecn_option_beacon applies only to 1, so it stays unmapped.
     ini: "**.tcp.accEcnOptionEnabled"
     transform: bool
   net.ipv4.tcp_mtu_probing:
