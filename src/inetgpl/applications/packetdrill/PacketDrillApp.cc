@@ -3066,8 +3066,9 @@ int PacketDrillApp::syscallSendMsg(struct syscall_spec *syscall, cQueue *args, c
                 // spills into multiple skbs -- each transmitted as its own
                 // PSH-marked segment (tcp/zerocopy/maxfrags.pkt pins the
                 // 17+1 and 17+17+17+13 shapes). Model an skb boundary as a
-                // record boundary (MSG_EOR): sendSegment then stops and sets
-                // PSH exactly at the chunk edges. The zerocopy completion
+                // record boundary (MSG_EOR): no segment spans a chunk edge, and
+                // each chunk, a write without MSG_MORE, ends with PSH
+                // (pushSegmentsOnWriteBoundary). The zerocopy completion
                 // stays ONE per sendmsg (tag only the final chunk). Without
                 // zerocopy (or with a small iov) the elements coalesce into
                 // one linear skb -- the plain single-payload path.
