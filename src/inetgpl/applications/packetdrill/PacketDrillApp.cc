@@ -3926,10 +3926,9 @@ bool PacketDrillApp::compareDatagram(Packet *storedPacket, Packet *livePacket)
         EV_WARN << "IP compare: moreFragments mismatch\n";
         return false;
     }
-    if (!(storedDatagram->getDontFragment() == liveDatagram->getDontFragment())) {
-        EV_WARN << "IP compare: dontFragment expected " << storedDatagram->getDontFragment() << " actual " << liveDatagram->getDontFragment() << "\n";
-        return false;
-    }
+    // The DF bit is deliberately NOT compared either: upstream packetdrill (verify_ipv4())
+    // never checks it, because Linux sets it on each TCP segment by default
+    // (IP_PMTUDISC_WANT), which INET does only with pmtudEnabled.
     if (!(storedDatagram->getFragmentOffset() == liveDatagram->getFragmentOffset())) {
         EV_WARN << "IP compare: fragmentOffset mismatch\n";
         return false;
