@@ -18,9 +18,9 @@
 /examples/htb/,                                -f omnetpp.ini -c scenarioTCP3Eth -r 0,        15s,     35d5-d822/tplx;7a2f-5d07/~tNl;5ecb-c1c6/~tND, PASS,
 /examples/htb/,                                -f omnetpp.ini -c scenarioTCP4Eth -r 0,        15s,     f022-9564/tplx;bd0f-d150/~tNl;f124-2f22/~tND, PASS,
 
-/examples/hls/,                                -f omnetpp.ini -c Experiment1 -r 0,            25s,     2d24-b657/tplx;d4e4-d648/~tNl;a253-3aac/~tND, PASS,
-/examples/hls/,                                -f omnetpp.ini -c Experiment2L -r 0,           25s,     6a8b-cd06/tplx;6004-a85f/~tNl;dc34-46b2/~tND, PASS,
-/examples/hls/,                                -f omnetpp.ini -c Experiment3 -r 0,            25s,     c0d4-54b6/tplx;2d89-3fac/~tNl;2ef5-6f80/~tND, PASS,
+/examples/hls/,                                -f omnetpp.ini -c Experiment1 -r 0,            25s,     5a23-46ae/tplx;d4e4-d648/~tNl;d913-9545/~tND, PASS,
+/examples/hls/,                                -f omnetpp.ini -c Experiment2L -r 0,           25s,     1bf3-a47a/tplx;6004-a85f/~tNl;e64f-27dc/~tND, PASS,
+/examples/hls/,                                -f omnetpp.ini -c Experiment3 -r 0,            25s,     31cd-7cb9/tplx;2d89-3fac/~tNl;2e56-dbc6/~tND, PASS,
 
 /examples/httptools/direct/flashdirect/,       -f omnetpp.ini -c General -r 0,            500000s,     f607-5921/tplx;428e-2e61/~tNl;8154-c757/tyf, PASS,
 /examples/httptools/direct/pairdirect/,        -f omnetpp.ini -c random -r 0,             500000s,     6fc8-681d/tplx;128c-5b0a/~tNl;f06b-220a/tyf, PASS,

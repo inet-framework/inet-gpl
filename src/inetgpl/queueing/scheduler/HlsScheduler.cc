@@ -393,10 +393,6 @@ int HlsScheduler::getNumPackets() const
     return numPackets;
 }
 
-bool HlsScheduler::canPullSomePacket(const cGate *gate) const
-{
-    return numBusyClasses > 0;
-}
 
 b HlsScheduler::getTotalLength() const
 {
@@ -463,11 +459,12 @@ void HlsScheduler::hlsEnqueue(int index)
     if(cl->isBusy == false) {
         hlsSetBusy(cl);
     }
+    updateNextIndex();
     handleCanPullPacketChanged(outputGate);
 }
 
 // choose which queue to dequeue the packet from
-int HlsScheduler::hlsDequeue()
+int HlsScheduler::hlsFindLeaf()
 {
     hlsClass *cl;
 
@@ -493,14 +490,8 @@ int HlsScheduler::hlsDequeue()
         Packet *packetToPop = providers[cl->queueId]->canPullPacket(inputGates[cl->queueId]);
 
         int packetLength = packetToPop->getByteLength() + phyHeaderSize;
-        // if quota is enough to send, send the packet
+        // if quota is enough to send, the next pull takes the packet
         if(packetLength <= cl->quota) {
-            cl->quota -= packetLength;
-            root->quota += packetLength;
-            // if this is the last packet set leaf to idle
-            if(collections[cl->queueId]->getNumPackets() <= 1) {
-                hlsSetIdle(cl);
-            }
             return cl->queueId;
         }
         else {
@@ -511,17 +502,24 @@ int HlsScheduler::hlsDequeue()
 }
 
 // send the index of the queue to be dequeued to the interface
-int HlsScheduler::schedulePacket() const
+void HlsScheduler::updateNextIndex()
 {
-    // KLUDGE: this query changes the state of the module
-    return const_cast<HlsScheduler *>(this)->schedulePacketAndUpdateState();
+    nextIndex = hlsFindLeaf();
 }
 
-int HlsScheduler::schedulePacketAndUpdateState()
+void HlsScheduler::handlePacketScheduled(Packet *packet, int index)
 {
-    int dequeueIndex = hlsDequeue();
-    emit(dequeueIndexSignal, dequeueIndex);
-    return dequeueIndex;
+    hlsClass *cl = allClasses[*currentPointer];
+    ASSERT(index == nextIndex && cl->queueId == index);
+    int packetLength = packet->getByteLength() + phyHeaderSize;
+    cl->quota -= packetLength;
+    root->quota += packetLength;
+    // if this was the last packet set leaf to idle
+    if(collections[cl->queueId]->isEmpty()) {
+        hlsSetIdle(cl);
+    }
+    emit(dequeueIndexSignal, index);
+    updateNextIndex();
 }
 
 // print info of one class

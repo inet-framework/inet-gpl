@@ -87,8 +87,11 @@ class INET_API HlsScheduler : public PacketSchedulerBase, public IPacketCollecti
     std::vector<hlsClass*> queueIdToLeafClasses; // stores the leaf class given the queue id as index
 
     virtual void initialize(int stage) override;
-    virtual int schedulePacket() const override;
-    virtual int schedulePacketAndUpdateState();
+    int nextIndex = -1; // The input of the next pull, -1 if no class is busy
+
+    virtual int schedulePacket() const override { return nextIndex; }
+    virtual void handlePacketScheduled(Packet *packet, int index) override;
+    virtual void updateNextIndex();
     virtual void handleMessage(cMessage *msg) override;
 
     void createAllClasses(cXMLElement *hlsConfig);
@@ -104,12 +107,11 @@ class INET_API HlsScheduler : public PacketSchedulerBase, public IPacketCollecti
 
   public:
 
-    int hlsDequeue();
+    int hlsFindLeaf();
     void hlsEnqueue(int index);
 
     virtual int getMaxNumPackets() const override { return -1; }
     virtual int getNumPackets() const override;
-    virtual bool canPullSomePacket(const cGate *gate) const override;
 
     virtual b getMaxTotalLength() const override { return b(-1); }
     virtual b getTotalLength() const override;
