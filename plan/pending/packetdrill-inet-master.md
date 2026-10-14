@@ -1,6 +1,6 @@
 # Run the packetdrill suite against INET master, with LinuxTcp
 
-Status: **in progress** — step 1 done in the tree, step 2 started.
+Status: **in progress** — step 1 done, the causes of step 2 known; the INET repairs follow.
 
 - Branch `topic/packetdrill-inet-master`, on `inet-gpl` master `a0b22d2`.
 - INET master `365c3941f7`: the TCP branch `topic/tcp-new-audit-fixes` landed there in the stages
@@ -33,8 +33,8 @@ resets them at each `socket()`.
 | Step | Commit | What |
 | --- | --- | --- |
 | 1 | PacketDrillApp: SO_RCVBUF and TCP_SYNCNT as socket calls of INET | the five run-time writes go |
-| 2 | (INET or here) one commit for each divergence that has a repair | see section 4 |
-| 3 | tests/packetdrill: the host runs LinuxTcp | `tcp.ini` selects `LinuxTcp` and keeps `mss` and `advertisedWindow` |
+| 2 | (INET) the repairs of section 5, on the INET branch `topic/tcp-packetdrill-repairs` | see section 5 |
+| 3 | tests/packetdrill: the host runs LinuxTcp | `tcp.ini` selects `LinuxTcp` and keeps only `advertisedWindow` |
 | 4 | the record | the suite on master, the wrappers of INET |
 
 ## 4. The suite on master
@@ -45,20 +45,65 @@ Measured on 2026-10-14 with step 1, INET master `365c3941f7` in debug mode:
 | --- | --- | --- | --- | --- |
 | the current file (explicit Linux parameters) | 288 | 15 | 12 | 3 |
 | `LinuxTcp`, `mss`, `advertisedWindow` | 295 | 8 | 12 | 3 |
+| `LinuxTcp`, `advertisedWindow` | 296 | 7 | 12 | 3 |
 
-The 8 divergences with `LinuxTcp` (7 scenarios; the PRR script is in both sets):
+`tcp.ini` does not need `mss`: master's default `mss = -1` gives 1460 bytes for IPv4 and 1440
+bytes for IPv6, as Linux does for an MTU of 1500 bytes, and a SYN in LISTEN then takes TCP_MAXSEG
+(INET D-99).
+
+The 8 divergences with `LinuxTcp`, `mss` and `advertisedWindow` (7 scenarios; the PRR script is in
+both sets). Each one also occurs with the current file, so none comes from `LinuxTcp`, and each one
+is a defect of master:
 
 | Script | First difference | Cause | Repair |
 | --- | --- | --- | --- |
-| `tcp/linux/tcp_fast_recovery_prr-ss-ack-below-snd_una-cubic`, `tcp/packetdrill/fast_recovery/prr-ss-ack-below-snd_una-cubic` | time, t=1.2435 | open | open |
-| `tcp/linux/tcp_fastopen_server_client-ack-dropped-then-recovery-ms-timestamps` | time, t=2.01 | open | open |
-| `tcp/linux/tcp_rcv_wnd_shrink_nomem` | packet, t=1 | open | open |
-| `tcp/packetdrill/fast_retransmit/fr-4pkt` | time, t=1.5 | open | open |
-| `tcp/packetdrill/fastopen/client/nonblocking-connect-bypass-errno` | time, t=9.735 | open | open |
-| `tcp/packetdrill/fastopen/client/nonblocking-sendto-errnos` | time, t=4.0 | open | open |
-| `tcp/packetdrill/mss/mss-setsockopt-tcp_maxseg-server` | packet, t=1.1 | open | open |
+| `tcp/linux/tcp_fast_recovery_prr-ss-ack-below-snd_una-cubic`, `tcp/packetdrill/fast_recovery/prr-ss-ack-below-snd_una-cubic` | time, t=1.2435 | A | 1 |
+| `tcp/linux/tcp_fastopen_server_client-ack-dropped-then-recovery-ms-timestamps` | time, t=2.01 | B | 2 |
+| `tcp/linux/tcp_rcv_wnd_shrink_nomem` | packet, t=1 | C | 3 |
+| `tcp/packetdrill/fast_retransmit/fr-4pkt` | time, t=1.5 | D | 4 |
+| `tcp/packetdrill/fastopen/client/nonblocking-connect-bypass-errno` | time, t=9.735 | E | 5 |
+| `tcp/packetdrill/fastopen/client/nonblocking-sendto-errnos` | time, t=4.0 | E | 5 |
+| `tcp/packetdrill/mss/mss-setsockopt-tcp_maxseg-server` | packet, t=1.1 | F | 6, and step 3 |
 
-Each has one of three causes: a value of Linux that `LinuxTcp` lacks (repair in INET), a
-deliberate difference of master from the TCP branch (a decision of the staged landing; then
-`scripts.yaml` records it, as it records the kernel drift), or a defect of master (repair in
-INET, with a module test).
+- **A.** Master ignores the SACK blocks of an ACK below SND.UNA ("Old ACK"). RFC 6675 section 5
+  updates the scoreboard on each ACK with SACK information (MUST), and Linux does too (the
+  `old_ack` path of `tcp_ack()`). The script expects two segments on the late ACK with the newly
+  SACKed 5001:7001. The TCP branch has the same gap. It passed because its PRR counted the SACKed
+  bytes of a cumulative ACK again (INET D-28): it sent the two segments 2 ms early, inside the
+  tolerance of packetdrill.
+- **B.** A Fast Open server sends data in SYN_RCVD, and the ACK that completes the handshake
+  carries SACK blocks. Master creates the SACK recovery at ESTABLISHED, so it drops the blocks ("no
+  SACK-capable recovery in use"), and the TLP comes 1 s later in place of the fast retransmit. The
+  TCP branch created the recovery at its first use; the landing of the split flavours lost that.
+- **C.** With `windowAutoTuning`, master offers the auto-tuned window less the unread data. The
+  right edge stays at 1000001, and master drops the 16th segment of 65000 bytes. Linux offers the
+  free buffer at the scaling ratio, at most `rcv_ssthresh` (`__tcp_select_window()`), so the
+  unread data reduce the offer only at that ratio.
+- **D.** NewReno without SACK: `recover` starts at the ISS (RFC 6582 step 1), and step 2 asks for
+  an ACK that covers more than `recover`. The ACK of the SYN covers only the ISS, so the loss of
+  the first data segment gets no fast retransmit and waits for the RTO. Linux has no such check
+  outside a recovery. FreeBSD keeps `snd_recover` as the next sequence number and starts it at the
+  ISS, which is one above the ISS of RFC 6582. The TCP branch passed because its `recover` started
+  at 0.
+- **E.** The script sets TCP_SYNCNT after `sendto()` or `write()` sent the SYN.
+  `TcpSocket::setSynRetries()` puts the value only in the open command (INET D-66), so the
+  connection sends the SYN again until `synRetries` of `LinuxTcp` (6). Linux reads
+  `icsk_syn_retries` at each timeout.
+- **F.** TCP_MAXSEG on a listening socket lowers the send MSS, but the SYN-ACK announces the MSS
+  that the open took from the `mss` parameter. Linux limits the MSS option of each connection of
+  the listener by `user_mss`. With `mss = -1` the SYN in LISTEN takes TCP_MAXSEG, so step 3 alone
+  repairs the script; the defect stays for an explicit `mss`.
+
+## 5. The repairs in INET
+
+One INET branch, `topic/tcp-packetdrill-repairs`, one commit with a module test for each:
+
+| Repair | What | Cause |
+| --- | --- | --- |
+| 1 | process the SACK blocks of an ACK below SND.UNA, as RFC 6675 section 5 and Linux | A |
+| 2 | create the SACK recovery when a Fast Open server sends data in SYN_RCVD | B |
+| 3 | `windowAutoTuning`: the offer of Linux, the free buffer at the scaling ratio, at most `rcv_ssthresh` | C |
+| 4 | NewReno: `recover` starts one below the ISS, so the first window has a fast retransmit | D |
+| 5 | TCP_SYNCNT also after the open | E |
+| 6 | TCP_MAXSEG on a listening socket also limits the MSS option | F |
+
