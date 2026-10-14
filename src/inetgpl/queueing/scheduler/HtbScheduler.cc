@@ -312,7 +312,9 @@ void HtbScheduler::handleMessage(cMessage *message)
 {
     Enter_Method("handleMessage");
     if (message == classModeChangeEvent) {
-        collector.handleCanPullPacketChanged();
+        updateNextIndex();
+        if (collector != nullptr)
+            collector.handleCanPullPacketChanged();
     }
     else
         throw cRuntimeError("Unknown self message");
@@ -379,25 +381,23 @@ simtime_t HtbScheduler::doEvents(int level)
 // "force it" to dequeue again.
 int HtbScheduler::getNumPackets() const
 {
-    const_cast<HtbScheduler *>(this)->cancelEvent(classModeChangeEvent);
     int fullSize = 0;  // Number of all packets in the queue
     int dequeueSize = 0; // Number of packets available for dequeueing
     int leafId = 0; // Id of the leaf/queue
-    simtime_t changeTime = simTime() + SimTime(100000, SIMTIME_NS); // Time at which we expect the next change of class mode
     for (auto collection : collections) { // Iterate over all leaf queues
         int collectionNumPackets = collection->getNumPackets();
         if (leafClasses.at(leafId) == nullptr) { // Leafs need to exist. If they don't, we've done sth. wrong :)
             throw cRuntimeError("There is no leaf at index %i!", leafId);
         }
         long long diff = (long long) std::min((simTime() - leafClasses.at(leafId)->checkpointTime).inUnit(SIMTIME_NS), (int64_t)leafClasses.at(leafId)->mbuffer);
-        int currClassMode = const_cast<HtbScheduler *>(this)->classMode(leafClasses.at(leafId), &diff);
+        int currClassMode = classMode(leafClasses.at(leafId), &diff);
         if (currClassMode != cant_send) { // The case when there are packets available at leaf for dequeuing
             bool parentOk = false;
             htbClass *parent = leafClasses.at(leafId)->parent;
             if (currClassMode != can_send) { //&& leafClasses.at(leafId)->nextEventTime <= simTime()
                 while (parent != NULL) { //&& parent->nextEventTime <= simTime()
                     long long diff2 = (long long) std::min((simTime() - parent->checkpointTime).inUnit(SIMTIME_NS), (int64_t)parent->mbuffer);
-                    int parentMode = const_cast<HtbScheduler *>(this)->classMode(parent, &diff2);
+                    int parentMode = classMode(parent, &diff2);
                     if (parentMode == can_send && parent->nextEventTime <= simTime()) {
                         parentOk = true;
                         break;
@@ -437,18 +437,9 @@ int HtbScheduler::getNumPackets() const
     }
 
     EV_INFO << "Curr num packets to dequeue: " << dequeueSize << "; All packets: " << fullSize << endl;
-    if (dequeueSize == 0 && fullSize > 0 && changeTime > simTime()) { // We have packets in queue, just none are available for dequeue!
-        EV_INFO << "Next Event will be scheduled at " << changeTime.str() << endl;
-        const_cast<HtbScheduler *>(this)->scheduleAt(changeTime, classModeChangeEvent);  // schedule an Omnet event on when we expect things to change.
-    }
     return dequeueSize;
 }
 
-bool HtbScheduler::canPullSomePacket(const cGate *gate) const
-{
-    // TODO write a more optimal code
-    return getNumPackets() > 0;
-}
 
 b HtbScheduler::getTotalLength() const
 {
@@ -494,43 +485,53 @@ void HtbScheduler::removeAllPackets()
 }
 
 // This is where the HTB scheduling comes into play
-int HtbScheduler::schedulePacket() const
+void HtbScheduler::updateNextIndex()
 {
-    // KLUDGE: this query changes the state of the module
-    return const_cast<HtbScheduler *>(this)->schedulePacketAndUpdateState();
-}
-
-int HtbScheduler::schedulePacketAndUpdateState()
-{
-    int level;
-    simtime_t nextEvent;
-    int dequeueIndex = -1;
-
-    nextEvent = simTime();
-
+    // bring the class modes of all levels up to the current time
+    for (int level = 0; level < maxHtbDepth; level++)
+        doEvents(level);
+    nextIndex = -1;
+    nextLevel = -1;
+    nextPriority = -1;
     // Go over all levels until we find something to dequeue
-    for (level = 0; level < maxHtbDepth; level++) {
-        nextEvent = doEvents(level); // Do all events for level
-        // Go through all priorities on level until we find something to dequeue
-        EV << "schedulePacket: Level " << level << endl;
+    for (int level = 0; level < maxHtbDepth && nextIndex == -1; level++) {
         printLevel(levels[level], level);
-        for (int prio = 0; prio < maxHtbNumPrio; prio++) {
-            EV_INFO << "Dequeue - testing: level = " << level << "; priority = " << prio << endl;
-            // if (levels[level]->nextToDequeue[prio] != NULL) { // Next to dequeue is always right. If it's not null, then we can dequeue something there. If it's null, we know there is nothing to dequeue.
+        // Go through all priorities on level until we find something to dequeue
+        for (int prio = 0; prio < maxHtbNumPrio && nextIndex == -1; prio++) {
             if (levels[level]->selfFeeds[prio].size() > 0) { // Next to dequeue is always right. If it's not null, then we can dequeue something there. If it's null, we know there is nothing to dequeue.
-                EV_INFO << "Dequeue - Found class to dequeue on level " << level << " and priority " << prio << endl;
-                dequeueIndex = htbDequeue(prio, level); // Do the dequeue in the HTB tree. Actual dequeue is done by the interface (I think)
+                int index = htbFindLeaf(prio, level);
+                if (index != -1) {
+                    nextIndex = index;
+                    nextLevel = level;
+                    nextPriority = prio;
+                }
             }
-            if (dequeueIndex != -1) { // We found the first valid thing, just break!
-                break;
-            }
-        }
-        if (dequeueIndex != -1) { // We found the first valid thing, just break!
-            break;
         }
     }
-    emit(dequeueIndexSignal, dequeueIndex);
-    return dequeueIndex; //index returned to the interface
+    scheduleClassModeChangeEvent();
+}
+
+void HtbScheduler::scheduleClassModeChangeEvent()
+{
+    // the next time at which a waiting class changes its mode
+    simtime_t nextEventTime = SimTime::getMaxTime();
+    for (int level = 0; level < maxHtbDepth; level++)
+        if (!levels[level]->waitingClasses.empty())
+            nextEventTime = std::min(nextEventTime, (*levels[level]->waitingClasses.cbegin())->nextEventTime);
+    if (classModeChangeEvent->isScheduled())
+        cancelEvent(classModeChangeEvent);
+    // at least 1 ns later, the unit of the token arithmetic, so that a class
+    // that waits for the current time does not repeat the event at that time
+    if (nextEventTime != SimTime::getMaxTime())
+        scheduleAt(std::max(nextEventTime, simTime() + SimTime(1, SIMTIME_NS)), classModeChangeEvent);
+}
+
+void HtbScheduler::handlePacketScheduled(Packet *packet, int index)
+{
+    ASSERT(index == nextIndex);
+    htbChargeLeaf(leafClasses.at(index), nextPriority, nextLevel, packet);
+    emit(dequeueIndexSignal, index);
+    updateNextIndex();
 }
 
 // Activates a class for a priority. Only really called for leafs
@@ -612,7 +613,8 @@ HtbScheduler::htbClass* HtbScheduler::getLeaf(int priority, int level)
 }
 
 // Determine which leaf queue to dequeue based on the htb tree. Based heavily on Linux HTB source code
-int HtbScheduler::htbDequeue(int priority, int level)
+
+int HtbScheduler::htbFindLeaf(int priority, int level)
 {
     int retIndex = -1;
     htbClass *cl = getLeaf(priority, level); // Get first leaf we could find
@@ -649,54 +651,56 @@ int HtbScheduler::htbDequeue(int priority, int level)
         cl = getLeaf(priority, level);
 
     } while (cl != start);
-    EV_INFO << "htbDequeue: Queue of leaf " << cl->name << " will be dequeued in mode " << cl->mode << endl;
-    if (thePacketToPop != nullptr) {
-        // Take care of the deficit round robin
-        if (cl->leaf.deficit[level] < 0) {
-            throw cRuntimeError("The class %s deficit on level %d is negative!", cl->name, level);
-        }
-        cl->leaf.deficit[level] -= (thePacketToPop->getByteLength() + phyHeaderSize);
+    EV_INFO << "htbFindLeaf: Queue of leaf " << cl->name << " is the next to dequeue in mode " << cl->mode << endl;
+    return retIndex;
+}
+
+void HtbScheduler::htbChargeLeaf(htbClass *cl, int priority, int level, Packet *packet)
+{
+    // Take care of the deficit round robin
+    if (cl->leaf.deficit[level] < 0) {
+        throw cRuntimeError("The class %s deficit on level %d is negative!", cl->name, level);
+    }
+    cl->leaf.deficit[level] -= (packet->getByteLength() + phyHeaderSize);
+    emit(cl->leaf.deficitSig[level], cl->leaf.deficit[level]);
+    if (cl->leaf.deficit[level] < 0) {
+        cl->leaf.deficit[level] += cl->quantum;
         emit(cl->leaf.deficitSig[level], cl->leaf.deficit[level]);
-        if (cl->leaf.deficit[level] < 0) {
-            cl->leaf.deficit[level] += cl->quantum;
-            emit(cl->leaf.deficitSig[level], cl->leaf.deficit[level]);
-            htbClass *tempNode = cl;
-            while (tempNode != rootClass) {
-                if (tempNode->parent->inner.innerFeeds[priority].size() > 1 && tempNode->mode == may_borrow) {
-                    if (tempNode->parent->inner.nextToDequeue[priority] == tempNode) {
-                        tempNode->parent->inner.nextToDequeue[priority] = *std::next(tempNode->parent->inner.innerFeeds[priority].find(tempNode));
-                        if (tempNode->parent->inner.nextToDequeue[priority] == *tempNode->parent->inner.innerFeeds[priority].cend()) {
-                            tempNode->parent->inner.nextToDequeue[priority] = *tempNode->parent->inner.innerFeeds[priority].cbegin();
-                        }
+        htbClass *tempNode = cl;
+        while (tempNode != rootClass) {
+            if (tempNode->parent->inner.innerFeeds[priority].size() > 1 && tempNode->mode == may_borrow) {
+                if (tempNode->parent->inner.nextToDequeue[priority] == tempNode) {
+                    tempNode->parent->inner.nextToDequeue[priority] = *std::next(tempNode->parent->inner.innerFeeds[priority].find(tempNode));
+                    if (tempNode->parent->inner.nextToDequeue[priority] == *tempNode->parent->inner.innerFeeds[priority].cend()) {
+                        tempNode->parent->inner.nextToDequeue[priority] = *tempNode->parent->inner.innerFeeds[priority].cbegin();
                     }
                 }
-                else if (levels[tempNode->level]->selfFeeds[priority].size() > 1 && tempNode->mode == can_send) {
-                    if (levels[tempNode->level]->nextToDequeue[priority] == tempNode) {
-                        levels[tempNode->level]->nextToDequeue[priority] = *std::next(levels[tempNode->level]->selfFeeds[priority].find(tempNode));
-                        if (levels[tempNode->level]->nextToDequeue[priority] == *levels[tempNode->level]->selfFeeds[priority].cend()) {
-                            levels[tempNode->level]->nextToDequeue[priority] = *levels[tempNode->level]->selfFeeds[priority].cbegin();
-                        }
-                        if (levels[tempNode->level]->nextToDequeue[priority] == nullptr) {
-                            throw cRuntimeError("Next to dequeue would be null even though it shouldn't be!");
-                        }
-                    }
-                    break;
-                }
-                else if (levels[tempNode->level]->selfFeeds[priority].size() == 1 && tempNode->mode == can_send) {
-                    if (levels[tempNode->level]->nextToDequeue[priority] != tempNode) {
-                        throw cRuntimeError("We were green and got selected but were not next to dequeue!");
-                    }
-                    break;
-                }
-                tempNode = tempNode->parent;
             }
-        }
-        chargeClass(cl, level, thePacketToPop);
-        if (collections[cl->leaf.queueId]->getNumPackets() <= 1) {
-            deactivateClass(cl, priority); // Called for leaf. Leaf can be active for only one prio
+            else if (levels[tempNode->level]->selfFeeds[priority].size() > 1 && tempNode->mode == can_send) {
+                if (levels[tempNode->level]->nextToDequeue[priority] == tempNode) {
+                    levels[tempNode->level]->nextToDequeue[priority] = *std::next(levels[tempNode->level]->selfFeeds[priority].find(tempNode));
+                    if (levels[tempNode->level]->nextToDequeue[priority] == *levels[tempNode->level]->selfFeeds[priority].cend()) {
+                        levels[tempNode->level]->nextToDequeue[priority] = *levels[tempNode->level]->selfFeeds[priority].cbegin();
+                    }
+                    if (levels[tempNode->level]->nextToDequeue[priority] == nullptr) {
+                        throw cRuntimeError("Next to dequeue would be null even though it shouldn't be!");
+                    }
+                }
+                break;
+            }
+            else if (levels[tempNode->level]->selfFeeds[priority].size() == 1 && tempNode->mode == can_send) {
+                if (levels[tempNode->level]->nextToDequeue[priority] != tempNode) {
+                    throw cRuntimeError("We were green and got selected but were not next to dequeue!");
+                }
+                break;
+            }
+            tempNode = tempNode->parent;
         }
     }
-    return retIndex;
+    chargeClass(cl, level, packet);
+    if (collections[cl->leaf.queueId]->isEmpty()) { // the module took the packet already
+        deactivateClass(cl, priority); // Called for leaf. Leaf can be active for only one prio
+    }
 }
 
 void HtbScheduler::printLevel(htbLevel *level, int index)
@@ -740,7 +744,7 @@ void HtbScheduler::printInner(htbClass *cl)
     }
 }
 
-inline long HtbScheduler::htb_lowater(htbClass *cl)
+inline long HtbScheduler::htb_lowater(htbClass *cl) const
 {
     if (htb_hysteresis)
         return cl->mode != cant_send ? -cl->cburstSize : 0;
@@ -748,7 +752,7 @@ inline long HtbScheduler::htb_lowater(htbClass *cl)
         return 0;
 }
 
-inline long HtbScheduler::htb_hiwater(htbClass *cl)
+inline long HtbScheduler::htb_hiwater(htbClass *cl) const
 {
     if (htb_hysteresis)
         return cl->mode == can_send ? -cl->burstSize : 0;
@@ -756,7 +760,7 @@ inline long HtbScheduler::htb_hiwater(htbClass *cl)
         return 0;
 }
 
-int HtbScheduler::classMode(htbClass *cl, long long *diff)
+int HtbScheduler::classMode(htbClass *cl, long long *diff) const
 {
     long long toks;
     if ((toks = (cl->ctokens + *diff)) < htb_lowater(cl)) {
@@ -984,6 +988,9 @@ void HtbScheduler::receiveSignal(cComponent *source, simsignal_t signal, cObject
             int index = static_cast<cModule*>(source)->getIndex();
             EV_INFO << "HtbScheduler::receiveSignal: PacketQueue " << index << " emitted a packetPushed signal! Call htbEnqueue for leaf " << index << endl;
             htbEnqueue(index);
+            updateNextIndex();
+            if (collector != nullptr)
+                collector.handleCanPullPacketChanged();
         }
     }
     else

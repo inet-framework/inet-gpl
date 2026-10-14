@@ -144,18 +144,22 @@ class INETGPL_API HtbScheduler : public PacketSchedulerBase, public IPacketColle
 
     cMessage *classModeChangeEvent = nullptr;
 
+    int nextIndex = -1; // The input of the next pull, -1 if no class can send
+    int nextLevel = -1; // The level at which the search found the leaf of the next pull
+    int nextPriority = -1; // The priority at which the search found the leaf of the next pull
+
   protected:
     virtual void initialize(int stage) override;
-    virtual int schedulePacket() const override;
-    virtual int schedulePacketAndUpdateState();
+    virtual int schedulePacket() const override { return nextIndex; }
+    virtual void handlePacketScheduled(Packet *packet, int index) override;
+    virtual void updateNextIndex();
+    virtual void scheduleClassModeChangeEvent();
     virtual void handleMessage(cMessage *msg) override;
 
   public:
-    int classMode(htbClass *cl, long long *diff);
+    int classMode(htbClass *cl, long long *diff) const;
     virtual int getMaxNumPackets() const override { return -1; }
     virtual int getNumPackets() const override;
-    virtual bool canPullSomePacket(const cGate *gate) const override;
-    virtual Packet *canPullPacket(const cGate *gate) const override { throw cRuntimeError("The canPullPacket() not implemented yet."); }
 
     virtual b getMaxTotalLength() const override { return b(-1); }
     virtual b getTotalLength() const override;
@@ -166,7 +170,8 @@ class INETGPL_API HtbScheduler : public PacketSchedulerBase, public IPacketColle
     virtual void removeAllPackets() override;
 
     void htbEnqueue(int index);
-    int htbDequeue(int priority, int level);
+    int htbFindLeaf(int priority, int level);
+    void htbChargeLeaf(htbClass *cl, int priority, int level, Packet *packet);
     void printClass(htbClass *cl);
     void printLevel(htbLevel *level, int index);
     void printInner(htbClass *cl);
@@ -177,8 +182,8 @@ class INETGPL_API HtbScheduler : public PacketSchedulerBase, public IPacketColle
     void activateClassPrios(htbClass *cl);
     void deactivateClassPrios(htbClass *cl);
 
-    inline long htb_hiwater(htbClass *cl);
-    inline long htb_lowater(htbClass *cl);
+    inline long htb_hiwater(htbClass *cl) const;
+    inline long htb_lowater(htbClass *cl) const;
 
     void updateClassMode(htbClass *cl, long long *diff);
     void accountTokens(htbClass *cl, long long bytes, long long diff);
