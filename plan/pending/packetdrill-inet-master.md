@@ -1,6 +1,7 @@
 # Run the packetdrill suite against INET master, with LinuxTcp
 
-Status: **in progress** — step 1 done, the causes of step 2 known; the INET repairs follow.
+Status: **in progress** — steps 1 and 3 done; step 2 waits for the review of the INET branch
+`topic/tcp-packetdrill-repairs`.
 
 - Branch `topic/packetdrill-inet-master`, on `inet-gpl` master `a0b22d2`.
 - INET master `365c3941f7`: the TCP branch `topic/tcp-new-audit-fixes` landed there in the stages
@@ -46,6 +47,7 @@ Measured on 2026-10-14 with step 1, INET master `365c3941f7` in debug mode:
 | the current file (explicit Linux parameters) | 288 | 15 | 12 | 3 |
 | `LinuxTcp`, `mss`, `advertisedWindow` | 295 | 8 | 12 | 3 |
 | `LinuxTcp`, `advertisedWindow` | 296 | 7 | 12 | 3 |
+| `LinuxTcp`, `advertisedWindow`, INET `topic/tcp-packetdrill-repairs` | 302 | 1 | 12 | 3 |
 
 `tcp.ini` does not need `mss`: master's default `mss = -1` gives 1460 bytes for IPv4 and 1440
 bytes for IPv6, as Linux does for an MTU of 1500 bytes, and a SYN in LISTEN then takes TCP_MAXSEG
@@ -102,8 +104,25 @@ One INET branch, `topic/tcp-packetdrill-repairs`, one commit with a module test 
 | --- | --- | --- |
 | 1 | process the SACK blocks of an ACK below SND.UNA, as RFC 6675 section 5 and Linux | A |
 | 2 | create the SACK recovery when a Fast Open server sends data in SYN_RCVD | B |
-| 3 | `windowAutoTuning`: the offer of Linux, the free buffer at the scaling ratio, at most `rcv_ssthresh` | C |
+| 3 | `windowAutoTuning` with a locked buffer: the unread data count once, in the free space of the buffer | C |
 | 4 | NewReno: `recover` starts one below the ISS, so the first window has a fast retransmit | D |
 | 5 | TCP_SYNCNT also after the open | E |
 | 6 | TCP_MAXSEG on a listening socket also limits the MSS option | F |
+
+The branch has these six commits, each with a module test that fails before it. With the branch,
+the suite has 302 MATCH and 1 DIVERGENCE: the TCP branch had 303 MATCH.
+
+The one divergence left is the last step of `tcp_rcv_wnd_shrink_nomem`. After repair 3 the
+script gets as far as its last step, "We are allowed to go beyond the window and buffer with one
+packet": Linux accepts a second 20000-byte segment into a locked buffer of 32000 bytes that holds
+about 23000 bytes, and then offers a zero window. Master refuses the segment for two reasons: its
+byte check refuses data beyond the first unread byte plus the buffer, and its truesize model
+charges 33000 bytes for a 20000-byte segment (one page of order 3). A truesize as
+`alloc_skb_with_frags()` gives (pages of the largest order that the rest fills), with memory
+alone deciding for a locked buffer, repairs the script but breaks
+`tcp_ooo-before-and-after-accept`, which needs the larger truesize. So neither model is the one
+of Linux 7.1; the receive memory of INET needs a closer study of the Linux code (the tun
+allocation, `tcp_try_coalesce()`, `tcp_can_ingest()`). The TCP branch passed the script only
+because it grew a buffer that SO_RCVBUF had locked, which Linux does not do. This is an open item
+for a later INET branch.
 
