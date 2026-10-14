@@ -1,7 +1,7 @@
 # Run the packetdrill suite against INET master, with LinuxTcp
 
-Status: **in progress** — steps 1 and 3 done; step 2 waits for the review of the INET branch
-`topic/tcp-packetdrill-repairs`.
+Status: **done** — the owner approved it on 2026-10-14; the INET repairs landed on INET master
+`2424a1a865`.
 
 - Branch `topic/packetdrill-inet-master`, on `inet-gpl` master `a0b22d2`.
 - INET master `365c3941f7`: the TCP branch `topic/tcp-new-audit-fixes` landed there in the stages
@@ -33,10 +33,10 @@ resets them at each `socket()`.
 
 | Step | Commit | What |
 | --- | --- | --- |
-| 1 | PacketDrillApp: SO_RCVBUF and TCP_SYNCNT as socket calls of INET | the five run-time writes go |
-| 2 | (INET) the repairs of section 5, on the INET branch `topic/tcp-packetdrill-repairs` | see section 5 |
-| 3 | tests/packetdrill: the host runs LinuxTcp | `tcp.ini` selects `LinuxTcp` and keeps only `advertisedWindow` |
-| 4 | the record | the suite on master, the wrappers of INET |
+| 1 ✅ | PacketDrillApp: SO_RCVBUF and TCP_SYNCNT as socket calls of INET | the five run-time writes go |
+| 2 ✅ | (INET) the repairs of section 5, on the INET branch `topic/tcp-packetdrill-repairs` | see section 5 |
+| 3 ✅ | tests/packetdrill: the host runs LinuxTcp | `tcp.ini` selects `LinuxTcp` and keeps only `advertisedWindow` |
+| 4 ✅ | the record | the suite on master, the wrappers of INET |
 
 ## 4. The suite on master
 
@@ -125,4 +125,18 @@ of Linux 7.1; the receive memory of INET needs a closer study of the Linux code 
 allocation, `tcp_try_coalesce()`, `tcp_can_ingest()`). The TCP branch passed the script only
 because it grew a buffer that SO_RCVBUF had locked, which Linux does not do. This is an open item
 for a later INET branch.
+
+## 6. The record
+
+The owner approved the INET repairs and this branch on 2026-10-14. The repairs landed on INET
+master as `2424a1a865` (INET `plan/done/tcp-packetdrill-repairs.md`, decisions D-108 to D-113).
+
+Against INET master `2424a1a865` in debug mode, with the `tcp.ini` of step 3, the suite has 302
+MATCH, 12 KERNEL_DRIFT, 3 UNSUPPORTED_FEATURE and 1 DIVERGENCE, `tcp_rcv_wnd_shrink_nomem`
+(section 5). The packetdrill wrappers of INET (`tests/protocol/tcp`, run with `INETGPL_ROOT` set to
+this tree) give 333 tests: 328 PASS, 4 expected failures (3 scripts need a feature that INET does
+not have; `Rfc9293ChecksumDefault`) and 1 unexpected failure, the same script. The suite also
+confirms two values of `LinuxTcp` that INET S19b marked "verify": with the value of `Tcp`,
+`abortOnDataAfterClose` fails 2 user_timeout scripts and `accEcnOptionEnabled` fails 28 AccECN
+scripts. No script reaches `maxPersistTimeout`.
 
