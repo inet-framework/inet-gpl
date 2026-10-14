@@ -87,7 +87,8 @@ class INET_API HlsScheduler : public PacketSchedulerBase, public IPacketCollecti
     std::vector<hlsClass*> queueIdToLeafClasses; // stores the leaf class given the queue id as index
 
     virtual void initialize(int stage) override;
-    virtual int schedulePacket() override;
+    virtual int schedulePacket() const override;
+    virtual int schedulePacketAndUpdateState();
     virtual void handleMessage(cMessage *msg) override;
 
     void createAllClasses(cXMLElement *hlsConfig);

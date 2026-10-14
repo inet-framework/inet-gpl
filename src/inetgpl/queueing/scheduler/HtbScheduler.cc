@@ -494,7 +494,14 @@ void HtbScheduler::removeAllPackets()
 }
 
 // This is where the HTB scheduling comes into play
-int HtbScheduler::schedulePacket() {
+int HtbScheduler::schedulePacket() const
+{
+    // KLUDGE: this query changes the state of the module
+    return const_cast<HtbScheduler *>(this)->schedulePacketAndUpdateState();
+}
+
+int HtbScheduler::schedulePacketAndUpdateState()
+{
     int level;
     simtime_t nextEvent;
     int dequeueIndex = -1;

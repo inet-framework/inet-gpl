@@ -146,7 +146,8 @@ class INETGPL_API HtbScheduler : public PacketSchedulerBase, public IPacketColle
 
   protected:
     virtual void initialize(int stage) override;
-    virtual int schedulePacket() override;
+    virtual int schedulePacket() const override;
+    virtual int schedulePacketAndUpdateState();
     virtual void handleMessage(cMessage *msg) override;
 
   public:

@@ -511,7 +511,13 @@ int HlsScheduler::hlsDequeue()
 }
 
 // send the index of the queue to be dequeued to the interface
-int HlsScheduler::schedulePacket()
+int HlsScheduler::schedulePacket() const
+{
+    // KLUDGE: this query changes the state of the module
+    return const_cast<HlsScheduler *>(this)->schedulePacketAndUpdateState();
+}
+
+int HlsScheduler::schedulePacketAndUpdateState()
 {
     int dequeueIndex = hlsDequeue();
     emit(dequeueIndexSignal, dequeueIndex);
