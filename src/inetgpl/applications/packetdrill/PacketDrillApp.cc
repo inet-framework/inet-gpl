@@ -1784,8 +1784,11 @@ int PacketDrillApp::syscallSocket(struct syscall_spec *syscall, cQueue *args, ch
                 zerocopyEnabled = false;
                 if (pollTimer->isScheduled())
                     cancelEvent(pollTimer);
-                if (cModule *tcpModule = getParentModule()->getSubmodule("tcp"))
-                    tcpModule->par("synRetries").setIntValue(-1); // TCP_SYNCNT is per-socket; a fresh socket() reverts to the default
+                // the socket options of the old socket do not reach the new one: SO_RCVBUF and
+                // TCP_SYNCNT go back to the parameters of the Tcp module
+                tcpSocket.setAdvertisedWindow(-1);
+                tcpSocket.setReceiveBufferSize(-1);
+                tcpSocket.setSynRetries(-1);
                 // ... on a fresh LOCAL PORT: real packetdrill gives every
                 // socket a new ephemeral port, and the previous connection
                 // (TIME_WAIT, or a still-open listener) would otherwise
@@ -2303,16 +2306,13 @@ int PacketDrillApp::setsockoptTcpLevel(int level, cQueue *args, char **error)
                     tcpSocket.setReceiveBufferSize(2 * optval);
                     return STATUS_OK;
                 }
-                if (cModule *tcpModule = getParentModule()->getSubmodule("tcp")) {
-                    tcpModule->par("advertisedWindow").setIntValue(advWnd);
-                    tcpModule->par("windowScalingFactor").setIntValue(-1);
-                    // sk_rcvbuf itself, which is what the window's free-space
-                    // arithmetic and the receive-memory accounting work against.
-                    // SO_RCVBUF also pins it (SOCK_RCVBUF_LOCK), whatever the socket's
-                    // state, so the kernel's grow-under-pressure path is off from here on.
-                    tcpModule->par("receiveBufferSize").setDoubleValue(2.0 * optval);
-                    tcpModule->par("receiveBufferLocked").setBoolValue(true);
-                }
+                // Before the open, the window and the buffer travel with the open command of
+                // this socket: the window scale follows the window, and the buffer is
+                // sk_rcvbuf itself, which the free-space arithmetic of the window and the
+                // receive-memory accounting work against. SO_RCVBUF also pins it
+                // (SOCK_RCVBUF_LOCK), so the grow-under-pressure path is off from here on.
+                tcpSocket.setAdvertisedWindow(advWnd);
+                tcpSocket.setReceiveBufferSize(2 * optval);
                 return STATUS_OK;
             }
             default:
@@ -2329,11 +2329,9 @@ int PacketDrillApp::setsockoptTcpLevel(int level, cQueue *args, char **error)
                 tcpSocket.setMaxSeg((int)optval);
                 return STATUS_OK;
             case TCP_SYNCNT:
-                // per-socket SYN-retransmission cap: inject into the module's
-                // @mutable synRetries (reset to -1 on the next socket(), see
-                // syscallSocket -- the sockopt is per-socket in Linux)
-                if (cModule *tcpModule = getParentModule()->getSubmodule("tcp"))
-                    tcpModule->par("synRetries").setIntValue(optval);
+                // the SYN-retransmission cap of this socket, in its open command (reset to -1
+                // on the next socket(), see syscallSocket)
+                tcpSocket.setSynRetries(optval);
                 return STATUS_OK;
             case TCP_NODELAY:
                 tcpSocket.setNoDelay(optval != 0);
