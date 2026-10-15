@@ -485,7 +485,7 @@ The RFC-test move depends neither on packetdrill nor on #1155, so it can also go
 its own, first.
 
 Done on `topic/tcp-packetdrill-tests`, on INET `359db08cc3`, in eight commits; the INET plan
-(`plan/pending/packetdrill-tcp-protocol-tests.md` there) records them. What differs from the
+(`plan/done/packetdrill-tcp-protocol-tests.md` there) records them. What differs from the
 list above:
 
 - **INET's runner extracts only a `%testprog` test beside its `.test` file.** The wifi tests
