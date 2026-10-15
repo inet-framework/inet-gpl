@@ -1,7 +1,6 @@
 # Run the packetdrill TCP corpus as INET protocol tests
 
-Status: **steps 0 to 5 done 2026-09-29**; step 6 is designed; steps 6 to 8 wait for the rebase of
-#1155. The `inet-gpl` side of the layout is in `packetdrill-branch-cleanup.md`.
+Status: **done** on 2026-10-15. Steps 0 to 5 were done on 2026-09-29; step 6 is on INET master since `0c2e091ee6` (2026-10-02), and the job runs the wrappers since #1155 landed in stages; steps 7 and 8 landed in INET on 2026-10-15 (INET `2dfb5bba68`, `c5d99b242e`). The `inet-gpl` side of the layout is in `packetdrill-branch-cleanup.md`.
 
 - Branch `rh/packetdrill` of `inet-gpl`, on master `9b2fb1d`.
 - INET pairing: INET `topic/tcp-new` (pull request #1155), because `PacketDrillApp` needs it
@@ -389,10 +388,10 @@ branch of their own from master.
 
 **Step 7 — The evidence (`INET`).** `model/tcp/results.md` gets a Linux equivalence section that
 cites the suite by commit, and `conformance.md` gets the second column of D-4. **Done when** every
-TCP feature shows its equivalence verdict, or says that no script exercises it.
+TCP feature shows its equivalence verdict, or says that no script exercises it. **Done 2026-10-15** (INET `c5d99b242e`): the section "Linux equivalence: the packetdrill suite" of `results.md` cites the suite at INET `3d3b535fc8`, inet-gpl `4a3894d` and Linux 7.1.3 (303 MATCH, 12 KERNEL_DRIFT, 3 UNSUPPORTED_FEATURE); the column of `conformance.md` gives eleven of the 23 features with scripts, each script a match, and "no script" for the others.
 
 **Step 8 — The guide (`INET`).** A section in `derive-tests-from-a-standard.md` on implementation
-oracle evidence: where it goes, and what it may not claim. **Done when** the guide says both.
+oracle evidence: where it goes, and what it may not claim. **Done when** the guide says both. **Done 2026-10-15** (INET `2dfb5bba68`): the section "Evidence from an implementation oracle".
 
 **Where the work lands.** Steps 1, 3 and 5 on this branch. Step 4 in `opp_repl`. Steps 2, 6, 7
 and 8, and the generated wrappers, on an INET branch **based on `topic/tcp-new-audit-fixes`**
