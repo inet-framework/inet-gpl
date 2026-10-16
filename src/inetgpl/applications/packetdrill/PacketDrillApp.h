@@ -190,17 +190,6 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     // notification ids collected from socketZerocopyCompletion() in send
     // order, drained by recvmsg(MSG_ERRQUEUE).
     bool zerocopyEnabled = false;
-    // Urgent data, as Linux: the state of the urgent byte (tcp_sock.urg_data), the
-    // stream offset of the urgent mark (urg_seq), where a read stops, and the bytes of
-    // the stream that arrived and that the script read; SO_OOBINLINE of the socket.
-    // INET tells of an urgent pointer by socketUrgentArrived() and gives the
-    // out-of-band byte alone (TcpOutOfBandInd), as recv(MSG_OOB) reads it.
-    enum UrgentState { URGENT_NONE, URGENT_NOTYET, URGENT_VALID, URGENT_READ };
-    UrgentState urgentState = URGENT_NONE;
-    int64_t urgentMarkOffset = 0;
-    int64_t streamReceived = 0;
-    int64_t streamConsumed = 0;
-    bool oobInline = false;
     int timestampingFlags = 0;
     bool fastopenConnectPending = false;
     // Mirror of INET's client-side TFO cookie-cache decision input: set once an
@@ -339,11 +328,7 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     int syscallSendTo(struct syscall_spec *syscall, cQueue *args, char **error);
 
     int syscallRead(PacketDrillEvent *event, struct syscall_spec *syscall, cQueue *args, char **error);
-    int recvOutOfBand(struct syscall_spec *syscall, int count, int flags);
-    int syscallIoctl(struct syscall_spec *syscall, cQueue *args, char **error);
     int syscallSplice(struct syscall_spec *syscall, cQueue *args, char **error);
-    // the unread bytes of the stream that a read can take: up to the urgent mark
-    int64_t readableAppBytes();
 
     int syscallRecvFrom(PacketDrillEvent *event, struct syscall_spec *syscall, cQueue *args, char **error);
 
@@ -439,7 +424,6 @@ class INETGPL_API PacketDrillApp : public ApplicationBase,
     virtual void socketFailure(TcpSocket *socket, int code) override;
     virtual void socketStatusArrived(TcpSocket *socket, TcpStatusInfo *status) override;
     virtual void socketZerocopyCompletion(TcpSocket *socket, unsigned int zerocopyId) override;
-    virtual void socketUrgentArrived(TcpSocket *socket, TcpUrgentInfo *urgentInfo) override;
     virtual void socketDeleted(TcpSocket *socket) override {} // TODO
     //@}
 
