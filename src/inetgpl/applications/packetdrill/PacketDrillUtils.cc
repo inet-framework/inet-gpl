@@ -13,6 +13,7 @@
  #include <poll.h>
  #include <linux/errqueue.h>
  #include <linux/net_tstamp.h>
+ #include <sys/ioctl.h>
  #include <cerrno>
 #else
 #include "sys/stat.h"
@@ -113,6 +114,10 @@ struct int_symbol platform_symbols_table[] = {
     { MSG_TRUNC,                        "MSG_TRUNC"                       },
     { MSG_EOR,                          "MSG_EOR"                         },
     { MSG_MORE,                         "MSG_MORE"                        },
+    { MSG_OOB,                          "MSG_OOB"                         },
+    { 0,                                "NULL"                            }, // a null pointer argument (splice(), ...)
+    { MSG_PEEK,                         "MSG_PEEK"                        },
+    { SIOCATMARK,                       "SIOCATMARK"                      },
     { AF_UNSPEC,                        "AF_UNSPEC"                       },
 
     /* socket options routed to INET's TCP socket-API extensions (harness
@@ -120,6 +125,7 @@ struct int_symbol platform_symbols_table[] = {
      * *run* -- see syscallSetsockopt for which ones act vs. no-op) */
     { SO_REUSEADDR,                     "SO_REUSEADDR"                    },
     { SO_KEEPALIVE,                     "SO_KEEPALIVE"                    },
+    { SO_OOBINLINE,                     "SO_OOBINLINE"                    },
     { SO_SNDBUF,                        "SO_SNDBUF"                       },
     { SO_RCVBUF,                        "SO_RCVBUF"                       },
     { SO_MARK,                          "SO_MARK"                         },

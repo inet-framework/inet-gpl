@@ -176,6 +176,14 @@ void PacketDrillApp::socketDataArrived(TcpSocket *socket, Packet *msg, bool urge
     // if it ever had). The previous version also discarded the payload
     // (`delete msg`) without ever queuing it, so read()/recvfrom()/recvmsg()
     // could never actually verify TCP payload lengths.
+    // The out-of-band byte of urgent data is not part of the stream: recv(MSG_OOB)
+    // reads it (Linux tcp_urg() sets urg_data valid)
+    if (msg->findTag<TcpOutOfBandInd>() != nullptr) {
+        urgentState = URGENT_VALID;
+        delete msg;
+        return;
+    }
+    streamReceived += msg->getByteLength();
     epollInEdgePending = true;
     PacketDrillInfo *info = new PacketDrillInfo();
     info->setLiveTime(getSimulation()->getSimTime());
@@ -187,7 +195,7 @@ void PacketDrillApp::socketDataArrived(TcpSocket *socket, Packet *msg, bool urge
         // a read()/recv() is blocked on this stream: complete it once enough
         // bytes have accumulated (stream semantics -- the read may span
         // several arrival chunks), else keep waiting
-        if (availableAppBytes() < expectedMessageSize)
+        if (readableAppBytes() < expectedMessageSize)
             return;
         recvFromSet = false;
         consumeAppBytes(expectedMessageSize);
@@ -258,6 +266,14 @@ void PacketDrillApp::socketZerocopyCompletion(TcpSocket *socket, unsigned int ze
     // epoll wakeup: EPOLLERR reports once per new-arrival batch.
     completedZerocopyIds.push_back(zerocopyId);
     epollErrEdgePending = true;
+}
+
+void PacketDrillApp::socketUrgentArrived(TcpSocket *socket, TcpUrgentInfo *urgentInfo)
+{
+    // a new urgent pointer (Linux tcp_check_urg(), sk_send_sigurg()): the mark is the
+    // given number of bytes after the data that arrived, and its byte is not there yet
+    urgentMarkOffset = streamReceived + urgentInfo->getUrgentBytes();
+    urgentState = URGENT_NOTYET;
 }
 
 void PacketDrillApp::socketStatusArrived(TcpSocket *socket, TcpStatusInfo *status)
@@ -513,12 +529,27 @@ int64_t PacketDrillApp::availableAppBytes()
     return total;
 }
 
+int64_t PacketDrillApp::readableAppBytes()
+{
+    // a read of Linux stops before the urgent mark (tcp_recvmsg(): "if (copied) break"
+    // at urg_seq); a read that starts at the mark goes on past it
+    int64_t avail = availableAppBytes();
+    if (urgentState != URGENT_NONE && streamConsumed < urgentMarkOffset)
+        avail = std::min(avail, urgentMarkOffset - streamConsumed);
+    return avail;
+}
+
 void PacketDrillApp::consumeAppBytes(int64_t count)
 {
     // Drain `count` bytes from the receive stream in arrival order,
     // discarding fully-read messages and advancing the partial-read offset
     // into a message a read stops in the middle of. Caller has verified
     // availableAppBytes() >= count.
+    streamConsumed += count;
+    // a read past the urgent mark ends the urgent data (Linux clears urg_data when
+    // copied_seq passes urg_seq)
+    if (urgentState != URGENT_NONE && streamConsumed > urgentMarkOffset)
+        urgentState = URGENT_NONE;
     std::vector<Packet *> appData;
     for (cQueue::Iterator it(*receivedPackets); !it.end(); it++) {
         auto *qpkt = dynamic_cast<Packet *>(*it);
@@ -1443,6 +1474,12 @@ void PacketDrillApp::runSystemCallEvent(PacketDrillEvent *event, struct syscall_
     else if (!strcmp(name, "getsockopt")) {
         result = syscallGetsockopt(syscall, args, &error);
     }
+    else if (!strcmp(name, "ioctl")) {
+        result = syscallIoctl(syscall, args, &error);
+    }
+    else if (!strcmp(name, "splice")) {
+        result = syscallSplice(syscall, args, &error);
+    }
     else if (!strcmp(name, "sctp_sendmsg")) {
         result = syscallSctpSendmsg(syscall, args, &error);
     }
@@ -2039,6 +2076,8 @@ void PacketDrillApp::sendTcpPayloadWithFlags(int64_t numBytes, int flags)
         payload->addTagIfAbsent<TcpSendZerocopyReq>();
     if (flags & MSG_MORE)
         payload->addTagIfAbsent<TcpSendMoreReq>();
+    if (flags & MSG_OOB)
+        payload->addTagIfAbsent<TcpSendUrgentReq>(); // urgent data, the pointer after it (Linux tcp_mark_urg())
     // TX timestamping (SO_TIMESTAMPING): register this write's last-byte key so its
     // SCM_TSTAMP_SCHED/SND/ACK errqueue entries can be generated as the data is
     // transmitted and acked (drained by recvmsg(MSG_ERRQUEUE)).
@@ -2263,6 +2302,11 @@ int PacketDrillApp::setsockoptTcpLevel(int level, cQueue *args, char **error)
                 // Gate for MSG_ZEROCOPY sends, mirroring Linux's requirement
                 // that the flag only works after SO_ZEROCOPY is enabled.
                 zerocopyEnabled = (optval != 0);
+                return STATUS_OK;
+            case SO_OOBINLINE:
+                // the out-of-band byte of urgent data stays in the stream
+                oobInline = (optval != 0);
+                tcpSocket.setOobInline(oobInline);
                 return STATUS_OK;
             case SO_TIMESTAMPING:
                 // INET models RX delivery-time stamps only (TcpRxTimestampInd);
@@ -2869,16 +2913,108 @@ int PacketDrillApp::syscallSctpSend(struct syscall_spec *syscall, cQueue *args, 
     return STATUS_OK;
 }
 
+int PacketDrillApp::recvOutOfBand(struct syscall_spec *syscall, int count, int flags)
+{
+    // as Linux tcp_recv_urg(): EINVAL with SO_OOBINLINE, without urgent data, or after
+    // the byte was read; EAGAIN before the byte arrives; else the byte, which a read
+    // without MSG_PEEK marks as read
+    int64_t result;
+    const char *errnoName = nullptr;
+    if (oobInline || urgentState == URGENT_NONE || urgentState == URGENT_READ) {
+        result = -1;
+        errnoName = "EINVAL";
+    }
+    else if (urgentState == URGENT_NOTYET) {
+        result = -1;
+        errnoName = "EAGAIN";
+    }
+    else {
+        result = count > 0 ? 1 : 0;
+        if (!(flags & MSG_PEEK))
+            urgentState = URGENT_READ;
+    }
+    int64_t expected = syscall->result->getNum();
+    bool errnoMatches = errnoName == nullptr || (syscall->error != nullptr && !strcmp(syscall->error->errno_macro, errnoName));
+    if (expected != result || !errnoMatches)
+        throw cTerminationException("Packetdrill error: recv(MSG_OOB) returns %" PRId64 " %s, the script expects %" PRId64,
+                result, errnoName ? errnoName : "", expected);
+    return STATUS_OK;
+}
+
+int PacketDrillApp::syscallIoctl(struct syscall_spec *syscall, cQueue *args, char **error)
+{
+    // ioctl(fd, SIOCATMARK, [answer]): as Linux tcp_ioctl(), the answer is whether the
+    // read position is at the urgent mark (urg_data && urg_seq == copied_seq); other
+    // requests are not modeled
+    int request;
+    if (args->getLength() != 3)
+        return STATUS_ERR;
+    auto *exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(1));
+    if (!exp || exp->getS32(&request, error))
+        return STATUS_ERR;
+    if (request != SIOCATMARK)
+        return STATUS_OK;
+    int64_t atMark = urgentState != URGENT_NONE && streamConsumed == urgentMarkOffset ? 1 : 0;
+    exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(2));
+    if (exp && exp->getType() == EXPR_LIST && exp->getList() && exp->getList()->getLength() == 1) {
+        auto *v = check_and_cast_nullable<PacketDrillExpression *>(exp->getList()->get(0));
+        if (v && v->getType() == EXPR_INTEGER && v->getNum() != atMark)
+            throw cTerminationException("Packetdrill error: ioctl(SIOCATMARK) gives %" PRId64 ", the script expects %" PRId64, atMark, v->getNum());
+    }
+    return STATUS_OK;
+}
+
+int PacketDrillApp::syscallSplice(struct syscall_spec *syscall, cQueue *args, char **error)
+{
+    // splice(fd_in, off_in, fd_out, off_out, len, flags) from the TCP socket to a pipe:
+    // a read of the stream, as Linux tcp_splice_read() and tcp_read_sock(), which stops
+    // at the urgent mark and gives 0 there; the pipe is not modeled
+    int len;
+    if (args->getLength() != 6)
+        return STATUS_ERR;
+    auto *exp = check_and_cast_nullable<PacketDrillExpression *>(args->get(4));
+    if (!exp || exp->getS32(&len, error))
+        return STATUS_ERR;
+    int64_t expected = syscall->result->getNum();
+    if (expected < 0)
+        return STATUS_OK;
+    bool atMark = urgentState != URGENT_NONE && streamConsumed == urgentMarkOffset;
+    int64_t readable = atMark ? 0 : std::min<int64_t>(len, readableAppBytes());
+    if (readable == expected) {
+        consumeAppBytes(expected);
+        return STATUS_OK;
+    }
+    if (readable < expected && !atMark) {
+        // not enough data yet: wait as a read does, socketDataArrived() completes it
+        expectedMessageSize = expected;
+        msgArrived = false;
+        recvFromSet = true;
+        return STATUS_OK;
+    }
+    throw cTerminationException("Packetdrill error: splice() reads %" PRId64 " bytes, the script expects %" PRId64, readable, expected);
+}
+
 int PacketDrillApp::syscallRead(PacketDrillEvent *event, struct syscall_spec *syscall, cQueue *args, char **error)
 {
     int script_fd, count;
     PacketDrillExpression *exp;
 
+    // recv(..., MSG_OOB) reads the out-of-band byte of urgent data, with its errors
+    if (args->getLength() == 4) {
+        int flags = 0;
+        auto *flagsExp = check_and_cast_nullable<PacketDrillExpression *>(args->get(3));
+        auto *countExp = check_and_cast_nullable<PacketDrillExpression *>(args->get(2));
+        if (flagsExp && countExp && !flagsExp->getS32(&flags, error) && (flags & MSG_OOB)) {
+            if (countExp->getS32(&count, error))
+                return STATUS_ERR;
+            return recvOutOfBand(syscall, count, flags);
+        }
+    }
     if (syscall->result->getNum() == -1) {
         return STATUS_OK;
     }
     // 3 args = read(fd, buf, count); 4 args = recv(fd, buf, count, flags) --
-    // same byte-stream consumption, the flags argument is not modeled (the
+    // same byte-stream consumption; of the flags, only MSG_OOB is modeled (the
     // corpus uses plain 0 / MSG_DONTWAIT, both equivalent under autoRead).
     if (args->getLength() != 3 && args->getLength() != 4)
         return STATUS_ERR;
@@ -2919,8 +3055,9 @@ int PacketDrillApp::syscallRead(PacketDrillEvent *event, struct syscall_spec *sy
                     // (partial read, e.g. read(...,1000)=1000 of 10000 queued)
                     // or span several arrival chunks. A short read (result <
                     // count) is legal exactly when it drains the stream.
+                    // A read also stops at the urgent mark (readableAppBytes()).
                     int64_t expected = syscall->result->getNum();
-                    int64_t avail = availableAppBytes();
+                    int64_t avail = readableAppBytes();
                     if (avail >= expected) {
                         if (expected < count && avail > expected)
                             throw cTerminationException("Packetdrill error: Wrong payload length"); // short read asserted while more data was queued
