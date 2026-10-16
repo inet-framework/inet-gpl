@@ -1573,6 +1573,10 @@ std::string PacketDrillApp::formatTcpInfoSnapshot(TcpStatusInfo *status)
     if (status->getSrtt() >= 0)
         out << "tcpi_rtt = " << (int64_t)llround(status->getSrtt() * 1e6) << "\n";
     out << "tcpi_min_rtt = " << (int64_t)llround(status->getMinRtt() * 1e6) << "\n";
+    // The receive RTT (rcv_rtt_est.rtt_us >> 3, in microseconds) and the
+    // receive space (rcvq_space.space) of Dynamic Right-Sizing, as Linux.
+    out << "tcpi_rcv_rtt = " << (int64_t)llround(status->getRcvRtt() * 1e6) << "\n";
+    out << "tcpi_rcv_space = " << status->getRcvSpace() << "\n";
     // tcpi_last_data_recv is in MILLISECONDS (Linux jiffies_to_msecs), unlike the
     // microsecond tcpi_rtt/busy_time/rwnd_limited fields below.
     out << "tcpi_last_data_recv = "
