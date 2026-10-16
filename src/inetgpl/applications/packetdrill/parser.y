@@ -229,11 +229,10 @@ static ByteVector hex_string_to_bytes(const char *hex)
  * cookie names: TFO_COOKIE ("some valid server-issued cookie") or
  * TFO_COOKIE_ZERO ("an all-zero cookie"). Upstream packetdrill binds TFO_COOKIE
  * to the deterministic cookie the kernel derives from the fixed tcp_fastopen_key;
- * INET's TFO server instead accepts any cookie under lenient validation (the
- * INET run's default, Tcp::fastopenLenientCookieValidation), so a symbol only needs
- * to expand to a well-formed fixed cookie of the canonical 8-byte length. Any
- * token carrying a non-hex-digit character is treated as symbolic; pure hex
- * literals decode as before. */
+ * INET derives the same cookie (Tcp::generateFastOpenCookie with fastopenKey),
+ * and its TFO server checks each cookie strictly, so the symbols expand to these
+ * cookies of 8 bytes. Any token carrying a non-hex-digit character is treated as
+ * symbolic; pure hex literals decode as before. */
 static ByteVector cookie_token_to_bytes(const char *tok)
 {
     bool symbolic = false;

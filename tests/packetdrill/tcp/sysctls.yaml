@@ -95,8 +95,8 @@ sysctl:
       # listener" to bit 0x400 (TFO_SERVER_WO_SOCKOPT2). Otherwise a non-TFO
       # listener under tcp_fastopen=2 (fastopen/server/basic-non-tfo-listener)
       # would wrongly accept the SYN data. Bit 1 maps to nothing. Linux answers
-      # and tries the experimental kind-254 form with no switch of its own, so
-      # tcp.ini sets fastopenExpOptionEnabled for every script.
+      # and tries the experimental kind-254 form with no switch of its own, and
+      # LinuxTcp turns fastopenExpOptionEnabled on to match.
       "0x400": "**.tcp.fastopenServerEnabled"
       # Bit 9 (0x200, TFO_SERVER_COOKIE_NOT_REQD): accept SYN data carrying no
       # cookie option at all. The scripts' basic-cookie-not-reqd / zerocopy
