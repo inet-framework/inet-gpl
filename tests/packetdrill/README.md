@@ -51,13 +51,20 @@ cd $INET_ROOT && make MODE=debug -j$(nproc)
 cd $INETGPL_ROOT && make MODE=debug -j$(nproc)
 ```
 
+`MODE` in the environment selects another build mode, as in OMNeT++. With `MODE=coverage`, the
+runner links the coverage libraries of both projects and is `packetdrill_inet_coverage`; build
+the libraries in that mode first. So that INET's protocol tests in coverage mode run the
+packetdrill wrappers with this runner, set `MODE=coverage` too:
+`MODE=coverage opp_run_protocol_tests -m coverage`.
+
 `suite.py` needs PyYAML. The `python3` on the `PATH` does not always have it. If it does not, give
 `PYTHON=<interpreter>` to `make`. `make check-env` shows the interpreter, the runner and the tools
 that it finds, and runs nothing.
 
 ## Run the suite
 
-Run the targets from this folder. The first run builds the runner, `packetdrill_inet_dbg`.
+Run the targets from this folder. The first run builds the runner, `packetdrill_inet_dbg`
+(`packetdrill_inet_coverage` with `MODE=coverage`).
 
 ```sh
 make                        # the INET run over all scripts

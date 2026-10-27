@@ -19,6 +19,9 @@
 #   PRIVILEGED=1     run the Linux run as real root (sudo) -- see README
 #   PYTHON=<python>  interpreter to run suite.py with
 #   PROTOCOL=<name>  the protocol folder to use (default tcp)
+#   MODE=<mode>      the build mode of the runner and of the INET and inet-gpl
+#                    libraries that it links (default debug); MODE=coverage
+#                    builds and runs packetdrill_inet_coverage
 #
 # Examples:
 #   make                        # run all scripts in INET
@@ -41,9 +44,16 @@ FILTER_ARG := $(if $(FILTER),--filter '$(FILTER)',)
 TOL_ARG := $(if $(TOLERANCE),--tolerance-usecs '$(TOLERANCE)',)
 PRIV_ARG := $(if $(PRIVILEGED),--privileged,)
 
-# opp_makemake names the output directory after the toolchain (clang-debug,
-# gcc-debug, ...); suite.py discovers it the same way.
-EXE := $(firstword $(wildcard build/out/*-debug/packetdrill_inet_dbg))
+# The build mode, as in OMNeT++: D is the suffix of the libraries and of the runner
+# (_dbg for debug, none for release, _<mode> for the other modes). suite.py reads
+# MODE from the environment and picks the runner of the same mode.
+MODE ?= debug
+export MODE
+D := $(if $(filter release,$(MODE)),,$(if $(filter debug,$(MODE)),_dbg,_$(MODE)))
+
+# opp_makemake names the output directory after the toolchain and the mode
+# (clang-debug, gcc-coverage, ...); suite.py discovers it the same way.
+EXE := $(firstword $(wildcard build/out/*-$(MODE)/packetdrill_inet$(D)))
 
 REPORT := out/report.md
 
@@ -91,10 +101,10 @@ build: ## build the runner executable for the INET run
 	    echo "  cd \$$INET_ROOT && source setenv -q && cd \$$INETGPL_ROOT && source setenv -q"; \
 	    exit 1; }
 	mkdir -p build
-	cd build && opp_makemake -f --deep -lINET_dbg -lINETGPL_dbg \
+	cd build && opp_makemake -f --deep -lINET$$\(D\) -lINETGPL$$\(D\) \
 	    -L$(INET_ROOT)/src -L$(INETGPL_ROOT)/src -P . \
 	    -I$(INET_ROOT)/src -I$(INETGPL_ROOT)/src -o packetdrill_inet
-	$(MAKE) -C build MODE=debug
+	$(MAKE) -C build MODE=$(MODE)
 
 rebuild: distclean build ## rebuild the runner from scratch
 
@@ -127,11 +137,11 @@ clean: ## remove run artifacts (results, preprocessed scripts, pcaps)
 	rm -rf out
 
 distclean: clean ## also remove the built runner and its generated makefile
-	rm -rf build/out build/Makefile build/packetdrill_inet_dbg build/packetdrill_inet
+	rm -rf build/out build/Makefile build/packetdrill_inet build/packetdrill_inet_*
 
 help: ## list the available targets
 	@echo "packetdrill suite -- targets:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 	  | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 	@echo
-	@echo "Variables: FILTER=<regex>  TOLERANCE=<usecs>  PRIVILEGED=1  PYTHON=<interpreter>"
+	@echo "Variables: FILTER=<regex>  TOLERANCE=<usecs>  PRIVILEGED=1  PYTHON=<interpreter>  MODE=<mode>"

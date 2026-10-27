@@ -77,16 +77,21 @@ BUILD_CMD = "make -C tests/packetdrill build"
 def runner_path():
     """Path to the executable of the INET run.
 
-    opp_makemake names the output directory after the toolchain
-    (out/clang-debug, out/gcc-debug, ...), so discover it rather than
-    hardcoding one. When several debug builds exist, clang wins; when none
-    does, the conventional path is returned so error messages stay concrete.
+    The build mode comes from MODE, as in OMNeT++, and is debug by default;
+    MODE=coverage picks packetdrill_inet_coverage, which `MODE=coverage make
+    build` makes. opp_makemake names the output directory after the toolchain
+    and the mode (out/clang-debug, out/gcc-coverage, ...), so discover it
+    rather than hardcoding one. When several builds of the mode exist, clang
+    wins; when none does, the conventional path is returned so error messages
+    stay concrete.
     """
-    found = sorted(glob.glob(os.path.join(BUILD_DIR, "out", "*-debug", "packetdrill_inet_dbg")))
+    mode = os.environ.get("MODE") or "debug"
+    suffix = "" if mode == "release" else "_dbg" if mode == "debug" else "_" + mode
+    found = sorted(glob.glob(os.path.join(BUILD_DIR, "out", "*-" + mode, "packetdrill_inet" + suffix)))
     for path in found:
-        if os.sep + "clang-debug" + os.sep in path:
+        if os.sep + "clang-" + mode + os.sep in path:
             return path
-    return found[0] if found else os.path.join(BUILD_DIR, "out", "clang-debug", "packetdrill_inet_dbg")
+    return found[0] if found else os.path.join(BUILD_DIR, "out", "clang-" + mode, "packetdrill_inet" + suffix)
 
 
 INET_RUN_TIMEOUT_S = 30
